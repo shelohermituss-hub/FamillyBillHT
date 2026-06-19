@@ -9,12 +9,12 @@ import { supabase, type Transaction } from '@/lib/supabase'
 import { getCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string }> = {
-  completed: { bg: 'bg-green-100', text: 'text-green-700' },
-  processing: { bg: 'bg-blue-100', text: 'text-blue-700' },
-  pending: { bg: 'bg-amber-100', text: 'text-amber-700' },
-  failed: { bg: 'bg-red-100', text: 'text-red-600' },
-  cancelled: { bg: 'bg-muted', text: 'text-muted-foreground' },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
+  completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'Complété' },
+  processing: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'En cours' },
+  pending: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'En attente' },
+  failed: { bg: 'bg-red-100', text: 'text-red-600', label: 'Échoué' },
+  cancelled: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Annulé' },
 }
 
 function txLabel(tx: Transaction): string {
@@ -86,7 +86,7 @@ export function HistoryPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Total transactions', value: transactions.length.toString() },
+            { label: 'Total', value: transactions.length.toString() },
             { label: 'Envois', value: sendCount.toString() },
             { label: 'Réceptions', value: receiveCount.toString() },
           ].map((s, i) => (
@@ -111,11 +111,11 @@ export function HistoryPage() {
           <div className="flex gap-1.5">
             {['all', 'send', 'receive', 'convert'].map(f => (
               <Button
-                key={f === 'all' ? 'Tout' : f === 'send' ? 'Envoi' : f === 'receive' ? 'Réception' : 'Conversion'}
+                key={f}
                 size="sm"
-                className="rounded-2xl capitalize font-semibold h-9"
+                className="rounded-2xl font-semibold h-9"
                 variant={filter === f ? 'default' : 'outline'}
-                style={filter === f ? { backgroundColor: 'var(--fb-ink)', color: 'white', borderColor: 'transparent' } : {}}
+                style={filter === f ? { backgroundColor: 'var(--fb-red)', color: 'white', borderColor: 'transparent' } : {}}
                 onClick={() => setFilter(f)}
               >
                 {f === 'all' ? 'Tout' : f === 'send' ? 'Envoi' : f === 'receive' ? 'Réception' : 'Conversion'}
@@ -124,7 +124,7 @@ export function HistoryPage() {
           </div>
           <Button variant="outline" size="sm" className="rounded-2xl font-semibold h-9 gap-1.5">
             <Download className="w-4 h-4" />
-            Export
+            Exporter
           </Button>
         </div>
 
@@ -137,7 +137,7 @@ export function HistoryPage() {
               <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center" style={{ backgroundColor: 'var(--fb-light)' }}>
                 <Search className="w-6 h-6 text-muted-foreground" />
               </div>
-              <p className="font-semibold">No transactions found</p>
+              <p className="font-semibold">Aucune transaction trouvée</p>
               <p className="text-xs text-muted-foreground">
                 {search ? 'Essayez un autre terme ou filtre.' : 'Vos transactions apparaîtront ici.'}
               </p>
@@ -160,11 +160,11 @@ export function HistoryPage() {
                       <div className="flex items-center gap-2 mb-0.5">
                         <p className="font-bold text-sm truncate">{label}</p>
                         <Badge className={cn("text-xs rounded-full shrink-0 border-0 font-semibold px-2 py-0.5", statusCfg.bg, statusCfg.text)}>
-                          {tx.status}
+                          {statusCfg.label}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
-                        <span>{new Date(tx.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        <span>{new Date(tx.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                         {tx.reference && <><span>·</span><span className="font-mono">{tx.reference}</span></>}
                         {toCurr && tx.target_amount && (
                           <><span>·</span><span>{toCurr.flag} {tx.target_amount.toLocaleString('en-US', { minimumFractionDigits: toCurr.decimals, maximumFractionDigits: toCurr.decimals })} {toCurr.code}</span></>

@@ -62,7 +62,7 @@ function CurrencyPill({ code, onChange }: { code: string; onChange: (c: string) 
                     <span className="font-bold">{c.code}</span>
                     <span className="text-muted-foreground ml-2 text-xs">{c.name}</span>
                   </div>
-                  {c.code === code && <CheckCircle2 className="w-4 h-4 ml-auto shrink-0 text-green-500" />}
+                  {c.code === code && <CheckCircle2 className="w-4 h-4 ml-auto shrink-0" style={{ color: 'var(--fb-red)' }} />}
                 </button>
               ))}
             </div>
@@ -82,7 +82,7 @@ export function TransferPage() {
   const isConvert = params.get('mode') === 'convert'
 
   const [step, setStep] = useState<Step>('amount')
-  const [fromCurrency, setFromCurrency] = useState('EUR')
+  const [fromCurrency, setFromCurrency] = useState('HTG')
   const [toCurrency, setToCurrency] = useState('USD')
   const [amount, setAmount] = useState('500')
   const [recipientName, setRecipientName] = useState('')
@@ -174,7 +174,7 @@ export function TransferPage() {
               <div
                 key={s}
                 className="h-1 flex-1 rounded-full transition-all duration-300"
-                style={i <= visibleIdx ? { backgroundColor: 'var(--fb-ink)' } : { backgroundColor: 'oklch(0.922 0.005 120)' }}
+                style={i <= visibleIdx ? { backgroundColor: 'var(--fb-red)' } : { backgroundColor: 'oklch(0.922 0.005 120)' }}
               />
             ))}
           </div>
@@ -185,7 +185,7 @@ export function TransferPage() {
           <div className="bg-white rounded-3xl p-6 border border-border shadow-sm space-y-5">
             {/* You send */}
             <div className="space-y-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">You send</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Vous envoyez</p>
               <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 border-border focus-within:border-foreground transition-colors">
                 <Input
                   type="number"
@@ -202,16 +202,16 @@ export function TransferPage() {
             {/* Fee breakdown */}
             <div className="space-y-2 py-3 border-y border-border">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Transfer fee</span>
+                <span className="text-muted-foreground">Frais de transfert</span>
                 <span className="font-semibold">− {formatCurrency(calc.fee, fromCurrency)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Amount converted</span>
+                <span className="text-muted-foreground">Montant converti</span>
                 <span className="font-semibold">{formatCurrency(calc.amountAfterFee, fromCurrency)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <span>Exchange rate</span>
+                  <span>Taux de change</span>
                   <Info className="w-3.5 h-3.5" />
                 </div>
                 <span className="font-semibold">1 {fromCurrency} = {calc.rate.toFixed(4)} {toCurrency}</span>
@@ -231,10 +231,10 @@ export function TransferPage() {
 
             {/* Recipient gets */}
             <div className="space-y-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Recipient gets</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Le bénéficiaire reçoit</p>
               <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 border-border bg-muted/30">
                 <p className="text-3xl font-black flex-1 tabular-nums">
-                  {calc.received > 0 ? calc.received.toLocaleString('en-US', {
+                  {calc.received > 0 ? calc.received.toLocaleString('fr-FR', {
                     minimumFractionDigits: toCurr?.decimals ?? 2,
                     maximumFractionDigits: toCurr?.decimals ?? 2,
                   }) : '0.00'}
@@ -246,16 +246,16 @@ export function TransferPage() {
             {/* Rate guarantee */}
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>We guarantee this rate for 48 hours</span>
+              <span>Taux garanti pendant 48 heures</span>
             </div>
 
             <Button
               className="w-full h-12 rounded-2xl font-bold text-base border-0"
-              style={{ backgroundColor: 'var(--fb-ink)', color: 'white' }}
+              style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
               onClick={() => setStep(isConvert ? 'review' : 'recipient')}
               disabled={!sendAmount || sendAmount <= 0}
             >
-              Continue
+              Continuer
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
@@ -265,13 +265,13 @@ export function TransferPage() {
         {step === 'recipient' && (
           <div className="bg-white rounded-3xl p-6 border border-border shadow-sm space-y-5">
             <div>
-              <h2 className="text-xl font-black" style={{ color: 'var(--fb-ink)' }}>Who are you sending to?</h2>
-              <p className="text-sm text-muted-foreground mt-1">Enter recipient details below</p>
+              <h2 className="text-xl font-black" style={{ color: 'var(--fb-ink)' }}>À qui envoyez-vous ?</h2>
+              <p className="text-sm text-muted-foreground mt-1">Saisissez les coordonnées du bénéficiaire</p>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold">Full name <span className="text-red-400">*</span></Label>
+                <Label className="text-sm font-bold">Nom complet <span className="text-red-400">*</span></Label>
                 <Input
                   value={recipientName}
                   onChange={e => setRecipientName(e.target.value)}
@@ -290,7 +290,7 @@ export function TransferPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold">IBAN / Account number <span className="text-muted-foreground font-normal">(optionnel)</span></Label>
+                <Label className="text-sm font-bold">IBAN / N° de compte <span className="text-muted-foreground font-normal">(optionnel)</span></Label>
                 <Input
                   value={recipientAccount}
                   onChange={e => setRecipientAccount(e.target.value)}
@@ -311,11 +311,11 @@ export function TransferPage() {
 
             <Button
               className="w-full h-12 rounded-2xl font-bold text-base border-0"
-              style={{ backgroundColor: 'var(--fb-ink)', color: 'white' }}
+              style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
               onClick={() => setStep('review')}
               disabled={!recipientName.trim()}
             >
-              Continue
+              Continuer
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
@@ -325,8 +325,8 @@ export function TransferPage() {
         {step === 'review' && (
           <div className="bg-white rounded-3xl p-6 border border-border shadow-sm space-y-5">
             <div>
-              <h2 className="text-xl font-black" style={{ color: 'var(--fb-ink)' }}>Review your transfer</h2>
-              <p className="text-sm text-muted-foreground mt-1">Please confirm everything looks correct</p>
+              <h2 className="text-xl font-black" style={{ color: 'var(--fb-ink)' }}>Vérifier votre virement</h2>
+              <p className="text-sm text-muted-foreground mt-1">Veuillez confirmer les informations</p>
             </div>
 
             <div className="space-y-0 divide-y divide-border rounded-2xl border border-border overflow-hidden">
@@ -379,10 +379,10 @@ export function TransferPage() {
         {step === 'success' && (
           <div className="bg-white rounded-3xl p-8 border border-border shadow-sm text-center space-y-6">
             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg" style={{ backgroundColor: 'var(--fb-red)' }}>
-              <CheckCircle2 className="w-10 h-10" style={{ color: 'var(--fb-ink)' }} />
+              <CheckCircle2 className="w-10 h-10" style={{ color: 'white' }} />
             </div>
             <div>
-              <h2 className="text-2xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Transfer sent!</h2>
+              <h2 className="text-2xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Virement envoyé !</h2>
               <p className="text-muted-foreground text-sm">
                 Votre virement de {fromCurr?.flag} {formatCurrency(sendAmount, fromCurrency)} est en cours.
               </p>
@@ -390,20 +390,20 @@ export function TransferPage() {
 
             <div className="p-4 rounded-2xl text-left space-y-2.5" style={{ backgroundColor: 'var(--fb-light)' }}>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Reference</span>
+                <span className="text-muted-foreground">Référence</span>
                 <span className="font-mono font-bold text-xs">{txId ? txId.slice(0, 8).toUpperCase() : '—'}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Recipient gets</span>
+                <span className="text-muted-foreground">Le bénéficiaire reçoit</span>
                 <span className="font-bold">{toCurr?.flag} {formatCurrency(calc.received, toCurrency)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Estimated delivery</span>
-                <span className="font-bold" style={{ color: 'var(--fb-ink)' }}>Within 24 hours</span>
+                <span className="text-muted-foreground">Livraison estimée</span>
+                <span className="font-bold" style={{ color: 'var(--fb-red)' }}>Sous 24 heures</span>
               </div>
               {recipientName && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">To</span>
+                  <span className="text-muted-foreground">À</span>
                   <span className="font-semibold">{recipientName}</span>
                 </div>
               )}
@@ -412,10 +412,10 @@ export function TransferPage() {
             <div className="flex flex-col gap-2">
               <Button
                 className="w-full h-12 rounded-2xl font-bold border-0"
-                style={{ backgroundColor: 'var(--fb-ink)', color: 'white' }}
+                style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
                 onClick={() => navigate('/dashboard')}
               >
-                Back to dashboard
+                Retour au tableau de bord
               </Button>
               <Button
                 variant="outline"
@@ -430,7 +430,7 @@ export function TransferPage() {
                   setTxId('')
                 }}
               >
-                Send another transfer
+                Nouveau virement
               </Button>
             </div>
           </div>

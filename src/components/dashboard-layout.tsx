@@ -6,11 +6,11 @@ import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { icon: Home, label: 'Home', href: '/dashboard' },
-  { icon: ArrowUpRight, label: 'Send', href: '/transfer' },
-  { icon: Wallet, label: 'Account', href: '/account' },
-  { icon: CreditCard, label: 'Card', href: '/card' },
-  { icon: Clock, label: 'History', href: '/history' },
+  { icon: Home, label: 'Accueil', href: '/dashboard' },
+  { icon: ArrowUpRight, label: 'Envoyer', href: '/transfer' },
+  { icon: Wallet, label: 'Compte', href: '/account' },
+  { icon: CreditCard, label: 'Carte', href: '/card' },
+  { icon: Clock, label: 'Historique', href: '/history' },
 ]
 
 function isNavActive(itemHref: string, pathname: string) {
@@ -75,7 +75,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
           >
             <LogOut className="w-5 h-5" />
-            Sign out
+            Déconnexion
           </button>
         </div>
       </aside>
@@ -140,11 +140,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                   className="w-8 h-8 rounded-xl flex items-center justify-center"
                   style={isActive ? { backgroundColor: 'var(--fb-red)' } : {}}
                 >
-                  <item.icon className="w-4 h-4" style={{ color: isActive ? 'var(--fb-ink)' : 'var(--muted-foreground)' }} />
+                  <item.icon className="w-4 h-4" style={{ color: isActive ? 'white' : undefined }} />
                 </div>
                 <span
                   className="text-xs font-semibold"
-                  style={{ color: isActive ? 'var(--fb-ink)' : undefined }}
+                  style={{ color: isActive ? 'var(--fb-red)' : undefined }}
                 >
                   {item.label}
                 </span>
