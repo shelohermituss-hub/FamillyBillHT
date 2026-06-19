@@ -4,7 +4,7 @@ import { ArrowUpRight, ArrowDownLeft, Repeat, Plus, Eye, EyeOff, ChevronRight, T
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Jar, type Transaction } from '@/lib/supabase'
-import { formatCurrency, getCurrency } from '@/lib/currencies'
+import { formatCurrency, getCurrency, getRate } from '@/lib/currencies'
 import { CurrencyIcon } from '@/components/currency-icon'
 import { cn } from '@/lib/utils'
 import { BILL_CATEGORIES } from '@/lib/haiti-providers'
@@ -47,10 +47,7 @@ export function DashboardPage() {
     })
   }, [user])
 
-  const htgRates: Record<string, number> = {
-    HTG: 1, EUR: 148, USD: 134.5, GBP: 170, CAD: 99, AUD: 88, CHF: 153,
-  }
-  const totalHTG = accounts.reduce((s, a) => s + a.balance * (htgRates[a.currency] ?? 134.5), 0)
+  const totalUSD = accounts.reduce((s, a) => s + a.balance * getRate(a.currency, 'USD'), 0)
   const firstName = profile?.full_name?.split(' ')[0] ?? 'là'
 
   return (
@@ -90,12 +87,12 @@ export function DashboardPage() {
             ) : (
               <p className="text-4xl font-bold text-white tabular-nums leading-none mb-1">
                 {visible
-                  ? `G ${totalHTG.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}`
-                  : 'G ••• •••'}
+                  ? `$ ${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  : '$ ••• •••'}
               </p>
             )}
             <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              {accounts.length} devise{accounts.length !== 1 ? 's' : ''} · en HTG
+              {accounts.length} devise{accounts.length !== 1 ? 's' : ''} · en USD
             </p>
 
             {/* Quick actions */}
