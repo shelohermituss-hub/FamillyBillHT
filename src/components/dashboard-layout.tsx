@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, ArrowUpRight, Wallet, CreditCard, Clock, Globe, LogOut, Menu, X } from 'lucide-react'
+import { Home, ArrowUpRight, Wallet, CreditCard, Clock, LogOut, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
@@ -30,15 +30,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--wise-sage)' }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--fb-light)' }}>
       {/* Sidebar desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-border fixed inset-y-0 left-0 z-30">
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-              <Globe className="w-4 h-4" style={{ color: 'var(--wise-ink)' }} />
-            </div>
-            <span className="text-xl font-black" style={{ color: 'var(--wise-ink)' }}>Wise</span>
+            <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-black" style={{ color: 'var(--fb-ink)' }}>FamillyBill <span className="text-red-600">HT</span></span>
           </Link>
         </div>
 
@@ -53,7 +51,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all",
                   isActive ? "" : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 )}
-                style={isActive ? { backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' } : {}}
+                style={isActive ? { backgroundColor: 'var(--fb-red)', color: 'white' } : {}}
               >
                 <item.icon className="w-5 h-5 shrink-0" />
                 {item.label}
@@ -64,7 +62,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
         <div className="p-3 border-t border-border space-y-1">
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white shrink-0" style={{ backgroundColor: 'var(--wise-ink)' }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white shrink-0" style={{ backgroundColor: 'var(--fb-ink)' }}>
               {(profile?.full_name ?? 'U')[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -85,10 +83,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-border px-4 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-            <Globe className="w-3 h-3" style={{ color: 'var(--wise-ink)' }} />
-          </div>
-          <span className="text-lg font-black" style={{ color: 'var(--wise-ink)' }}>Wise</span>
+          <img src="/logo.png" alt="FamillyBill HT" className="w-6 h-6 object-contain" />
+          <span className="text-lg font-black" style={{ color: 'var(--fb-ink)' }}>FamillyBill <span className="text-red-600">HT</span></span>
         </Link>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-accent">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -110,7 +106,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                     "flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all",
                     isActive ? "" : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   )}
-                  style={isActive ? { backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' } : {}}
+                  style={isActive ? { backgroundColor: 'var(--fb-red)', color: 'white' } : {}}
                 >
                   <item.icon className="w-5 h-5" />
                   {item.label}
@@ -142,13 +138,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <Link key={item.href} to={item.href} className="flex flex-col items-center gap-1 p-2 rounded-xl min-w-0">
                 <div
                   className="w-8 h-8 rounded-xl flex items-center justify-center"
-                  style={isActive ? { backgroundColor: 'var(--wise-lime)' } : {}}
+                  style={isActive ? { backgroundColor: 'var(--fb-red)' } : {}}
                 >
-                  <item.icon className="w-4 h-4" style={{ color: isActive ? 'var(--wise-ink)' : 'var(--muted-foreground)' }} />
+                  <item.icon className="w-4 h-4" style={{ color: isActive ? 'var(--fb-ink)' : 'var(--muted-foreground)' }} />
                 </div>
                 <span
                   className="text-xs font-semibold"
-                  style={{ color: isActive ? 'var(--wise-ink)' : undefined }}
+                  style={{ color: isActive ? 'var(--fb-ink)' : undefined }}
                 >
                   {item.label}
                 </span>

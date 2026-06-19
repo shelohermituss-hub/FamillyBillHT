@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils'
 
 function getGreeting() {
   const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (h < 12) return 'Bonjour'
+  if (h < 18) return 'Bon après-midi'
+  return 'Bonsoir'
 }
 
 function QuickAction({ icon: Icon, label, href, accent }: { icon: React.ElementType; label: string; href: string; accent?: boolean }) {
@@ -23,15 +23,15 @@ function QuickAction({ icon: Icon, label, href, accent }: { icon: React.ElementT
         "flex flex-col items-center gap-2 p-4 rounded-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer",
         accent ? "" : "bg-white/10 hover:bg-white/20"
       )}
-        style={accent ? { backgroundColor: 'var(--wise-lime)' } : {}}
+        style={accent ? { backgroundColor: 'var(--fb-red)' } : {}}
       >
         <div className={cn(
           "w-10 h-10 rounded-full flex items-center justify-center",
           accent ? "bg-black/10" : "bg-white/15"
         )}>
-          <Icon className="w-5 h-5" style={{ color: accent ? 'var(--wise-ink)' : 'white' }} />
+          <Icon className="w-5 h-5" style={{ color: 'white' }} />
         </div>
-        <span className="text-xs font-semibold" style={{ color: accent ? 'var(--wise-ink)' : 'white' }}>
+        <span className="text-xs font-semibold" style={{ color: 'white' }}>
           {label}
         </span>
       </div>
@@ -71,14 +71,14 @@ export function DashboardPage() {
   const firstName = profile?.full_name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'there'
 
   return (
-    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--wise-sage)' }}>
+    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--fb-light)' }}>
       <div className="max-w-5xl mx-auto px-4 pt-8 space-y-6">
 
         {/* Greeting */}
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground font-medium">{getGreeting()},</p>
-            <h1 className="text-2xl font-black" style={{ color: 'var(--wise-ink)' }}>
+            <h1 className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>
               {firstName} 👋
             </h1>
           </div>
@@ -98,7 +98,7 @@ export function DashboardPage() {
         </div>
 
         {/* Total balance hero */}
-        <div className="rounded-3xl p-6" style={{ backgroundColor: 'var(--wise-ink)' }}>
+        <div className="rounded-3xl p-6" style={{ backgroundColor: 'var(--fb-ink)' }}>
           <div className="flex items-start justify-between mb-6">
             <div>
               <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-2">Total balance</p>
@@ -120,28 +120,28 @@ export function DashboardPage() {
                 </button>
               </div>
               <p className="text-white/30 text-xs mt-1">
-                Across {accounts.length} {accounts.length === 1 ? 'currency' : 'currencies'} · approx. in EUR
+                {accounts.length} devise{accounts.length > 1 ? 's' : ''} · approx. en EUR
               </p>
             </div>
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--wise-lime)' }}>
-              <Sparkles className="w-6 h-6" style={{ color: 'var(--wise-ink)' }} />
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--fb-red)' }}>
+              <Sparkles className="w-6 h-6" style={{ color: 'white' }} />
             </div>
           </div>
 
           {/* Quick actions */}
           <div className="grid grid-cols-4 gap-2">
-            <QuickAction icon={ArrowUpRight} label="Send" href="/transfer" accent />
-            <QuickAction icon={ArrowDownLeft} label="Receive" href="/account" />
-            <QuickAction icon={Repeat} label="Convert" href="/transfer?mode=convert" />
-            <QuickAction icon={Plus} label="Add money" href="/account" />
+            <QuickAction icon={ArrowUpRight} label="Envoyer" href="/transfer" accent />
+            <QuickAction icon={ArrowDownLeft} label="Recevoir" href="/account" />
+            <QuickAction icon={Repeat} label="Convertir" href="/transfer?mode=convert" />
+            <QuickAction icon={Plus} label="Ajouter" href="/account" />
           </div>
         </div>
 
         {/* Currency accounts */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg" style={{ color: 'var(--wise-ink)' }}>Your currencies</h2>
-            <Link to="/account" className="text-sm font-semibold hover:underline" style={{ color: 'var(--wise-ink)' }}>
+            <h2 className="font-bold text-lg" style={{ color: 'var(--fb-ink)' }}>Vos devises</h2>
+            <Link to="/account" className="text-sm font-semibold hover:underline" style={{ color: 'var(--fb-ink)' }}>
               See all
             </Link>
           </div>
@@ -152,7 +152,7 @@ export function DashboardPage() {
               <div className="bg-white rounded-3xl p-6 border border-border text-center space-y-2">
                 <p className="text-sm text-muted-foreground">No currency accounts yet.</p>
                 <Link to="/account">
-                  <Button size="sm" className="rounded-2xl border-0 font-semibold mt-1" style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}>
+                  <Button size="sm" className="rounded-2xl border-0 font-semibold mt-1" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
                     Open your first account
                   </Button>
                 </Link>
@@ -176,7 +176,7 @@ export function DashboardPage() {
                         <p className="text-xs text-muted-foreground">{curr?.name}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="font-bold text-sm" style={{ color: 'var(--wise-ink)' }}>
+                        <p className="font-bold text-sm" style={{ color: 'var(--fb-ink)' }}>
                           {balanceVisible ? formatCurrency(acc.balance, acc.currency) : `${curr?.symbol ?? ''} ••••`}
                         </p>
                         {acc.iban && <p className="text-xs text-muted-foreground">IBAN</p>}
@@ -194,8 +194,8 @@ export function DashboardPage() {
         {(loading || jars.length > 0) && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-lg" style={{ color: 'var(--wise-ink)' }}>Jars</h2>
-              <button className="text-sm font-semibold hover:underline" style={{ color: 'var(--wise-ink)' }}>
+              <h2 className="font-bold text-lg" style={{ color: 'var(--fb-ink)' }}>Coffres</h2>
+              <button className="text-sm font-semibold hover:underline" style={{ color: 'var(--fb-ink)' }}>
                 + New jar
               </button>
             </div>
@@ -209,14 +209,14 @@ export function DashboardPage() {
                   <div key={jar.id} className="bg-white rounded-2xl p-5 border border-border hover:shadow-md transition-all">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="font-bold text-sm" style={{ color: 'var(--wise-ink)' }}>{jar.name}</p>
+                        <p className="font-bold text-sm" style={{ color: 'var(--fb-ink)' }}>{jar.name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{curr?.flag} {jar.currency}</p>
                       </div>
                       <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: jar.color + '30' }}>
                         🏺
                       </div>
                     </div>
-                    <p className="font-black text-xl mb-2" style={{ color: 'var(--wise-ink)' }}>
+                    <p className="font-black text-xl mb-2" style={{ color: 'var(--fb-ink)' }}>
                       {balanceVisible ? formatCurrency(jar.balance, jar.currency) : '••••'}
                     </p>
                     {jar.goal && (
@@ -228,7 +228,7 @@ export function DashboardPage() {
                           />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {progress.toFixed(0)}% of {formatCurrency(jar.goal, jar.currency)} goal
+                          {progress.toFixed(0)}% de l'objectif {formatCurrency(jar.goal, jar.currency)}
                         </p>
                       </div>
                     )}
@@ -242,8 +242,8 @@ export function DashboardPage() {
         {/* Recent transactions */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg" style={{ color: 'var(--wise-ink)' }}>Recent activity</h2>
-            <Link to="/history" className="text-sm font-semibold hover:underline" style={{ color: 'var(--wise-ink)' }}>
+            <h2 className="font-bold text-lg" style={{ color: 'var(--fb-ink)' }}>Activité récente</h2>
+            <Link to="/history" className="text-sm font-semibold hover:underline" style={{ color: 'var(--fb-ink)' }}>
               All transactions
             </Link>
           </div>
@@ -251,7 +251,7 @@ export function DashboardPage() {
             <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}</div>
           ) : transactions.length === 0 ? (
             <div className="bg-white rounded-3xl p-8 border border-border text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center" style={{ backgroundColor: 'var(--wise-sage)' }}>
+              <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center" style={{ backgroundColor: 'var(--fb-light)' }}>
                 <ArrowUpRight className="w-6 h-6 text-muted-foreground" />
               </div>
               <div>
@@ -259,7 +259,7 @@ export function DashboardPage() {
                 <p className="text-xs text-muted-foreground mt-1">Send money or add funds to get started.</p>
               </div>
               <Link to="/transfer">
-                <Button size="sm" className="rounded-2xl border-0 font-semibold" style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}>
+                <Button size="sm" className="rounded-2xl border-0 font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
                   Send money
                 </Button>
               </Link>

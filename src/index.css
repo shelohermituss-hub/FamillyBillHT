@@ -40,20 +40,20 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Wise design tokens */
-  --color-wise-lime: var(--wise-lime);
-  --color-wise-lime-hover: var(--wise-lime-hover);
-  --color-wise-sage: var(--wise-sage);
-  --color-wise-ink: var(--wise-ink);
+  /* FamillyBill HT design tokens */
+  --color-fb-red: var(--fb-red);
+  --color-fb-red-hover: var(--fb-red-hover);
+  --color-fb-light: var(--fb-light);
+  --color-fb-ink: var(--fb-ink);
 }
 
 :root {
   --radius: 0.625rem;
-  /* Wise brand colors */
-  --wise-lime: #9fe870;
-  --wise-lime-hover: #8edc5f;
-  --wise-sage: #e8ebe6;
-  --wise-ink: #0e0f0c;
+  /* FamillyBill HT brand colors */
+  --fb-red: #dc1f1f;
+  --fb-red-hover: #bf1a1a;
+  --fb-light: #eef2ff;
+  --fb-ink: #0d1b4b;
   /* Theming */
   --background: oklch(1 0 0);
   --foreground: oklch(0.1 0.01 120);
@@ -130,11 +130,12 @@
 }
 
 @layer utilities {
-  .wise-lime-btn {
-    background-color: var(--wise-lime);
-    color: var(--wise-ink);
+  .fb-red-btn {
+    background-color: var(--fb-red);
+    color: white;
   }
-  .wise-lime-btn:hover {
-    background-color: var(--wise-lime-hover);
+  .fb-red-btn:hover {
+    background-color: var(--fb-red-hover);
+    color: white;
   }
 }
