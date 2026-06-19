@@ -21,7 +21,16 @@ export function LoginPage() {
     setError('')
     const { error } = await signIn(email, password)
     if (error) {
-      setError(error.message)
+      const msg = error.message
+      if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
+        setError('Email ou mot de passe incorrect.')
+      } else if (msg.includes('Email not confirmed')) {
+        setError("Votre email n'est pas encore confirmé. Contactez l'administrateur.")
+      } else if (msg.includes('rate limit')) {
+        setError('Trop de tentatives. Attendez quelques minutes.')
+      } else {
+        setError(msg)
+      }
       setLoading(false)
     } else {
       navigate('/dashboard')
@@ -73,7 +82,7 @@ export function LoginPage() {
 
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-border">
             <div className="mb-8">
-              <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Log in</h1>
+              <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Connexion</h1>
               <p className="text-muted-foreground text-sm">Bienvenue. Entrez vos informations pour continuer.</p>
             </div>
 
@@ -92,7 +101,7 @@ export function LoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
+                <Label htmlFor="password" className="text-sm font-semibold">Mot de passe</Label>
                 <div className="relative">
                   <Input
                     id="password"

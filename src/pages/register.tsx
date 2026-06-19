@@ -25,12 +25,21 @@ export function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (password.length < 8) { setError('Password must be at least 8 characters'); return }
+    if (password.length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères.'); return }
     setLoading(true)
     setError('')
     const { error } = await signUp(email, password, fullName)
     if (error) {
-      setError(error.message)
+      const msg = error.message
+      if (msg.includes('already registered') || msg.includes('User already registered')) {
+        setError('Cet email est déjà utilisé. Connectez-vous à la place.')
+      } else if (msg.includes('rate limit') || msg.includes('email rate limit exceeded')) {
+        setError('Limite de vérification email atteinte. Désactivez la confirmation email dans Supabase ou réessayez dans 1h.')
+      } else if (msg.includes('Password should be')) {
+        setError('Le mot de passe doit contenir au moins 8 caractères.')
+      } else {
+        setError(msg)
+      }
       setLoading(false)
     } else {
       navigate('/dashboard')
@@ -77,13 +86,13 @@ export function RegisterPage() {
 
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-border">
             <div className="mb-8">
-              <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Create account</h1>
+              <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Créer un compte</h1>
               <p className="text-muted-foreground text-sm">Gratuit. Sans frais cachés.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="fullName" className="text-sm font-semibold">Full name</Label>
+                <Label htmlFor="fullName" className="text-sm font-semibold">Nom complet</Label>
                 <Input
                   id="fullName"
                   type="text"
@@ -109,7 +118,7 @@ export function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
+                <Label htmlFor="password" className="text-sm font-semibold">Mot de passe</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -144,13 +153,13 @@ export function RegisterPage() {
                 style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
                 disabled={loading}
               >
-                {loading ? 'Creating account...' : 'Créer un compte'}
+                {loading ? 'Création en cours...' : 'Créer un compte'}
                 {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
                 En vous inscrivant, vous acceptez nos{' '}
-                <a href="#" className="underline">Conditions d'utilisation</a> and{' '}
+                <a href="#" className="underline">Conditions d'utilisation</a> et{' '}
                 <a href="#" className="underline">Politique de confidentialité</a>.
               </p>
             </form>
@@ -159,7 +168,7 @@ export function RegisterPage() {
               <p className="text-sm text-muted-foreground">
                 Déjà un compte ?{' '}
                 <Link to="/login" className="font-semibold underline underline-offset-2" style={{ color: 'var(--fb-ink)' }}>
-                  Log in
+                  Se connecter
                 </Link>
               </p>
             </div>
