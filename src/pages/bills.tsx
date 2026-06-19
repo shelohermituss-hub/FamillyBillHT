@@ -26,19 +26,16 @@ function ProviderLogo({
   size?: 'sm' | 'md' | 'lg'
 }) {
   const cls = size === 'lg' ? 'w-16 h-16 rounded-2xl text-3xl'
-    : size === 'sm' ? 'w-9 h-9 rounded-xl text-lg'
-    : 'w-12 h-12 rounded-2xl text-2xl'
+    : size === 'sm' ? 'w-11 h-11 rounded-xl text-xl'
+    : 'w-14 h-14 rounded-2xl text-2xl'
 
   if (provider.logo) {
     return (
-      <div
-        className={`${cls} overflow-hidden shrink-0 flex items-center justify-center`}
-        style={{ background: provider.bg }}
-      >
+      <div className={`${cls} overflow-hidden shrink-0 flex items-center justify-center bg-white border border-[var(--border)]`}>
         <img
           src={provider.logo}
           alt={provider.shortName}
-          className="w-full h-full object-contain p-1"
+          className="w-full h-full object-contain"
         />
       </div>
     )
@@ -61,19 +58,16 @@ function CategoryIcon({
   size?: 'sm' | 'md' | 'lg'
 }) {
   const cls = size === 'lg' ? 'w-14 h-14 rounded-2xl text-3xl'
-    : size === 'sm' ? 'w-8 h-8 rounded-xl text-base'
+    : size === 'sm' ? 'w-10 h-10 rounded-xl text-base'
     : 'w-12 h-12 rounded-2xl text-2xl'
 
   if (cat.icon) {
     return (
-      <div
-        className={`${cls} overflow-hidden shrink-0 flex items-center justify-center`}
-        style={{ background: cat.bg }}
-      >
+      <div className={`${cls} overflow-hidden shrink-0 flex items-center justify-center bg-white border border-[var(--border)]`}>
         <img
           src={cat.icon}
           alt={cat.label}
-          className="w-full h-full object-contain p-1.5"
+          className="w-full h-full object-contain"
         />
       </div>
     )
@@ -466,17 +460,15 @@ function SuccessStep({
 
   return (
     <div className="card-flat p-8 text-center space-y-6 animate-scale-in">
-      <div
-        className="w-20 h-20 rounded-3xl overflow-hidden mx-auto flex items-center justify-center"
-        style={{ background: provider.logo ? 'white' : 'var(--lime)' }}
-      >
-        {provider.logo
-          ? <img src={provider.logo} alt={provider.shortName} className="w-full h-full object-contain p-2" />
-          : <span className="text-4xl">{provider.emoji}</span>}
-      </div>
-
-      <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto -mt-2" style={{ background: 'var(--lime)' }}>
-        <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--ink)' }} />
+      <div className="relative w-24 h-24 mx-auto">
+        <div className="w-24 h-24 rounded-3xl overflow-hidden border border-[var(--border)] bg-white flex items-center justify-center">
+          {provider.logo
+            ? <img src={provider.logo} alt={provider.shortName} className="w-full h-full object-contain" />
+            : <span className="text-5xl">{provider.emoji}</span>}
+        </div>
+        <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center border-2 border-white" style={{ background: 'var(--lime)' }}>
+          <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--ink)' }} />
+        </div>
       </div>
 
       <div>
