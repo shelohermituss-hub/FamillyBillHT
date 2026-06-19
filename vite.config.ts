@@ -16,7 +16,7 @@ export default defineConfig({
         name: "FamillyBill HT",
         short_name: "FamillyBill",
         description: "Gestion financière familiale — FamillyBill HT",
-        theme_color: "#1a3cff",
+        theme_color: "#0d1b4b",
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait",

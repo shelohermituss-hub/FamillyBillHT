@@ -44,22 +44,22 @@ export function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="pt-28 pb-20 px-4" style={{ backgroundColor: 'var(--wise-sage)' }}>
+      <section className="pt-28 pb-20 px-4" style={{ backgroundColor: 'var(--fb-light)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left copy */}
             <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
                 <Star className="w-3 h-3 fill-current" />
                 N°1 pour les transferts en Haïti
               </div>
 
-              <h1 className="font-black leading-none tracking-tight" style={{ fontSize: 'clamp(3rem, 8vw, 7.875rem)', color: 'var(--wise-ink)', fontWeight: 900, lineHeight: 1 }}>
+              <h1 className="font-black leading-none tracking-tight" style={{ fontSize: 'clamp(3rem, 8vw, 7.875rem)', color: 'var(--fb-ink)', fontWeight: 900, lineHeight: 1 }}>
                 Famille<br />
-                <span style={{ color: 'var(--wise-ink)' }}>sans</span><br />
+                <span style={{ color: 'var(--fb-ink)' }}>sans</span><br />
                 <span className="relative">
                   frontières
-                  <span className="absolute -bottom-2 left-0 right-0 h-1.5 rounded-full" style={{ backgroundColor: 'var(--wise-lime)' }} />
+                  <span className="absolute -bottom-2 left-0 right-0 h-1.5 rounded-full" style={{ backgroundColor: 'var(--fb-red)' }} />
                 </span>
               </h1>
 
@@ -72,7 +72,7 @@ export function LandingPage() {
                   <Button
                     size="lg"
                     className="rounded-2xl font-semibold h-12 px-8 border-0"
-                    style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
+                    style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
                   >
                     Commencer — c'est gratuit
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -93,7 +93,7 @@ export function LandingPage() {
               <div className="flex flex-wrap gap-4">
                 {TRUST_BADGES.map(b => (
                   <div key={b.label} className="text-center">
-                    <p className="text-2xl font-black" style={{ color: 'var(--wise-ink)' }}>{b.value}</p>
+                    <p className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>{b.value}</p>
                     <p className="text-xs text-muted-foreground">{b.label}</p>
                   </div>
                 ))}
@@ -126,20 +126,20 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 space-y-4">
             <Badge variant="outline" className="rounded-full">Pourquoi FamillyBill HT</Badge>
-            <h2 className="text-5xl font-black tracking-tight" style={{ color: 'var(--wise-ink)' }}>
+            <h2 className="text-5xl font-black tracking-tight" style={{ color: 'var(--fb-ink)' }}>
               Conçu pour<br />votre famille.
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
               <div key={i} className="p-8 rounded-3xl border border-border hover:border-wise-ink/20 transition-all hover:shadow-lg group">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: 'var(--wise-lime)' }}>
-                  <f.icon className="w-6 h-6" style={{ color: 'var(--wise-ink)' }} />
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: 'var(--fb-red)' }}>
+                  <f.icon className="w-6 h-6" style={{ color: 'var(--fb-ink)' }} />
                 </div>
-                <div className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold mb-3" style={{ backgroundColor: 'var(--wise-sage)', color: 'var(--wise-ink)' }}>
+                <div className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold mb-3" style={{ backgroundColor: 'var(--fb-light)', color: 'var(--fb-ink)' }}>
                   {f.badge}
                 </div>
-                <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--wise-ink)' }}>{f.title}</h3>
+                <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--fb-ink)' }}>{f.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -148,12 +148,12 @@ export function LandingPage() {
       </section>
 
       {/* Multi-currency account */}
-      <section className="py-24 px-4" style={{ backgroundColor: 'var(--wise-sage)' }}>
+      <section className="py-24 px-4" style={{ backgroundColor: 'var(--fb-light)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <Badge variant="outline" className="rounded-full">Compte multi-devises</Badge>
-              <h2 className="text-5xl font-black tracking-tight leading-tight" style={{ color: 'var(--wise-ink)' }}>
+              <h2 className="text-5xl font-black tracking-tight leading-tight" style={{ color: 'var(--fb-ink)' }}>
                 10+ devises.<br />Dépensez partout.
               </h2>
               <p className="text-lg text-muted-foreground">
@@ -167,8 +167,8 @@ export function LandingPage() {
                   "Dépensez dans 10+ pays avec la carte FamillyBill HT",
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: 'var(--wise-lime)' }}>
-                      <Check className="w-3 h-3" style={{ color: 'var(--wise-ink)' }} />
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: 'var(--fb-red)' }}>
+                      <Check className="w-3 h-3" style={{ color: 'white' }} />
                     </div>
                     <span className="text-sm font-medium">{item}</span>
                   </li>
@@ -178,7 +178,7 @@ export function LandingPage() {
                 <Button
                   size="lg"
                   className="rounded-2xl font-semibold h-12 px-8 border-0 mt-2"
-                  style={{ backgroundColor: 'var(--wise-ink)', color: 'white' }}
+                  style={{ backgroundColor: 'var(--fb-ink)', color: 'white' }}
                 >
                   Ouvrir votre compte
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -200,10 +200,10 @@ export function LandingPage() {
                   <span className="text-3xl">{card.flag}</span>
                   <div className="flex-1">
                     <p className="text-xs text-muted-foreground font-medium">{card.account}</p>
-                    <p className="font-bold text-lg" style={{ color: 'var(--wise-ink)' }}>{card.currency} {card.balance}</p>
+                    <p className="font-bold text-lg" style={{ color: 'var(--fb-ink)' }}>{card.currency} {card.balance}</p>
                   </div>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-                    <ChevronRight className="w-4 h-4" style={{ color: 'var(--wise-ink)' }} />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--fb-red)' }}>
+                    <ChevronRight className="w-4 h-4" style={{ color: 'var(--fb-ink)' }} />
                   </div>
                 </div>
               ))}
@@ -221,7 +221,7 @@ export function LandingPage() {
               <div className="relative">
                 <div
                   className="w-80 h-48 rounded-3xl p-6 flex flex-col justify-between shadow-2xl"
-                  style={{ background: 'linear-gradient(135deg, var(--wise-ink) 0%, #2d2f2b 100%)' }}
+                  style={{ background: 'linear-gradient(135deg, var(--fb-ink) 0%, #2d2f2b 100%)' }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -239,12 +239,12 @@ export function LandingPage() {
                     </div>
                   </div>
                 </div>
-                <div className="absolute -bottom-4 -right-4 w-64 h-40 rounded-3xl opacity-30" style={{ backgroundColor: 'var(--wise-lime)' }} />
+                <div className="absolute -bottom-4 -right-4 w-64 h-40 rounded-3xl opacity-30" style={{ backgroundColor: 'var(--fb-red)' }} />
               </div>
             </div>
             <div className="space-y-6">
               <Badge variant="outline" className="rounded-full">Carte FamillyBill HT</Badge>
-              <h2 className="text-5xl font-black tracking-tight leading-tight" style={{ color: 'var(--wise-ink)' }}>
+              <h2 className="text-5xl font-black tracking-tight leading-tight" style={{ color: 'var(--fb-ink)' }}>
                 Payez dans 10+<br />pays.
               </h2>
               <p className="text-lg text-muted-foreground">
@@ -258,7 +258,7 @@ export function LandingPage() {
                   { icon: Shield, label: 'Bloquer en tout temps', desc: 'Contrôle total' },
                 ].map((item, i) => (
                   <div key={i} className="p-4 rounded-2xl border border-border">
-                    <item.icon className="w-5 h-5 mb-2" style={{ color: 'var(--wise-lime)' }} />
+                    <item.icon className="w-5 h-5 mb-2" style={{ color: 'var(--fb-red)' }} />
                     <p className="font-semibold text-sm">{item.label}</p>
                     <p className="text-xs text-muted-foreground">{item.desc}</p>
                   </div>
@@ -268,7 +268,7 @@ export function LandingPage() {
                 <Button
                   size="lg"
                   className="rounded-2xl font-semibold h-12 px-8 border-0"
-                  style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
+                  style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
                 >
                   Obtenez votre carte FamillyBill HT
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -280,16 +280,16 @@ export function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 px-4" style={{ backgroundColor: 'var(--wise-sage)' }}>
+      <section className="py-24 px-4" style={{ backgroundColor: 'var(--fb-light)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 space-y-4">
             <div className="flex items-center justify-center gap-1">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-current" style={{ color: 'var(--wise-lime)' }} />
+                <Star key={i} className="w-5 h-5 fill-current" style={{ color: 'var(--fb-red)' }} />
               ))}
               <span className="ml-2 text-sm font-semibold text-muted-foreground">4.9/5 de plus de 10 000 avis</span>
             </div>
-            <h2 className="text-5xl font-black tracking-tight" style={{ color: 'var(--wise-ink)' }}>
+            <h2 className="text-5xl font-black tracking-tight" style={{ color: 'var(--fb-ink)' }}>
               Aimé par des milliers
             </h2>
           </div>
@@ -298,12 +298,12 @@ export function LandingPage() {
               <div key={i} className="bg-white p-8 rounded-3xl border border-border">
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(t.rating)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 fill-current" style={{ color: 'var(--wise-lime)' }} />
+                    <Star key={j} className="w-4 h-4 fill-current" style={{ color: 'var(--fb-red)' }} />
                   ))}
                 </div>
                 <p className="text-sm leading-relaxed text-foreground mb-6">"{t.text}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: 'var(--wise-ink)', color: 'white' }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: 'var(--fb-ink)', color: 'white' }}>
                     {t.name[0]}
                   </div>
                   <div>
@@ -318,10 +318,10 @@ export function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 px-4" style={{ backgroundColor: 'var(--wise-ink)' }}>
+      <section className="py-24 px-4" style={{ backgroundColor: 'var(--fb-ink)' }}>
         <div className="max-w-3xl mx-auto text-center space-y-8">
           <div className="flex items-center justify-center gap-2">
-            <Users className="w-5 h-5" style={{ color: 'var(--wise-lime)' }} />
+            <Users className="w-5 h-5" style={{ color: 'var(--fb-red)' }} />
             <span className="font-semibold text-white/80 text-sm">Rejoignez 50 000 familles</span>
           </div>
           <h2 className="text-5xl font-black text-white tracking-tight leading-tight">
@@ -333,7 +333,7 @@ export function LandingPage() {
               <Button
                 size="lg"
                 className="rounded-2xl font-semibold h-14 px-10 text-base border-0"
-                style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
+                style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
               >
                 Créer votre compte gratuit
               </Button>
@@ -379,7 +379,7 @@ export function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-border">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="FamillyBill HT" className="w-6 h-6 object-contain" />
-              <span className="font-black text-sm" style={{ color: 'var(--wise-ink)' }}>FamillyBill HT</span>
+              <span className="font-black text-sm" style={{ color: 'var(--fb-ink)' }}>FamillyBill HT</span>
             </div>
             <p className="text-xs text-muted-foreground text-center">
               © 2025 FamillyBill HT. Tous droits réservés.

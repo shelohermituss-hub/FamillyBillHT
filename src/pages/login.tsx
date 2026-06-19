@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Globe, ArrowRight, Check } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,30 +29,28 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--wise-sage)' }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--fb-light)' }}>
       {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-1/2 p-12" style={{ backgroundColor: 'var(--wise-ink)' }}>
+      <div className="hidden lg:flex flex-col justify-between w-1/2 p-12" style={{ backgroundColor: 'var(--fb-ink)' }}>
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-            <Globe className="w-4 h-4" style={{ color: 'var(--wise-ink)' }} />
-          </div>
-          <span className="text-2xl font-black text-white">Wise</span>
+          <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
+          <span className="text-2xl font-black text-white">FamillyBill <span style={{ color: 'var(--fb-red)' }}>HT</span></span>
         </Link>
         <div className="space-y-8">
           <h2 className="text-5xl font-black text-white leading-tight">
-            Welcome back to<br />
-            <span style={{ color: 'var(--wise-lime)' }}>borderless</span><br />
-            money.
+            Bienvenue sur<br />
+            <span style={{ color: 'var(--fb-red)' }}>FamillyBill</span><br />
+            HT.
           </h2>
           <div className="space-y-4">
             {[
-              'Real mid-market exchange rate',
-              'Send to 160+ countries',
-              '16 million customers worldwide',
+              'Taux de change réel',
+              'Envoyez dans 10+ pays',
+              '50 000 familles haïtiennes',
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--wise-lime)' }}>
-                  <Check className="w-3 h-3" style={{ color: 'var(--wise-ink)' }} />
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--fb-red)' }}>
+                  <Check className="w-3 h-3" style={{ color: 'var(--fb-ink)' }} />
                 </div>
                 <span className="text-white/80 text-sm">{item}</span>
               </div>
@@ -60,7 +58,7 @@ export function LoginPage() {
           </div>
         </div>
         <p className="text-white/30 text-xs">
-          © 2024 Wise Payments Ltd. FCA authorised.
+          © 2025 FamillyBill HT. Tous droits réservés.
         </p>
       </div>
 
@@ -69,21 +67,19 @@ export function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2 lg:hidden mb-8 justify-center">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-              <Globe className="w-4 h-4" style={{ color: 'var(--wise-ink)' }} />
-            </div>
-            <span className="text-2xl font-black" style={{ color: 'var(--wise-ink)' }}>Wise</span>
+            <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
+            <span className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>FamillyBill <span className="text-red-600">HT</span></span>
           </Link>
 
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-border">
             <div className="mb-8">
-              <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--wise-ink)' }}>Log in</h1>
-              <p className="text-muted-foreground text-sm">Welcome back. Enter your details to continue.</p>
+              <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Log in</h1>
+              <p className="text-muted-foreground text-sm">Bienvenue. Entrez vos informations pour continuer.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-sm font-semibold">Email address</Label>
+                <Label htmlFor="email" className="text-sm font-semibold">Adresse email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -101,7 +97,7 @@ export function LoginPage() {
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Your password"
+                    placeholder="Votre mot de passe"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="h-12 rounded-2xl pr-12"
@@ -126,19 +122,19 @@ export function LoginPage() {
               <Button
                 type="submit"
                 className="w-full h-12 rounded-2xl font-semibold text-base border-0"
-                style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
+                style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
                 disabled={loading}
               >
-                {loading ? 'Logging in...' : 'Log in'}
+                {loading ? 'Connexion...' : 'Se connecter'}
                 {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <Link to="/register" className="font-semibold underline underline-offset-2" style={{ color: 'var(--wise-ink)' }}>
-                  Register for free
+                Pas encore de compte ?{' '}
+                <Link to="/register" className="font-semibold underline underline-offset-2" style={{ color: 'var(--fb-ink)' }}>
+                  S'inscrire gratuitement
                 </Link>
               </p>
             </div>

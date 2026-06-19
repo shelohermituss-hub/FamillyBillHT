@@ -17,7 +17,7 @@ export function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
-            <span className="text-xl font-black tracking-tight" style={{ color: 'var(--wise-ink)' }}>
+            <span className="text-xl font-black tracking-tight" style={{ color: 'var(--fb-ink)' }}>
               FamillyBill <span className="text-red-600">HT</span>
             </span>
           </Link>
@@ -52,7 +52,7 @@ export function Navbar() {
                 </Link>
                 <Button
                   size="sm"
-                  className="rounded-2xl font-semibold wise-lime-btn border-0"
+                  className="rounded-2xl font-semibold fb-red-btn border-0"
                   onClick={() => signOut()}
                 >
                   Sign out
@@ -69,7 +69,7 @@ export function Navbar() {
                   <Button
                     size="sm"
                     className="rounded-2xl font-semibold border-0"
-                    style={{ backgroundColor: 'var(--wise-ink)', color: 'white' }}
+                    style={{ backgroundColor: 'var(--fb-ink)', color: 'white' }}
                   >
                     Register
                   </Button>
