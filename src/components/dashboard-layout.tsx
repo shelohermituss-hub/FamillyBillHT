@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, ArrowUpRight, Wallet, CreditCard, Clock, Globe, LogOut, Menu, X } from 'lucide-react'
+import { Home, ArrowUpRight, Wallet, CreditCard, Clock, LogOut, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
@@ -35,10 +35,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-border fixed inset-y-0 left-0 z-30">
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-              <Globe className="w-4 h-4" style={{ color: 'var(--wise-ink)' }} />
-            </div>
-            <span className="text-xl font-black" style={{ color: 'var(--wise-ink)' }}>Wise</span>
+            <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-black" style={{ color: 'var(--wise-ink)' }}>FamillyBill <span className="text-red-600">HT</span></span>
           </Link>
         </div>
 
@@ -85,10 +83,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-border px-4 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-            <Globe className="w-3 h-3" style={{ color: 'var(--wise-ink)' }} />
-          </div>
-          <span className="text-lg font-black" style={{ color: 'var(--wise-ink)' }}>Wise</span>
+          <img src="/logo.png" alt="FamillyBill HT" className="w-6 h-6 object-contain" />
+          <span className="text-lg font-black" style={{ color: 'var(--wise-ink)' }}>FamillyBill <span className="text-red-600">HT</span></span>
         </Link>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-accent">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

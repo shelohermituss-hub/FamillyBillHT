@@ -5,37 +5,37 @@ import { Badge } from '@/components/ui/badge'
 import { CurrencyConverter } from '@/components/currency-converter'
 
 const TRUST_BADGES = [
-  { value: '16M+', label: 'customers worldwide' },
-  { value: '160+', label: 'countries supported' },
-  { value: '40+', label: 'currencies supported' },
-  { value: '£9B+', label: 'saved in fees' },
+  { value: '50K+', label: 'familles haïtiennes' },
+  { value: '10+', label: 'devises supportées' },
+  { value: '24/7', label: 'service disponible' },
+  { value: '0%', label: 'frais cachés' },
 ]
 
 const FEATURES = [
   {
     icon: TrendingDown,
-    title: 'Always the real rate',
-    desc: 'We use the mid-market exchange rate — the one you see on Google. No markup, no hidden fees.',
-    badge: 'Up to 8x cheaper',
+    title: 'Taux de change réel',
+    desc: 'Nous utilisons le taux officiel HTG/USD. Pas de majoration, pas de frais cachés sur chaque transfert.',
+    badge: "Jusqu'à 8x moins cher",
   },
   {
     icon: Zap,
-    title: 'Money moves fast',
-    desc: '80% of transfers arrive in 24 hours. Track every step of your transfer in real time.',
-    badge: 'Often instant',
+    title: 'Transferts rapides',
+    desc: '80% des transferts arrivent dans les 24h. Suivez chaque étape de votre transfert en temps réel.',
+    badge: 'Souvent instantané',
   },
   {
     icon: Shield,
-    title: 'Safe & regulated',
-    desc: 'Licensed by financial authorities in 50+ countries. Your money is always protected.',
-    badge: 'FCA regulated',
+    title: 'Sûr & sécurisé',
+    desc: 'Vos données et votre argent sont protégés par un chiffrement de niveau bancaire. Votre famille est en sécurité.',
+    badge: 'Sécurité bancaire',
   },
 ]
 
 const TESTIMONIALS = [
-  { name: 'Sarah K.', role: 'Freelancer', text: "I save hundreds every month compared to my bank. The transparency is incredible — I always know exactly what I'm paying.", rating: 5 },
-  { name: 'Marco B.', role: 'Small business owner', text: 'Managing multiple currencies for my international team has never been easier. Wise is a game changer.', rating: 5 },
-  { name: 'Priya M.', role: 'Digital nomad', text: 'The multi-currency card is perfect for traveling. I always get the best rate without thinking about it.', rating: 5 },
+  { name: 'Marie J.', role: 'Diaspora haïtienne', text: "J'envoie de l'argent à ma famille en Haïti chaque mois. FamillyBill HT me fait économiser des centaines de gourdes sur les frais.", rating: 5 },
+  { name: 'Pierre D.', role: 'Chef de famille', text: "Gérer les finances de toute la famille n'a jamais été aussi simple. Je vois tout en un seul endroit.", rating: 5 },
+  { name: 'Claudette M.', role: 'Mère au foyer', text: "La carte multi-devises est parfaite pour les achats en ligne et les voyages. Je reçois toujours le meilleur taux.", rating: 5 },
 ]
 
 const COUNTRIES = ['🇺🇸', '🇬🇧', '🇪🇺', '🇨🇦', '🇦🇺', '🇯🇵', '🇮🇳', '🇧🇷', '🇸🇬', '🇲🇽']
@@ -51,20 +51,20 @@ export function LandingPage() {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}>
                 <Star className="w-3 h-3 fill-current" />
-                Rated #1 for international money transfers
+                N°1 pour les transferts en Haïti
               </div>
 
               <h1 className="font-black leading-none tracking-tight" style={{ fontSize: 'clamp(3rem, 8vw, 7.875rem)', color: 'var(--wise-ink)', fontWeight: 900, lineHeight: 1 }}>
-                Money<br />
-                <span style={{ color: 'var(--wise-ink)' }}>without</span><br />
+                Famille<br />
+                <span style={{ color: 'var(--wise-ink)' }}>sans</span><br />
                 <span className="relative">
-                  borders
+                  frontières
                   <span className="absolute -bottom-2 left-0 right-0 h-1.5 rounded-full" style={{ backgroundColor: 'var(--wise-lime)' }} />
                 </span>
               </h1>
 
               <p className="text-lg text-muted-foreground leading-relaxed max-w-md">
-                Send money abroad with the real exchange rate. 8× cheaper than banks, 16 million customers trust us worldwide.
+                Envoyez de l'argent en Haïti au taux réel. 8× moins cher que les banques. Plus de 50 000 familles nous font confiance.
               </p>
 
               <div className="flex flex-wrap gap-3">
@@ -74,7 +74,7 @@ export function LandingPage() {
                     className="rounded-2xl font-semibold h-12 px-8 border-0"
                     style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
                   >
-                    Get started — it's free
+                    Commencer — c'est gratuit
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
@@ -84,7 +84,7 @@ export function LandingPage() {
                     variant="outline"
                     className="rounded-2xl font-semibold h-12 px-8"
                   >
-                    Log in
+                    Se connecter
                   </Button>
                 </Link>
               </div>
@@ -111,12 +111,12 @@ export function LandingPage() {
       {/* Countries strip */}
       <section className="py-6 px-4 bg-white border-b border-border overflow-hidden">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <p className="text-sm font-semibold text-muted-foreground shrink-0">We serve</p>
+          <p className="text-sm font-semibold text-muted-foreground shrink-0">Nous desservons</p>
           <div className="flex items-center gap-3 flex-wrap">
             {COUNTRIES.map((flag, i) => (
               <span key={i} className="text-2xl hover:scale-110 transition-transform cursor-default">{flag}</span>
             ))}
-            <span className="text-sm text-muted-foreground font-medium">160+ countries</span>
+            <span className="text-sm text-muted-foreground font-medium">10+ pays</span>
           </div>
         </div>
       </section>
@@ -125,9 +125,9 @@ export function LandingPage() {
       <section className="py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 space-y-4">
-            <Badge variant="outline" className="rounded-full">Why Wise</Badge>
+            <Badge variant="outline" className="rounded-full">Pourquoi FamillyBill HT</Badge>
             <h2 className="text-5xl font-black tracking-tight" style={{ color: 'var(--wise-ink)' }}>
-              Built different.<br />Built better.
+              Conçu pour<br />votre famille.
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -152,19 +152,19 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge variant="outline" className="rounded-full">Multi-currency account</Badge>
+              <Badge variant="outline" className="rounded-full">Compte multi-devises</Badge>
               <h2 className="text-5xl font-black tracking-tight leading-tight" style={{ color: 'var(--wise-ink)' }}>
-                Hold 40+ currencies.<br />Spend anywhere.
+                10+ devises.<br />Dépensez partout.
               </h2>
               <p className="text-lg text-muted-foreground">
-                Open your Wise account and get local account details in 22 currencies — including USD, EUR, GBP, CAD, AUD and more.
+                Ouvrez votre compte FamillyBill HT et obtenez des coordonnées bancaires locales en HTG, USD, EUR et plus encore.
               </p>
               <ul className="space-y-3">
                 {[
-                  'Receive payments like a local — no international fees',
-                  'Real exchange rate when converting between currencies',
-                  'Local account numbers for USD, EUR, GBP, AUD and more',
-                  'Spend in 160+ countries with the Wise card',
+                  'Recevez des paiements comme un local — sans frais internationaux',
+                  'Taux de change réel lors des conversions entre devises',
+                  'Numéros de compte locaux pour HTG, USD, EUR et plus',
+                  "Dépensez dans 10+ pays avec la carte FamillyBill HT",
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: 'var(--wise-lime)' }}>
@@ -180,7 +180,7 @@ export function LandingPage() {
                   className="rounded-2xl font-semibold h-12 px-8 border-0 mt-2"
                   style={{ backgroundColor: 'var(--wise-ink)', color: 'white' }}
                 >
-                  Open your account
+                  Ouvrir votre compte
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -188,9 +188,9 @@ export function LandingPage() {
             {/* Balance cards visual */}
             <div className="relative flex flex-col gap-4">
               {[
-                { flag: '🇪🇺', currency: 'EUR', balance: '2,450.00', account: 'IBAN: BE71 0961 2345 6769' },
+                { flag: '🇭🇹', currency: 'HTG', balance: '245,000.00', account: 'Numéro: HT71 0961 2345 6769' },
                 { flag: '🇺🇸', currency: 'USD', balance: '1,820.50', account: 'Routing: 026073150' },
-                { flag: '🇬🇧', currency: 'GBP', balance: '890.25', account: 'Sort code: 23-14-70' },
+                { flag: '🇪🇺', currency: 'EUR', balance: '890.25', account: 'IBAN: FR76 3000 6000 0112' },
               ].map((card, i) => (
                 <div
                   key={i}
@@ -225,16 +225,16 @@ export function LandingPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full" style={{ backgroundColor: 'var(--wise-lime)' }} />
-                      <span className="text-white font-black text-sm">Wise</span>
+                      <img src="/logo.png" alt="FamillyBill HT" className="w-6 h-6 object-contain" />
+                      <span className="text-white font-black text-sm">FamillyBill</span>
                     </div>
                     <Globe className="w-5 h-5 text-white/60" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-xs mb-1">Multi-currency</p>
+                    <p className="text-white/60 text-xs mb-1">Multi-devises</p>
                     <p className="text-white font-mono tracking-widest text-sm">•••• •••• •••• 4729</p>
                     <div className="flex items-center justify-between mt-3">
-                      <p className="text-white/80 text-xs">J. SMITH</p>
+                      <p className="text-white/80 text-xs">J. PIERRE</p>
                       <CreditCard className="w-6 h-6 text-white/60" />
                     </div>
                   </div>
@@ -243,19 +243,19 @@ export function LandingPage() {
               </div>
             </div>
             <div className="space-y-6">
-              <Badge variant="outline" className="rounded-full">Wise Debit Card</Badge>
+              <Badge variant="outline" className="rounded-full">Carte FamillyBill HT</Badge>
               <h2 className="text-5xl font-black tracking-tight leading-tight" style={{ color: 'var(--wise-ink)' }}>
-                Pay in 160+<br />countries.
+                Payez dans 10+<br />pays.
               </h2>
               <p className="text-lg text-muted-foreground">
-                The Wise card automatically uses the best currency in your account. No foreign transaction fees. Always the real exchange rate.
+                La carte FamillyBill HT utilise automatiquement la meilleure devise de votre compte. Sans frais de transaction étrangers. Toujours le taux réel.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { icon: Globe, label: '160+ countries', desc: 'Use it worldwide' },
-                  { icon: TrendingDown, label: 'No markup', desc: 'Mid-market rate always' },
-                  { icon: Zap, label: '49 currencies', desc: 'Auto-select best balance' },
-                  { icon: Shield, label: 'Freeze anytime', desc: 'Full card controls' },
+                  { icon: Globe, label: '10+ pays', desc: 'Utilisez-la partout' },
+                  { icon: TrendingDown, label: 'Sans majoration', desc: 'Taux marché toujours' },
+                  { icon: Zap, label: '10 devises', desc: 'Sélection auto du solde' },
+                  { icon: Shield, label: 'Bloquer en tout temps', desc: 'Contrôle total' },
                 ].map((item, i) => (
                   <div key={i} className="p-4 rounded-2xl border border-border">
                     <item.icon className="w-5 h-5 mb-2" style={{ color: 'var(--wise-lime)' }} />
@@ -270,7 +270,7 @@ export function LandingPage() {
                   className="rounded-2xl font-semibold h-12 px-8 border-0"
                   style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
                 >
-                  Get your Wise card
+                  Obtenez votre carte FamillyBill HT
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -287,10 +287,10 @@ export function LandingPage() {
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="w-5 h-5 fill-current" style={{ color: 'var(--wise-lime)' }} />
               ))}
-              <span className="ml-2 text-sm font-semibold text-muted-foreground">4.9/5 from 180,000+ reviews</span>
+              <span className="ml-2 text-sm font-semibold text-muted-foreground">4.9/5 de plus de 10 000 avis</span>
             </div>
             <h2 className="text-5xl font-black tracking-tight" style={{ color: 'var(--wise-ink)' }}>
-              Loved by millions
+              Aimé par des milliers
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -322,12 +322,12 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto text-center space-y-8">
           <div className="flex items-center justify-center gap-2">
             <Users className="w-5 h-5" style={{ color: 'var(--wise-lime)' }} />
-            <span className="font-semibold text-white/80 text-sm">Join 16 million people</span>
+            <span className="font-semibold text-white/80 text-sm">Rejoignez 50 000 familles</span>
           </div>
           <h2 className="text-5xl font-black text-white tracking-tight leading-tight">
-            Start sending money<br />the wise way
+            Commencez à envoyer<br />avec FamillyBill HT
           </h2>
-          <p className="text-white/60 text-lg">No fees to open an account. No hidden costs. Ever.</p>
+          <p className="text-white/60 text-lg">Aucun frais pour ouvrir un compte. Aucun coût caché. Jamais.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/register">
               <Button
@@ -335,7 +335,7 @@ export function LandingPage() {
                 className="rounded-2xl font-semibold h-14 px-10 text-base border-0"
                 style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
               >
-                Create your free account
+                Créer votre compte gratuit
               </Button>
             </Link>
             <Link to="/login">
@@ -344,12 +344,12 @@ export function LandingPage() {
                 variant="outline"
                 className="rounded-2xl font-semibold h-14 px-10 text-base border-white/20 text-white hover:bg-white/10 hover:text-white"
               >
-                Log in
+                Se connecter
               </Button>
             </Link>
           </div>
           <p className="text-white/40 text-xs">
-            Wise is authorised by the Financial Conduct Authority. Protected up to €100,000.
+            FamillyBill HT est sécurisé avec un chiffrement de niveau bancaire.
           </p>
         </div>
       </section>
@@ -359,10 +359,10 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             {[
-              { title: 'Personal', items: ['Send money', 'Receive money', 'Multi-currency account', 'Debit card', 'Mobile app'] },
-              { title: 'Business', items: ['Business account', 'Payroll', 'API', 'Enterprise', 'Partner with us'] },
-              { title: 'Company', items: ['About us', 'Newsroom', 'Careers', 'Mission', 'Investors'] },
-              { title: 'Help', items: ['Help Center', 'Contact us', 'Community', 'Security', 'Accessibility'] },
+              { title: 'Particuliers', items: ["Envoyer de l'argent", "Recevoir de l'argent", 'Compte multi-devises', 'Carte de débit', 'Application mobile'] },
+              { title: 'Entreprises', items: ['Compte entreprise', 'Paie', 'API', 'Grandes entreprises', 'Partenariat'] },
+              { title: 'Entreprise', items: ['À propos', 'Actualités', 'Carrières', 'Mission', 'Investisseurs'] },
+              { title: 'Aide', items: ["Centre d'aide", 'Contactez-nous', 'Communauté', 'Sécurité', 'Accessibilité'] },
             ].map(col => (
               <div key={col.title}>
                 <p className="font-semibold text-sm mb-4">{col.title}</p>
@@ -378,13 +378,11 @@ export function LandingPage() {
           </div>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-border">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-                <Globe className="w-3 h-3" style={{ color: 'var(--wise-ink)' }} />
-              </div>
-              <span className="font-black text-sm" style={{ color: 'var(--wise-ink)' }}>Wise</span>
+              <img src="/logo.png" alt="FamillyBill HT" className="w-6 h-6 object-contain" />
+              <span className="font-black text-sm" style={{ color: 'var(--wise-ink)' }}>FamillyBill HT</span>
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              © 2024 Wise Payments Ltd. Authorised by the Financial Conduct Authority.
+              © 2025 FamillyBill HT. Tous droits réservés.
             </p>
           </div>
         </div>
