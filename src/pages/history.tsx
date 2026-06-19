@@ -19,10 +19,10 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string }> = {
 
 function txLabel(tx: Transaction): string {
   if (tx.type === 'convert') return `${tx.currency} → ${tx.target_currency ?? ''}`
-  if (tx.type === 'receive') return tx.recipient_name ? `From ${tx.recipient_name}` : 'Received'
-  if (tx.type === 'deposit') return 'Deposit'
-  if (tx.type === 'withdraw') return 'Withdrawal'
-  return tx.recipient_name ?? 'Transfer'
+  if (tx.type === 'receive') return tx.recipient_name ? `De ${tx.recipient_name}` : 'Reçu'
+  if (tx.type === 'deposit') return 'Dépôt'
+  if (tx.type === 'withdraw') return 'Retrait'
+  return tx.recipient_name ?? 'Transfert'
 }
 
 function txIcon(tx: Transaction) {
@@ -76,22 +76,22 @@ export function HistoryPage() {
   const receiveCount = transactions.filter(t => t.type === 'receive').length
 
   return (
-    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--wise-sage)' }}>
+    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--fb-light)' }}>
       <div className="max-w-3xl mx-auto px-4 pt-8 space-y-6">
         <div>
-          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--wise-ink)' }}>Transactions</h1>
-          <p className="text-sm text-muted-foreground">Your complete transaction history</p>
+          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--fb-ink)' }}>Transactions</h1>
+          <p className="text-sm text-muted-foreground">Votre historique complet</p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
             { label: 'Total transactions', value: transactions.length.toString() },
-            { label: 'Sends', value: sendCount.toString() },
-            { label: 'Receives', value: receiveCount.toString() },
+            { label: 'Envois', value: sendCount.toString() },
+            { label: 'Réceptions', value: receiveCount.toString() },
           ].map((s, i) => (
             <div key={i} className="bg-white rounded-2xl p-4 border border-border text-center">
-              <p className="text-2xl font-black" style={{ color: 'var(--wise-ink)' }}>{s.value}</p>
+              <p className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>{s.value}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
             </div>
           ))}
@@ -102,7 +102,7 @@ export function HistoryPage() {
           <div className="relative flex-1 min-w-44">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search transactions..."
+              placeholder="Rechercher..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9 h-10 rounded-2xl"
@@ -111,14 +111,14 @@ export function HistoryPage() {
           <div className="flex gap-1.5">
             {['all', 'send', 'receive', 'convert'].map(f => (
               <Button
-                key={f}
+                key={f === 'all' ? 'Tout' : f === 'send' ? 'Envoi' : f === 'receive' ? 'Réception' : 'Conversion'}
                 size="sm"
                 className="rounded-2xl capitalize font-semibold h-9"
                 variant={filter === f ? 'default' : 'outline'}
-                style={filter === f ? { backgroundColor: 'var(--wise-ink)', color: 'white', borderColor: 'transparent' } : {}}
+                style={filter === f ? { backgroundColor: 'var(--fb-ink)', color: 'white', borderColor: 'transparent' } : {}}
                 onClick={() => setFilter(f)}
               >
-                {f}
+                {f === 'all' ? 'Tout' : f === 'send' ? 'Envoi' : f === 'receive' ? 'Réception' : 'Conversion'}
               </Button>
             ))}
           </div>
@@ -134,12 +134,12 @@ export function HistoryPage() {
             [1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-[72px] rounded-2xl" />)
           ) : filtered.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 border border-border text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center" style={{ backgroundColor: 'var(--wise-sage)' }}>
+              <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center" style={{ backgroundColor: 'var(--fb-light)' }}>
                 <Search className="w-6 h-6 text-muted-foreground" />
               </div>
               <p className="font-semibold">No transactions found</p>
               <p className="text-xs text-muted-foreground">
-                {search ? 'Try a different search term or filter.' : 'Your transactions will appear here once you send or receive money.'}
+                {search ? 'Essayez un autre terme ou filtre.' : 'Vos transactions apparaîtront ici.'}
               </p>
             </div>
           ) : (

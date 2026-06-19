@@ -39,7 +39,7 @@ function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
           <div className="absolute top-full mt-2 right-0 z-20 bg-white border border-border rounded-2xl shadow-xl w-64 overflow-hidden">
             <div className="p-2 border-b border-border">
               <Input
-                placeholder="Search currency..."
+                placeholder="Rechercher une devise..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="h-8 text-sm rounded-xl border-border"
@@ -63,7 +63,7 @@ function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
                     <p className="text-xs text-muted-foreground">{c.name}</p>
                   </div>
                   {c.code === value && (
-                    <CheckCircle2 className="w-4 h-4 ml-auto shrink-0" style={{ color: 'var(--wise-lime)' }} />
+                    <CheckCircle2 className="w-4 h-4 ml-auto shrink-0" style={{ color: 'var(--fb-red)' }} />
                   )}
                 </button>
               ))}
@@ -168,7 +168,7 @@ export function CurrencyConverter({ compact = false }: CurrencyConverterProps) {
         </div>
 
         {/* Rate guarantee badge */}
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}>
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>Guaranteed rate for 48 hours after payment</span>
         </div>
@@ -177,7 +177,7 @@ export function CurrencyConverter({ compact = false }: CurrencyConverterProps) {
         <Link to="/register">
           <Button
             className="w-full rounded-2xl font-bold text-base h-12 border-0 hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: 'var(--wise-ink)', color: 'white' }}
+            style={{ backgroundColor: 'var(--fb-ink)', color: 'white' }}
           >
             Get started for free
             <ArrowRight className="w-4 h-4 ml-2" />
@@ -185,7 +185,7 @@ export function CurrencyConverter({ compact = false }: CurrencyConverterProps) {
         </Link>
 
         <p className="text-center text-xs text-muted-foreground">
-          No hidden fees. We use the <strong className="text-foreground">real exchange rate</strong>.
+          Sans frais cachés. Nous utilisons le <strong className="text-foreground">taux réel</strong>.
         </p>
       </div>
     </div>

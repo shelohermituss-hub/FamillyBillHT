@@ -14,9 +14,9 @@ import { HistoryPage } from '@/pages/history'
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--wise-sage)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--fb-light)' }}>
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-full flex items-center justify-center animate-pulse" style={{ backgroundColor: 'var(--wise-lime)' }}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center animate-pulse" style={{ backgroundColor: 'var(--fb-red)' }}>
           <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="10" />
           </svg>

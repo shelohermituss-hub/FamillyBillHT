@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { Globe, CreditCard, Eye, EyeOff, Lock, Unlock, Smartphone, Shield, Check, ChevronRight, MapPin } from 'lucide-react'
+import { CreditCard, Eye, EyeOff, Lock, Unlock, Smartphone, Shield, Check, ChevronRight, MapPin } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/auth-context'
 
 const SPENDING = [
-  { flag: '🇫🇷', country: 'France', amount: '€124.50', currency: 'EUR', date: 'Today' },
-  { flag: '🇯🇵', country: 'Japan', amount: '¥8,400', currency: 'JPY', date: 'Yesterday' },
-  { flag: '🇺🇸', country: 'United States', amount: '$45.00', currency: 'USD', date: '2 days ago' },
+  { flag: '🇫🇷', country: 'France', amount: '€124.50', currency: 'EUR', date: 'Aujourd\'hui' },
+  { flag: '🇯🇵', country: 'Japan', amount: '¥8,400', currency: 'JPY', date: 'Hier' },
+  { flag: '🇺🇸', country: 'United States', amount: '$45.00', currency: 'USD', date: 'Il y a 2 jours' },
 ]
 
 export function CardPage() {
@@ -20,11 +20,11 @@ export function CardPage() {
   const name = profile?.full_name ?? 'Your Name'
 
   return (
-    <div className="min-h-screen pb-12" style={{ backgroundColor: 'var(--wise-sage)' }}>
+    <div className="min-h-screen pb-12" style={{ backgroundColor: 'var(--fb-light)' }}>
       <div className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
         <div>
-          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--wise-ink)' }}>Wise Card</h1>
-          <p className="text-sm text-muted-foreground">Spend in 160+ countries at the real exchange rate</p>
+          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--fb-ink)' }}>Carte FamillyBill HT</h1>
+          <p className="text-sm text-muted-foreground">Dépensez dans 10+ pays au taux réel</p>
         </div>
 
         {/* Card visual */}
@@ -35,17 +35,17 @@ export function CardPage() {
               style={{
                 background: frozen
                   ? 'linear-gradient(135deg, #666 0%, #999 100%)'
-                  : 'linear-gradient(135deg, var(--wise-ink) 0%, #2d2f2b 100%)',
+                  : 'linear-gradient(135deg, var(--fb-ink) 0%, #2d2f2b 100%)',
               }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full" style={{ backgroundColor: frozen ? '#ccc' : 'var(--wise-lime)' }} />
-                  <span className="text-white font-black text-sm">Wise</span>
+                  <img src="/logo.png" alt="FamillyBill" className="w-6 h-6 object-contain" style={{ opacity: frozen ? 0.5 : 1 }} />
+                  <span className="text-white font-black text-sm">FamillyBill</span>
                 </div>
                 <div className="flex items-center gap-1">
                   {frozen && <Lock className="w-4 h-4 text-white/60" />}
-                  <Globe className="w-5 h-5 text-white/60" />
+                  <CreditCard className="w-5 h-5 text-white/60" />
                 </div>
               </div>
               <div>
@@ -80,30 +80,30 @@ export function CardPage() {
             className="bg-white rounded-2xl p-4 border border-border flex flex-col items-center gap-2 hover:shadow-sm transition-all"
           >
             {frozen ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-            <span className="text-xs font-semibold text-muted-foreground">{frozen ? 'Unfreeze' : 'Freeze'}</span>
+            <span className="text-xs font-semibold text-muted-foreground">{frozen ? 'Débloquer' : 'Bloquer'}</span>
           </button>
           <button
             onClick={() => setShowNumber(!showNumber)}
             className="bg-white rounded-2xl p-4 border border-border flex flex-col items-center gap-2 hover:shadow-sm transition-all"
           >
             {showNumber ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            <span className="text-xs font-semibold text-muted-foreground">{showNumber ? 'Hide' : 'Show'} details</span>
+            <span className="text-xs font-semibold text-muted-foreground">{showNumber ? 'Masquer' : 'Afficher'} détails</span>
           </button>
           <button className="bg-white rounded-2xl p-4 border border-border flex flex-col items-center gap-2 hover:shadow-sm transition-all">
             <Smartphone className="w-5 h-5" />
-            <span className="text-xs font-semibold text-muted-foreground">Add to wallet</span>
+            <span className="text-xs font-semibold text-muted-foreground">Ajouter au portefeuille</span>
           </button>
         </div>
 
         {/* Card stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Spent this month', value: '€243.50' },
-            { label: 'Currencies used', value: '3' },
-            { label: 'Countries visited', value: '3' },
+            { label: 'Dépensé ce mois', value: '€243.50' },
+            { label: 'Devises utilisées', value: '3' },
+            { label: 'Pays visités', value: '3' },
           ].map((s, i) => (
             <div key={i} className="bg-white rounded-2xl p-4 border border-border text-center">
-              <p className="text-xl font-black" style={{ color: 'var(--wise-ink)' }}>{s.value}</p>
+              <p className="text-xl font-black" style={{ color: 'var(--fb-ink)' }}>{s.value}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
             </div>
           ))}
@@ -113,15 +113,15 @@ export function CardPage() {
         <div className="bg-white rounded-3xl border border-border overflow-hidden">
           <div className="p-5 border-b border-border">
             <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5" style={{ color: 'var(--wise-ink)' }} />
-              <h3 className="font-bold" style={{ color: 'var(--wise-ink)' }}>Card controls</h3>
+              <Shield className="w-5 h-5" style={{ color: 'var(--fb-ink)' }} />
+              <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Card controls</h3>
             </div>
           </div>
           <div className="divide-y divide-border">
             {[
-              { label: 'Online payments', desc: 'Allow payments on websites', state: online, setState: setOnline },
-              { label: 'Contactless payments', desc: 'Tap to pay', state: contactless, setState: setContactless },
-              { label: 'ATM withdrawals', desc: 'Withdraw cash worldwide', state: atm, setState: setAtm },
+              { label: 'Paiements en ligne', desc: 'Autoriser les paiements web', state: online, setState: setOnline },
+              { label: 'Paiements sans contact', desc: 'Payer par contact', state: contactless, setState: setContactless },
+              { label: 'Retraits DAB', desc: 'Retirer du cash partout', state: atm, setState: setAtm },
             ].map(item => (
               <div key={item.label} className="flex items-center justify-between px-5 py-4">
                 <div>
@@ -138,8 +138,8 @@ export function CardPage() {
         <div className="bg-white rounded-3xl border border-border overflow-hidden">
           <div className="p-5 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" style={{ color: 'var(--wise-ink)' }} />
-              <h3 className="font-bold" style={{ color: 'var(--wise-ink)' }}>Recent spending</h3>
+              <MapPin className="w-5 h-5" style={{ color: 'var(--fb-ink)' }} />
+              <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Recent spending</h3>
             </div>
             <Badge variant="outline" className="rounded-full text-xs">Card</Badge>
           </div>
@@ -152,7 +152,7 @@ export function CardPage() {
                   <p className="text-xs text-muted-foreground">{item.date}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-sm" style={{ color: 'var(--wise-ink)' }}>{item.amount}</p>
+                  <p className="font-bold text-sm" style={{ color: 'var(--fb-ink)' }}>{item.amount}</p>
                   <p className="text-xs text-muted-foreground">{item.currency}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -162,20 +162,20 @@ export function CardPage() {
         </div>
 
         {/* Benefits */}
-        <div className="rounded-3xl p-6 border border-border" style={{ backgroundColor: 'var(--wise-ink)' }}>
+        <div className="rounded-3xl p-6 border border-border" style={{ backgroundColor: 'var(--fb-ink)' }}>
           <h3 className="font-black text-white mb-4">Card benefits</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              'No foreign transaction fees',
-              'Real mid-market exchange rate',
-              'Freeze and unfreeze instantly',
-              'Spend in 49 currencies',
-              'Works in 160+ countries',
-              'Add to Apple/Google Pay',
+              'Sans frais de change',
+              'Taux de change réel',
+              'Blocage/déblocage instantané',
+              'Dépensez en 10 devises',
+              'Valide dans 10+ pays',
+              'Ajout Apple/Google Pay',
             ].map((b, i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--wise-lime)' }}>
-                  <Check className="w-2.5 h-2.5" style={{ color: 'var(--wise-ink)' }} />
+                <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--fb-red)' }}>
+                  <Check className="w-2.5 h-2.5" style={{ color: 'var(--fb-ink)' }} />
                 </div>
                 <span className="text-white/80 text-xs">{b}</span>
               </div>

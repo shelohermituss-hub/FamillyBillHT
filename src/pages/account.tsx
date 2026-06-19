@@ -18,11 +18,11 @@ const LOCAL_ACCOUNT_NUMBERS: Record<string, Record<string, string>> = {
 }
 
 const LOCAL_DETAILS: Record<string, { type: string; label: string }[]> = {
-  USD: [{ type: 'ACH', label: 'Routing + Account number' }, { type: 'Wire', label: 'SWIFT/BIC' }],
-  EUR: [{ type: 'SEPA', label: 'IBAN' }, { type: 'SWIFT', label: 'BIC code' }],
-  GBP: [{ type: 'Faster Payments', label: 'Sort code + Account' }, { type: 'SWIFT', label: 'IBAN' }],
-  AUD: [{ type: 'PayID', label: 'BSB + Account number' }],
-  CAD: [{ type: 'EFT', label: 'Institution / Transit / Account' }],
+  USD: [{ type: 'ACH', label: 'Routage + N° de compte' }, { type: 'Wire', label: 'SWIFT/BIC' }],
+  EUR: [{ type: 'SEPA', label: 'IBAN' }, { type: 'SWIFT', label: 'Code BIC' }],
+  GBP: [{ type: 'Faster Payments', label: 'Code de tri + Compte' }, { type: 'SWIFT', label: 'IBAN' }],
+  AUD: [{ type: 'PayID', label: 'BSB + N° de compte' }],
+  CAD: [{ type: 'EFT', label: 'Institution / Transit / Compte' }],
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -82,18 +82,18 @@ export function AccountPage() {
       setSelected(data)
       setAddingCurrency('')
     } else {
-      setAddError('Could not add currency. Try again.')
+      setAddError('Impossible d’ajouter la devise. Réessayez.')
     }
   }
 
   const availableCurrencies = CURRENCIES.filter(c => !accounts.find(a => a.currency === c.code))
 
   return (
-    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--wise-sage)' }}>
+    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--fb-light)' }}>
       <div className="max-w-4xl mx-auto px-4 pt-8 space-y-6">
         <div>
-          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--wise-ink)' }}>Account</h1>
-          <p className="text-sm text-muted-foreground">Your multi-currency balances and local account details</p>
+          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--fb-ink)' }}>Account</h1>
+          <p className="text-sm text-muted-foreground">Vos soldes multi-devises et coordonnées bancaires</p>
         </div>
 
         <div className="grid md:grid-cols-[280px_1fr] gap-6">
@@ -113,7 +113,7 @@ export function AccountPage() {
                       "w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left",
                       isSelected ? "border-2 shadow-sm" : "border-border bg-white hover:shadow-sm"
                     )}
-                    style={isSelected ? { borderColor: 'var(--wise-ink)', backgroundColor: 'white' } : {}}
+                    style={isSelected ? { borderColor: 'var(--fb-ink)', backgroundColor: 'white' } : {}}
                   >
                     <span className="text-2xl">{curr?.flag}</span>
                     <div className="flex-1">
@@ -143,7 +143,7 @@ export function AccountPage() {
                 <Button
                   size="sm"
                   className="rounded-xl border-0 font-semibold"
-                  style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
+                  style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
                   onClick={addAccount}
                   disabled={!addingCurrency}
                 >
@@ -158,7 +158,7 @@ export function AccountPage() {
           {selected ? (
             <div className="space-y-4">
               {/* Balance card */}
-              <div className="rounded-3xl p-6 border-0" style={{ backgroundColor: 'var(--wise-ink)' }}>
+              <div className="rounded-3xl p-6 border-0" style={{ backgroundColor: 'var(--fb-ink)' }}>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -173,7 +173,7 @@ export function AccountPage() {
                     <Button
                       size="sm"
                       className="rounded-xl font-semibold border-0"
-                      style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}
+                      style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
                     >
                       Add money
                     </Button>
@@ -193,14 +193,14 @@ export function AccountPage() {
               {LOCAL_DETAILS[selected.currency] ? (
                 <div className="bg-white rounded-3xl p-6 border border-border space-y-4">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold" style={{ color: 'var(--wise-ink)' }}>Local account details</h3>
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}>
+                    <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Local account details</h3>
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
                       <Check className="w-3 h-3" />
                       Free to receive
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Receive {selected.currency} payments like a local. Share these details with anyone paying you.
+                    Recevez des paiements en {selected.currency} comme un local. Partagez ces coordonnées.
                   </p>
                   <div className="space-y-3">
                     {LOCAL_DETAILS[selected.currency].map((detail, i) => {
@@ -221,14 +221,14 @@ export function AccountPage() {
                   </div>
                   <div className="flex items-start gap-2 p-3 rounded-xl bg-blue-50">
                     <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
-                    <p className="text-xs text-blue-700">Receiving international transfers is free in most currencies. Local transfers are always free.</p>
+                    <p className="text-xs text-blue-700">Les virements internationaux sont gratuits dans la plupart des devises.</p>
                   </div>
                 </div>
               ) : (
                 <div className="bg-white rounded-3xl p-6 border border-border">
-                  <h3 className="font-bold mb-2" style={{ color: 'var(--wise-ink)' }}>Hold {selected.currency}</h3>
+                  <h3 className="font-bold mb-2" style={{ color: 'var(--fb-ink)' }}>Détenir {selected.currency}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Convert to {selected.currency} from any of your other currencies at the real exchange rate.
+                    Convertissez vers {selected.currency} depuis vos autres devises au taux réel.
                   </p>
                 </div>
               )}
@@ -237,10 +237,10 @@ export function AccountPage() {
               <Link to="/transfer?mode=convert">
                 <div className="bg-white rounded-2xl p-4 border border-border flex items-center justify-between hover:shadow-sm transition-all">
                   <div>
-                    <p className="font-semibold text-sm">Convert {selected.currency}</p>
-                    <p className="text-xs text-muted-foreground">Exchange between your currencies at the real rate</p>
+                    <p className="font-semibold text-sm">Convertir {selected.currency}</p>
+                    <p className="text-xs text-muted-foreground">Échangez vos devises au taux réel</p>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-sm" style={{ backgroundColor: 'var(--wise-lime)', color: 'var(--wise-ink)' }}>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-sm" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
                     <Repeat className="w-4 h-4" />
                     Convert
                   </div>
