@@ -137,10 +137,12 @@ export function DashboardPage() {
               <Link key={cat.id} to={`/bills?category=${cat.id}`}>
                 <div className="flex flex-col items-center gap-2 p-3 rounded-2xl border border-[var(--border)] hover:border-[var(--ink-30)] tr cursor-pointer group" style={{ background: 'var(--card-bg)' }}>
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-xl tr group-hover:scale-110"
+                    className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-xl tr group-hover:scale-110"
                     style={{ background: cat.bg }}
                   >
-                    {cat.emoji}
+                    {cat.icon
+                      ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain p-1" />
+                      : cat.emoji}
                   </div>
                   <span className="text-[10px] font-semibold text-[var(--ink)] text-center leading-tight">{cat.label}</span>
                 </div>

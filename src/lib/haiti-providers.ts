@@ -18,6 +18,7 @@ export type Provider = {
   shortName: string
   category: string
   emoji: string
+  logo?: string
   color: string
   bg: string
   description: string
@@ -33,21 +34,22 @@ export type BillCategory = {
   id: string
   label: string
   emoji: string
+  icon?: string
   color: string
   bg: string
   providerIds: string[]
 }
 
 export const BILL_CATEGORIES: BillCategory[] = [
-  { id: 'electricity', label: 'Électricité', emoji: '⚡', color: '#f59e0b', bg: '#fef3c7', providerIds: ['edh'] },
-  { id: 'tv',          label: 'TV / Câble',  emoji: '📺', color: '#8b5cf6', bg: '#ede9fe', providerIds: ['canal_plus', 'nutv'] },
-  { id: 'phone',       label: 'Téléphone',   emoji: '📱', color: '#3b82f6', bg: '#dbeafe', providerIds: ['digicel', 'natcom'] },
-  { id: 'internet',    label: 'Internet',    emoji: '🌐', color: '#06b6d4', bg: '#cffafe', providerIds: ['access_haiti', 'wimis'] },
-  { id: 'water',       label: 'Eau',         emoji: '💧', color: '#0ea5e9', bg: '#e0f2fe', providerIds: ['camep', 'veolia'] },
-  { id: 'moncash',     label: 'MonCash',     emoji: '💸', color: '#ef4444', bg: '#fee2e2', providerIds: ['moncash'] },
-  { id: 'rent',        label: 'Loyer',       emoji: '🏠', color: '#10b981', bg: '#d1fae5', providerIds: ['rent'] },
-  { id: 'gas',         label: 'Gaz',         emoji: '🔥', color: '#f97316', bg: '#ffedd5', providerIds: ['sodigaz'] },
-  { id: 'insurance',   label: 'Assurance',   emoji: '🛡️', color: '#64748b', bg: '#f1f5f9', providerIds: ['aic'] },
+  { id: 'electricity', label: 'Électricité', emoji: '⚡', icon: '/icons/categories/electricity.jpg', color: '#f59e0b', bg: '#fef3c7', providerIds: ['edh'] },
+  { id: 'tv',          label: 'TV / Câble',  emoji: '📺', icon: '/icons/categories/tv.jpg',          color: '#8b5cf6', bg: '#ede9fe', providerIds: ['canal_plus', 'nutv'] },
+  { id: 'phone',       label: 'Téléphone',   emoji: '📱', icon: '/icons/categories/phone.png',        color: '#3b82f6', bg: '#dbeafe', providerIds: ['digicel', 'natcom'] },
+  { id: 'internet',    label: 'Internet',    emoji: '🌐', icon: '/icons/providers/access_haiti.png',  color: '#06b6d4', bg: '#cffafe', providerIds: ['access_haiti', 'wimis'] },
+  { id: 'water',       label: 'Eau',         emoji: '💧', icon: '/icons/categories/water.png',        color: '#0ea5e9', bg: '#e0f2fe', providerIds: ['camep', 'veolia'] },
+  { id: 'moncash',     label: 'MonCash',     emoji: '💸', icon: '/icons/providers/moncash.png',       color: '#ef4444', bg: '#fee2e2', providerIds: ['moncash'] },
+  { id: 'rent',        label: 'Loyer',       emoji: '🏠', icon: '/icons/categories/loyer.png',        color: '#10b981', bg: '#d1fae5', providerIds: ['rent'] },
+  { id: 'gas',         label: 'Gaz',         emoji: '🔥', icon: '/icons/categories/gas.jpg',          color: '#f97316', bg: '#ffedd5', providerIds: ['sodigaz'] },
+  { id: 'insurance',   label: 'Assurance',   emoji: '🛡️', icon: '/icons/providers/aic.jpg',           color: '#64748b', bg: '#f1f5f9', providerIds: ['aic'] },
 ]
 
 export const PROVIDERS: Provider[] = [
@@ -58,6 +60,7 @@ export const PROVIDERS: Provider[] = [
     shortName: 'EDH',
     category: 'electricity',
     emoji: '⚡',
+    logo: '/icons/providers/edh.jpg',
     color: '#f59e0b',
     bg: '#fef3c7',
     description: 'Paiement de facture d\'électricité EDH',
@@ -92,6 +95,7 @@ export const PROVIDERS: Provider[] = [
     shortName: 'Digicel',
     category: 'phone',
     emoji: '📱',
+    logo: '/icons/providers/digicel.png',
     color: '#ef4444',
     bg: '#fee2e2',
     description: 'Recharge, forfait ou données Digicel',
@@ -126,6 +130,7 @@ export const PROVIDERS: Provider[] = [
     shortName: 'Natcom',
     category: 'phone',
     emoji: '📱',
+    logo: '/icons/providers/natcom.webp',
     color: '#1d4ed8',
     bg: '#dbeafe',
     description: 'Recharge ou forfait Natcom',
@@ -160,6 +165,7 @@ export const PROVIDERS: Provider[] = [
     shortName: 'Canal+',
     category: 'tv',
     emoji: '📺',
+    logo: '/icons/providers/canal_plus.jpg',
     color: '#7c3aed',
     bg: '#ede9fe',
     description: 'Abonnement Canal+ / Canal+ Haïti',
@@ -193,8 +199,9 @@ export const PROVIDERS: Provider[] = [
     shortName: 'NuTV',
     category: 'tv',
     emoji: '📺',
-    color: '#0891b2',
-    bg: '#cffafe',
+    logo: '/icons/providers/nutv.png',
+    color: '#f59e0b',
+    bg: '#fef3c7',
     description: 'Abonnement NuTV (bouquet local)',
     fee: 0,
     instant: false,
@@ -225,6 +232,7 @@ export const PROVIDERS: Provider[] = [
     shortName: 'MonCash',
     category: 'moncash',
     emoji: '💸',
+    logo: '/icons/providers/moncash.png',
     color: '#ef4444',
     bg: '#fee2e2',
     description: 'Envoi via portefeuille MonCash',
@@ -291,8 +299,9 @@ export const PROVIDERS: Provider[] = [
     shortName: 'Veolia',
     category: 'water',
     emoji: '💧',
-    color: '#0284c7',
-    bg: '#e0f2fe',
+    logo: '/icons/providers/veolia.jpg',
+    color: '#e53e3e',
+    bg: '#fee2e2',
     description: 'Paiement d\'eau Veolia',
     fee: 0,
     instant: false,
@@ -322,8 +331,9 @@ export const PROVIDERS: Provider[] = [
     shortName: 'Access Haiti',
     category: 'internet',
     emoji: '🌐',
-    color: '#06b6d4',
-    bg: '#cffafe',
+    logo: '/icons/providers/access_haiti.png',
+    color: '#e53e3e',
+    bg: '#fee2e2',
     description: 'Abonnement Internet Access Haiti',
     fee: 0,
     instant: false,
@@ -386,8 +396,9 @@ export const PROVIDERS: Provider[] = [
     shortName: 'SODIGAZ',
     category: 'gas',
     emoji: '🔥',
-    color: '#f97316',
-    bg: '#ffedd5',
+    logo: '/icons/providers/sodigaz.png',
+    color: '#1d6eb5',
+    bg: '#dbeafe',
     description: 'Commande de bonbonnes de propane',
     fee: 0,
     instant: false,
@@ -426,8 +437,9 @@ export const PROVIDERS: Provider[] = [
     shortName: 'AIC',
     category: 'insurance',
     emoji: '🛡️',
-    color: '#64748b',
-    bg: '#f1f5f9',
+    logo: '/icons/providers/aic.jpg',
+    color: '#1d4ed8',
+    bg: '#dbeafe',
     description: 'Paiement de prime d\'assurance AIC',
     fee: 0,
     instant: false,

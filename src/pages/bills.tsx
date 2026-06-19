@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ArrowRight, CheckCircle2, Loader2, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ArrowRight, CheckCircle2, Loader2, ChevronRight, Info } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import { getRate, getFeeRate } from '@/lib/currencies'
 import {
   BILL_CATEGORIES,
   PROVIDERS,
@@ -16,6 +17,78 @@ import {
 type Step = 'category' | 'provider' | 'details' | 'review' | 'success'
 const STEPS: Step[] = ['category', 'provider', 'details', 'review', 'success']
 
+// ── Icon helpers ─────────────────────────────────────────────────────────────
+function ProviderLogo({
+  provider,
+  size = 'md',
+}: {
+  provider: Provider
+  size?: 'sm' | 'md' | 'lg'
+}) {
+  const cls = size === 'lg' ? 'w-16 h-16 rounded-2xl text-3xl'
+    : size === 'sm' ? 'w-9 h-9 rounded-xl text-lg'
+    : 'w-12 h-12 rounded-2xl text-2xl'
+
+  if (provider.logo) {
+    return (
+      <div
+        className={`${cls} overflow-hidden shrink-0 flex items-center justify-center`}
+        style={{ background: provider.bg }}
+      >
+        <img
+          src={provider.logo}
+          alt={provider.shortName}
+          className="w-full h-full object-contain p-1"
+        />
+      </div>
+    )
+  }
+  return (
+    <div
+      className={`${cls} shrink-0 flex items-center justify-center`}
+      style={{ background: provider.bg }}
+    >
+      {provider.emoji}
+    </div>
+  )
+}
+
+function CategoryIcon({
+  cat,
+  size = 'md',
+}: {
+  cat: BillCategory
+  size?: 'sm' | 'md' | 'lg'
+}) {
+  const cls = size === 'lg' ? 'w-14 h-14 rounded-2xl text-3xl'
+    : size === 'sm' ? 'w-8 h-8 rounded-xl text-base'
+    : 'w-12 h-12 rounded-2xl text-2xl'
+
+  if (cat.icon) {
+    return (
+      <div
+        className={`${cls} overflow-hidden shrink-0 flex items-center justify-center`}
+        style={{ background: cat.bg }}
+      >
+        <img
+          src={cat.icon}
+          alt={cat.label}
+          className="w-full h-full object-contain p-1.5"
+        />
+      </div>
+    )
+  }
+  return (
+    <div
+      className={`${cls} shrink-0 flex items-center justify-center`}
+      style={{ background: cat.bg }}
+    >
+      {cat.emoji}
+    </div>
+  )
+}
+
+// ── Step bar ─────────────────────────────────────────────────────────────────
 function StepBar({ current }: { current: Step }) {
   const visible = STEPS.slice(0, 4)
   const idx = visible.indexOf(current)
@@ -32,12 +105,8 @@ function StepBar({ current }: { current: Step }) {
   )
 }
 
-// ── Category grid ────────────────────────────────────────────────────────────
-function CategoryStep({
-  onSelect,
-}: {
-  onSelect: (cat: BillCategory) => void
-}) {
+// ── Category grid ─────────────────────────────────────────────────────────────
+function CategoryStep({ onSelect }: { onSelect: (cat: BillCategory) => void }) {
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div>
@@ -52,11 +121,8 @@ function CategoryStep({
             className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border border-[var(--border)] hover:border-[var(--ink-30)] tr cursor-pointer group"
             style={{ background: 'var(--card-bg)' }}
           >
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 tr group-hover:scale-110"
-              style={{ background: cat.bg }}
-            >
-              {cat.emoji}
+            <div className="tr group-hover:scale-110">
+              <CategoryIcon cat={cat} size="md" />
             </div>
             <span className="text-xs font-semibold text-[var(--ink)] text-center leading-tight">
               {cat.label}
@@ -68,31 +134,26 @@ function CategoryStep({
   )
 }
 
-// ── Provider list ────────────────────────────────────────────────────────────
+// ── Provider list ─────────────────────────────────────────────────────────────
 function ProviderStep({
   category,
   onSelect,
 }: {
   category: BillCategory
-  onSelect: (provider: Provider) => void
+  onSelect: (p: Provider) => void
 }) {
   const providers = getProvidersForCategory(category.id)
-  const others = PROVIDERS.filter(p => !category.providerIds.includes(p.id) && p.priority === 1)
+  const others = PROVIDERS.filter(
+    p => !category.providerIds.includes(p.id) && p.priority === 1
+  )
 
   return (
     <div className="space-y-4 animate-fade-in-up">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
-            style={{ background: category.bg }}
-          >
-            {category.emoji}
-          </span>
-          <h2 className="text-lg font-semibold text-[var(--ink)]">{category.label}</h2>
-        </div>
-        <p className="text-sm text-[var(--ink-60)]">Choisissez le fournisseur</p>
+      <div className="flex items-center gap-2 mb-1">
+        <CategoryIcon cat={category} size="sm" />
+        <h2 className="text-lg font-semibold text-[var(--ink)]">{category.label}</h2>
       </div>
+      <p className="text-sm text-[var(--ink-60)] -mt-2">Choisissez le fournisseur</p>
 
       <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
         {providers.map(provider => (
@@ -101,12 +162,7 @@ function ProviderStep({
             onClick={() => onSelect(provider)}
             className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left"
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-              style={{ background: provider.bg }}
-            >
-              {provider.emoji}
-            </div>
+            <ProviderLogo provider={provider} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-[var(--ink)]">{provider.name}</p>
               <p className="text-xs text-[var(--ink-60)] truncate">{provider.description}</p>
@@ -125,7 +181,7 @@ function ProviderStep({
 
       {others.length > 0 && (
         <>
-          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)] px-1">Autres services</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)] px-1">Autres services populaires</p>
           <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
             {others.map(provider => (
               <button
@@ -133,12 +189,7 @@ function ProviderStep({
                 onClick={() => onSelect(provider)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left"
               >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-                  style={{ background: provider.bg }}
-                >
-                  {provider.emoji}
-                </div>
+                <ProviderLogo provider={provider} size="sm" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[var(--ink)]">{provider.name}</p>
                   <p className="text-xs text-[var(--ink-60)] truncate">{provider.description}</p>
@@ -149,6 +200,46 @@ function ProviderStep({
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+// ── HTG → USD conversion block (mirrors transfer page) ────────────────────────
+function ConversionBlock({ htgAmount }: { htgAmount: number }) {
+  if (htgAmount <= 0) return null
+
+  const HTG_USD_RATE = getRate('HTG', 'USD')           // ≈ 0.00743
+  const feeRate      = getFeeRate('HTG', 'USD')
+  const fee          = htgAmount * feeRate
+  const usdEquiv     = (htgAmount - fee) * HTG_USD_RATE
+
+  return (
+    <div className="space-y-2 pt-3 border-t border-[var(--border)]">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-[var(--ink-60)]">Frais de service</span>
+        <span className="font-semibold" style={{ color: 'var(--lime)' }}>
+          − G {fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+      </div>
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-1.5 text-[var(--ink-60)]">
+          <span>Taux de change</span>
+          <Info className="w-3.5 h-3.5" />
+        </div>
+        <span className="font-medium text-[var(--ink)]">
+          1 HTG = {HTG_USD_RATE.toFixed(4)} USD
+        </span>
+      </div>
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-[var(--ink-60)]">Équivalent USD</span>
+        <span className="font-semibold text-[var(--ink)]">
+          ≈ ${usdEquiv.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'var(--lime-light)', color: 'var(--ink)' }}>
+        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--lime)' }} />
+        Taux garanti pendant 48 heures
+      </div>
     </div>
   )
 }
@@ -169,19 +260,16 @@ function DetailsStep({
   onAmountChange: (val: string) => void
   onNext: () => void
 }) {
+  const htgAmount = parseFloat(amount) || 0
   const canProceed =
     provider.fields.filter(f => f.required).every(f => fieldValues[f.id]?.trim()) &&
-    parseFloat(amount) > 0
+    htgAmount > 0
 
   return (
     <div className="space-y-5 animate-fade-in-up">
+      {/* Provider header */}
       <div className="flex items-center gap-3">
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
-          style={{ background: provider.bg }}
-        >
-          {provider.emoji}
-        </div>
+        <ProviderLogo provider={provider} size="md" />
         <div>
           <h2 className="text-lg font-semibold text-[var(--ink)]">{provider.name}</h2>
           <p className="text-xs text-[var(--ink-60)]">{provider.description}</p>
@@ -225,34 +313,27 @@ function DetailsStep({
           </div>
         ))}
 
-        {/* Amount */}
-        <div className="space-y-1.5 pt-2 border-t border-[var(--border)]">
-          <Label className="text-sm font-medium text-[var(--ink)]">
-            Montant à payer <span className="text-red-400">*</span>
-          </Label>
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
+        {/* Amount block — mirrors transfer page step 1 */}
+        <div className="space-y-3 pt-2 border-t border-[var(--border)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Vous payez</p>
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
             <Input
               type="number"
               value={amount}
               onChange={e => onAmountChange(e.target.value)}
               placeholder="0"
               min="1"
-              className="border-0 shadow-none text-2xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent text-[var(--ink)]"
+              className="border-0 shadow-none text-3xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent text-[var(--ink)]"
             />
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm shrink-0" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm shrink-0" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
               <span>🇭🇹</span> HTG
             </div>
           </div>
-          <p className="text-xs text-[var(--ink-60)]">Montant en Gourdes haïtiennes uniquement</p>
+
+          {/* HTG → USD conversion summary — same as transfer page */}
+          <ConversionBlock htgAmount={htgAmount} />
         </div>
       </div>
-
-      {provider.instant && (
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium" style={{ background: 'var(--lime-light)', color: 'var(--ink)' }}>
-          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: 'var(--lime)' }} />
-          <span>Paiement instantané — confirmé en quelques secondes</span>
-        </div>
-      )}
 
       <button
         className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
@@ -266,7 +347,7 @@ function DetailsStep({
   )
 }
 
-// ── Review ───────────────────────────────────────────────────────────────────
+// ── Review ────────────────────────────────────────────────────────────────────
 function ReviewStep({
   provider,
   category,
@@ -285,6 +366,10 @@ function ReviewStep({
   onConfirm: () => void
 }) {
   const htgAmount = parseFloat(amount) || 0
+  const HTG_USD_RATE = getRate('HTG', 'USD')
+  const feeRate = getFeeRate('HTG', 'USD')
+  const fee = htgAmount * feeRate
+  const usdEquiv = (htgAmount - fee) * HTG_USD_RATE
 
   const rows = provider.fields
     .filter(f => fieldValues[f.id])
@@ -299,12 +384,7 @@ function ReviewStep({
 
       {/* Provider card */}
       <div className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)]" style={{ background: 'var(--card-bg)' }}>
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
-          style={{ background: provider.bg }}
-        >
-          {provider.emoji}
-        </div>
+        <ProviderLogo provider={provider} size="sm" />
         <div>
           <p className="font-semibold text-[var(--ink)]">{provider.name}</p>
           <p className="text-xs text-[var(--ink-60)]">{category.label}</p>
@@ -323,15 +403,28 @@ function ReviewStep({
             <span className="text-sm font-medium text-[var(--ink)] text-right break-all">{row.value}</span>
           </div>
         ))}
-        <div className="flex justify-between items-center px-4 py-3.5" style={{ background: 'var(--lime-light)' }}>
-          <span className="text-sm text-[var(--ink-60)]">Montant total</span>
-          <span className="text-lg font-bold text-[var(--ink)]">
-            G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+        {/* Same breakdown as transfer page */}
+        <div className="flex justify-between items-center px-4 py-3 text-sm">
+          <span className="text-[var(--ink-60)]">Vous payez</span>
+          <span className="font-semibold text-[var(--ink)]">🇭🇹 G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
+        </div>
+        <div className="flex justify-between items-center px-4 py-3 text-sm">
+          <span className="text-[var(--ink-60)]">Frais de service</span>
+          <span className="font-semibold" style={{ color: 'var(--lime)' }}>
+            − G {fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
-        <div className="flex justify-between items-center px-4 py-3">
-          <span className="text-sm text-[var(--ink-60)]">Frais de service</span>
-          <span className="text-sm font-semibold text-[var(--ink)]">Gratuit</span>
+        <div className="flex justify-between items-center px-4 py-3 text-sm">
+          <span className="text-[var(--ink-60)]">Taux de change</span>
+          <span className="font-medium text-[var(--ink)]">1 HTG = {HTG_USD_RATE.toFixed(4)} USD</span>
+        </div>
+        <div className="flex justify-between items-center px-4 py-3.5" style={{ background: 'var(--lime-light)' }}>
+          <span className="text-sm font-semibold text-[var(--ink)]">Total HTG</span>
+          <span className="text-lg font-bold text-[var(--ink)]">G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
+        </div>
+        <div className="flex justify-between items-center px-4 py-3 text-sm">
+          <span className="text-[var(--ink-60)]">Équivalent USD</span>
+          <span className="font-semibold text-[var(--ink-60)]">≈ ${usdEquiv.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       </div>
 
@@ -355,7 +448,7 @@ function ReviewStep({
   )
 }
 
-// ── Success ──────────────────────────────────────────────────────────────────
+// ── Success ───────────────────────────────────────────────────────────────────
 function SuccessStep({
   provider,
   amount,
@@ -369,15 +462,23 @@ function SuccessStep({
 }) {
   const navigate = useNavigate()
   const htgAmount = parseFloat(amount) || 0
+  const usdEquiv = htgAmount * getRate('HTG', 'USD')
 
   return (
     <div className="card-flat p-8 text-center space-y-6 animate-scale-in">
       <div
-        className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto text-4xl"
-        style={{ background: 'var(--lime)' }}
+        className="w-20 h-20 rounded-3xl overflow-hidden mx-auto flex items-center justify-center"
+        style={{ background: provider.logo ? 'white' : 'var(--lime)' }}
       >
-        {provider.emoji}
+        {provider.logo
+          ? <img src={provider.logo} alt={provider.shortName} className="w-full h-full object-contain p-2" />
+          : <span className="text-4xl">{provider.emoji}</span>}
       </div>
+
+      <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto -mt-2" style={{ background: 'var(--lime)' }}>
+        <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--ink)' }} />
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold text-[var(--ink)] mb-2">Paiement effectué !</h2>
         <p className="text-sm text-[var(--ink-60)]">
@@ -397,10 +498,12 @@ function SuccessStep({
           <span className="font-semibold text-[var(--ink)]">{provider.name}</span>
         </div>
         <div className="flex justify-between px-4 py-3 text-sm">
-          <span className="text-[var(--ink-60)]">Montant payé</span>
-          <span className="font-bold text-[var(--ink)]">
-            G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
-          </span>
+          <span className="text-[var(--ink-60)]">Montant HTG</span>
+          <span className="font-bold text-[var(--ink)]">G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
+        </div>
+        <div className="flex justify-between px-4 py-3 text-sm">
+          <span className="text-[var(--ink-60)]">Équivalent USD</span>
+          <span className="font-medium text-[var(--ink-60)]">≈ ${usdEquiv.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div className="flex justify-between px-4 py-3 text-sm">
           <span className="text-[var(--ink-60)]">Statut</span>
@@ -474,10 +577,6 @@ export function BillsPage() {
     setStep('details')
   }
 
-  function handleFieldChange(id: string, val: string) {
-    setFieldValues(prev => ({ ...prev, [id]: val }))
-  }
-
   async function handleConfirm() {
     if (!user || !selectedProvider) return
     setSubmitting(true)
@@ -498,7 +597,7 @@ export function BillsPage() {
       target_amount: parseFloat(amount),
       target_currency: 'HTG',
       exchange_rate: 1,
-      fee: 0,
+      fee: parseFloat(amount) * getFeeRate('HTG', 'USD'),
       recipient_name: recipientName,
       note: `Paiement ${selectedProvider.name} — ${Object.entries(fieldValues)
         .filter(([, v]) => v)
@@ -532,7 +631,7 @@ export function BillsPage() {
     : step === 'category'
       ? 'Payer une facture'
       : step === 'provider'
-        ? `${selectedCategory?.label ?? 'Fournisseur'}`
+        ? selectedCategory?.label ?? 'Fournisseur'
         : step === 'details'
           ? selectedProvider?.name ?? 'Informations'
           : 'Confirmation'
@@ -547,7 +646,7 @@ export function BillsPage() {
           <div className="flex items-center gap-3 mb-6 animate-fade-in-up">
             <button
               onClick={goBack}
-              className="w-9 h-9 rounded-full border border-[var(--border)] flex items-center justify-center tr hover:bg-[var(--surface)] cursor-pointer"
+              className="w-9 h-9 rounded-full border border-[var(--border)] flex items-center justify-center tr hover:bg-[var(--surface)] cursor-pointer shrink-0"
               style={{ background: 'var(--card-bg)' }}
             >
               <ChevronLeft className="w-4 h-4 text-[var(--ink)]" />
@@ -570,10 +669,7 @@ export function BillsPage() {
         )}
 
         {step === 'provider' && selectedCategory && (
-          <ProviderStep
-            category={selectedCategory}
-            onSelect={handleProviderSelect}
-          />
+          <ProviderStep category={selectedCategory} onSelect={handleProviderSelect} />
         )}
 
         {step === 'details' && selectedProvider && (
@@ -581,7 +677,7 @@ export function BillsPage() {
             provider={selectedProvider}
             fields={fieldValues}
             amount={amount}
-            onFieldChange={handleFieldChange}
+            onFieldChange={(id, val) => setFieldValues(p => ({ ...p, [id]: val }))}
             onAmountChange={setAmount}
             onNext={() => setStep('review')}
           />
