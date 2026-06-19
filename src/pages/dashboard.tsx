@@ -7,6 +7,7 @@ import { supabase, type CurrencyAccount, type Jar, type Transaction } from '@/li
 import { formatCurrency, getCurrency } from '@/lib/currencies'
 import { CurrencyIcon } from '@/components/currency-icon'
 import { cn } from '@/lib/utils'
+import { BILL_CATEGORIES } from '@/lib/haiti-providers'
 
 function greeting() {
   const h = new Date().getHours()
@@ -122,6 +123,31 @@ export function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Bill payment quick access */}
+        <section className="animate-fade-in-up stagger-2">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-[var(--ink)]">Payer une facture</h2>
+            <Link to="/bills" className="text-xs font-medium tr hover:opacity-70" style={{ color: 'var(--ink-60)' }}>
+              Tout voir →
+            </Link>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {BILL_CATEGORIES.slice(0, 8).map(cat => (
+              <Link key={cat.id} to={`/bills?category=${cat.id}`}>
+                <div className="flex flex-col items-center gap-2 p-3 rounded-2xl border border-[var(--border)] hover:border-[var(--ink-30)] tr cursor-pointer group" style={{ background: 'var(--card-bg)' }}>
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-xl tr group-hover:scale-110"
+                    style={{ background: cat.bg }}
+                  >
+                    {cat.emoji}
+                  </div>
+                  <span className="text-[10px] font-semibold text-[var(--ink)] text-center leading-tight">{cat.label}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* Currencies */}
         <section>
