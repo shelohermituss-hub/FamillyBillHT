@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Globe, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 
@@ -16,11 +16,9 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--wise-lime)' }}>
-              <Globe className="w-4 h-4" style={{ color: 'var(--wise-ink)' }} />
-            </div>
+            <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
             <span className="text-xl font-black tracking-tight" style={{ color: 'var(--wise-ink)' }}>
-              Wise
+              FamillyBill <span className="text-red-600">HT</span>
             </span>
           </Link>
 
@@ -28,9 +26,9 @@ export function Navbar() {
           {isLanding && (
             <nav className="hidden md:flex items-center gap-1">
               {[
-                { label: 'Personal', href: '/' },
-                { label: 'Business', href: '/' },
-                { label: 'Enterprise', href: '/' },
+                { label: 'Famille', href: '/' },
+                { label: 'Transfert', href: '/' },
+                { label: 'Épargne', href: '/' },
               ].map(item => (
                 <button
                   key={item.label}
@@ -92,9 +90,9 @@ export function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-white px-4 py-4 space-y-2">
-          <Link to="/" className="block px-3 py-2 rounded-xl font-medium hover:bg-accent" onClick={() => setMobileOpen(false)}>Personal</Link>
-          <Link to="/" className="block px-3 py-2 rounded-xl font-medium hover:bg-accent" onClick={() => setMobileOpen(false)}>Business</Link>
-          <Link to="/" className="block px-3 py-2 rounded-xl font-medium hover:bg-accent" onClick={() => setMobileOpen(false)}>Enterprise</Link>
+          <Link to="/" className="block px-3 py-2 rounded-xl font-medium hover:bg-accent" onClick={() => setMobileOpen(false)}>Famille</Link>
+          <Link to="/" className="block px-3 py-2 rounded-xl font-medium hover:bg-accent" onClick={() => setMobileOpen(false)}>Transfert</Link>
+          <Link to="/" className="block px-3 py-2 rounded-xl font-medium hover:bg-accent" onClick={() => setMobileOpen(false)}>Épargne</Link>
         </div>
       )}
     </header>
