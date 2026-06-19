@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
+import { ThemeProvider } from '@/lib/theme-context'
+import { NotificationsProvider } from '@/lib/notifications-context'
 import { Navbar } from '@/components/navbar'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { LandingPage } from '@/pages/landing'
@@ -10,18 +12,18 @@ import { TransferPage } from '@/pages/transfer'
 import { AccountPage } from '@/pages/account'
 import { CardPage } from '@/pages/card'
 import { HistoryPage } from '@/pages/history'
+import { ProfilePage } from '@/pages/profile'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--fb-light)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface)' }}>
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-full flex items-center justify-center animate-pulse" style={{ backgroundColor: 'var(--fb-red)' }}>
-          <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="10" />
-          </svg>
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center animate-pulse-lime"
+          style={{ background: 'var(--lime)' }}>
+          <img src="/logo.png" alt="" className="w-7 h-7 object-contain" />
         </div>
-        <p className="text-muted-foreground text-sm font-medium">Loading...</p>
+        <p className="text-sm font-medium text-[var(--ink-60)]">Chargement...</p>
       </div>
     </div>
   )
@@ -94,6 +96,13 @@ function AppRoutes() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ProfilePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
@@ -102,9 +111,13 @@ function AppRoutes() {
 
 export function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <ThemeProvider>
+      <NotificationsProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </NotificationsProvider>
+    </ThemeProvider>
   )
 }
 

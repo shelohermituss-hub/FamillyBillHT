@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount } from '@/lib/supabase'
 import { formatCurrency, getCurrency, CURRENCIES } from '@/lib/currencies'
+import { CurrencyIcon } from '@/components/currency-icon'
 import { cn } from '@/lib/utils'
 
 const LOCAL_ACCOUNT_NUMBERS: Record<string, Record<string, string>> = {
@@ -102,7 +103,6 @@ export function AccountPage() {
               [1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)
             ) : (
               accounts.map(acc => {
-                const curr = getCurrency(acc.currency)
                 const isSelected = selected?.id === acc.id
                 return (
                   <button
@@ -116,7 +116,7 @@ export function AccountPage() {
                     )}
                     style={isSelected ? { borderWidth: 2 } : {}}
                   >
-                    <span className="text-2xl">{curr?.flag}</span>
+                    <CurrencyIcon code={acc.currency} className="w-9 h-9" />
                     <div className="flex-1">
                       <p className="font-semibold text-sm text-[var(--ink)]">{acc.currency}</p>
                       <p className="text-xs text-[var(--ink-60)]">{formatCurrency(acc.balance, acc.currency)}</p>
@@ -165,7 +165,7 @@ export function AccountPage() {
                 <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl">{getCurrency(selected.currency)?.flag}</span>
+                    <CurrencyIcon code={selected.currency} className="w-8 h-8" />
                     <p className="text-white/60 text-sm">{getCurrency(selected.currency)?.name}</p>
                     {selected.is_main && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded ml-auto" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>

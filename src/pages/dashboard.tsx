@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Jar, type Transaction } from '@/lib/supabase'
 import { formatCurrency, getCurrency } from '@/lib/currencies'
+import { CurrencyIcon } from '@/components/currency-icon'
 import { cn } from '@/lib/utils'
 
 function greeting() {
@@ -56,7 +57,7 @@ export function DashboardPage() {
       <div className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
 
         {/* Greeting row */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fade-in-up">
           <div>
             <p className="text-sm text-[var(--ink-60)]">{greeting()},</p>
             <h1 className="text-xl font-semibold text-[var(--ink)] mt-0.5">{firstName}</h1>
@@ -64,7 +65,8 @@ export function DashboardPage() {
           <button
             onClick={() => setVisible(!visible)}
             aria-label={visible ? 'Masquer le solde' : 'Afficher le solde'}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white tr cursor-pointer border border-[var(--border)] bg-white"
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[var(--surface)] tr cursor-pointer border border-[var(--border)]"
+            style={{ background: 'var(--card-bg)' }}
           >
             {visible
               ? <Eye className="w-4 h-4 text-[var(--ink-60)]" />
@@ -73,7 +75,7 @@ export function DashboardPage() {
         </div>
 
         {/* Balance card */}
-        <div className="card-dark p-6 relative overflow-hidden" style={{ background: 'var(--ink)' }}>
+        <div className="card-dark p-6 relative overflow-hidden animate-fade-in-up stagger-1" style={{ background: 'var(--ink)' }}>
           {/* Decorative circle */}
           <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
           <div className="absolute -bottom-12 -left-8 w-48 h-48 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
@@ -144,14 +146,13 @@ export function DashboardPage() {
                     </Link>
                   </div>
                 )
-                : accounts.map(acc => {
+                : accounts.map((acc, i) => {
                     const curr = getCurrency(acc.currency)
                     return (
                       <Link to="/account" key={acc.id}>
-                        <div className="card-flat flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-[var(--surface)] shrink-0 select-none">
-                            {curr?.flag}
-                          </div>
+                        <div className={cn("card-flat card-hover flex items-center gap-3 px-4 py-3.5 tr cursor-pointer animate-fade-in-up")}
+                          style={{ animationDelay: `${i * 60}ms` }}>
+                          <CurrencyIcon code={acc.currency} className="w-10 h-10" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-[var(--ink)]">{acc.currency}
                               {acc.is_main && (
