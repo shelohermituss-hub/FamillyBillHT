@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth-context'
@@ -25,7 +24,7 @@ export function LoginPage() {
       if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
         setError('Email ou mot de passe incorrect.')
       } else if (msg.includes('Email not confirmed')) {
-        setError("Votre email n'est pas encore confirmé. Contactez l'administrateur.")
+        setError("Votre email n'est pas encore confirmé.")
       } else if (msg.includes('rate limit')) {
         setError('Trop de tentatives. Attendez quelques minutes.')
       } else {
@@ -38,116 +37,116 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--fb-light)' }}>
-      {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-1/2 p-12" style={{ backgroundColor: 'var(--fb-ink)' }}>
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
-          <span className="text-2xl font-black text-white">FamillyBill <span style={{ color: 'var(--fb-red)' }}>HT</span></span>
+    <div className="min-h-screen flex" style={{ background: 'var(--surface)' }}>
+
+      {/* Left panel — desktop */}
+      <div className="hidden lg:flex flex-col justify-between w-1/2 p-12 relative overflow-hidden" style={{ background: 'var(--ink)' }}>
+        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
+        <div className="absolute -bottom-20 -left-10 w-60 h-60 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
+
+        <Link to="/" className="flex items-center gap-2.5 relative z-10">
+          <img src="/logo.png" alt="FamillyBill HT" className="w-7 h-7 object-contain" />
+          <span className="font-semibold text-white tracking-tight">
+            FamillyBill <span className="px-1 py-0.5 rounded text-xs font-bold" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>HT</span>
+          </span>
         </Link>
-        <div className="space-y-8">
-          <h2 className="text-5xl font-black text-white leading-tight">
-            Bienvenue sur<br />
-            <span style={{ color: 'var(--fb-red)' }}>FamillyBill</span><br />
-            HT.
+
+        <div className="relative z-10 space-y-6">
+          <h2 className="text-4xl font-bold text-white leading-tight">
+            Bienvenue<br />sur FamillyBill HT.
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[
-              'Taux de change réel',
+              'Taux de change réel, sans frais cachés',
               'Envoyez dans 10+ pays',
-              '50 000 familles haïtiennes',
+              '50 000 familles haïtiennes nous font confiance',
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--fb-red)' }}>
-                  <Check className="w-3 h-3" style={{ color: 'var(--fb-ink)' }} />
-                </div>
-                <span className="text-white/80 text-sm">{item}</span>
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--lime)' }} />
+                <span className="text-white/70 text-sm">{item}</span>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-white/30 text-xs">
-          © 2025 FamillyBill HT. Tous droits réservés.
-        </p>
+
+        <p className="text-white/20 text-xs relative z-10">© 2025 FamillyBill HT. Tous droits réservés.</p>
       </div>
 
       {/* Right: form */}
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-sm">
+
           {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2 lg:hidden mb-8 justify-center">
-            <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
-            <span className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>FamillyBill <span className="text-red-600">HT</span></span>
+            <img src="/logo.png" alt="FamillyBill HT" className="w-7 h-7 object-contain" />
+            <span className="font-semibold text-[var(--ink)]">
+              FamillyBill <span className="px-1 py-0.5 rounded text-xs font-bold" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>HT</span>
+            </span>
           </Link>
 
-          <div className="bg-white rounded-3xl p-8 card-lg border border-border/50">
-            <div className="mb-8">
-              <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Connexion</h1>
-              <p className="text-muted-foreground text-sm">Bienvenue. Entrez vos informations pour continuer.</p>
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-[var(--ink)] mb-1">Connexion</h1>
+            <p className="text-sm text-[var(--ink-60)]">Entrez vos informations pour continuer.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium text-[var(--ink)]">Adresse email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="h-11 rounded-xl"
+                required
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-sm font-semibold">Adresse email</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-sm font-medium text-[var(--ink)]">Mot de passe</Label>
+              <div className="relative">
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="h-12 rounded-2xl"
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Votre mot de passe"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="h-11 rounded-xl pr-11"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ink-60)] hover:text-[var(--ink)] cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm font-semibold">Mot de passe</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Votre mot de passe"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    className="h-12 rounded-2xl pr-12"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <div className="p-3 rounded-2xl bg-destructive/10 text-destructive text-sm">
-                  {error}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full h-12 rounded-2xl font-semibold text-base border-0"
-                style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
-                disabled={loading}
-              >
-                {loading ? 'Connexion...' : 'Se connecter'}
-                {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Pas encore de compte ?{' '}
-                <Link to="/register" className="font-semibold underline underline-offset-2" style={{ color: 'var(--fb-ink)' }}>
-                  S'inscrire gratuitement
-                </Link>
-              </p>
             </div>
-          </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-red-50 text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-lime w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+              disabled={loading}
+            >
+              {loading ? 'Connexion...' : 'Se connecter'}
+              {!loading && <ArrowRight className="w-4 h-4" />}
+            </button>
+          </form>
+
+          <p className="text-sm text-[var(--ink-60)] text-center mt-6">
+            Pas encore de compte ?{' '}
+            <Link to="/register" className="font-semibold text-[var(--ink)] underline underline-offset-2">
+              S'inscrire gratuitement
+            </Link>
+          </p>
         </div>
       </div>
     </div>
