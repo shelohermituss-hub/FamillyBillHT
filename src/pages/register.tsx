@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth-context'
@@ -9,7 +8,7 @@ import { useAuth } from '@/lib/auth-context'
 const BENEFITS = [
   'Gratuit à ouvrir, détenez 10+ devises',
   'Envoyez au taux de change réel',
-  'Recevez dans 10 devises comme un local',
+  'Recevez en local dans 10 devises',
   'Dépensez partout avec la carte FamillyBill HT',
 ]
 
@@ -47,132 +46,135 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--fb-light)' }}>
-      {/* Left */}
-      <div className="hidden lg:flex flex-col justify-between w-1/2 p-12" style={{ backgroundColor: 'var(--fb-red)' }}>
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
-          <span className="text-2xl font-black text-white">FamillyBill HT</span>
+    <div className="min-h-screen flex" style={{ background: 'var(--surface)' }}>
+
+      {/* Left panel — desktop */}
+      <div className="hidden lg:flex flex-col justify-between w-1/2 p-12 relative overflow-hidden" style={{ background: 'var(--ink)' }}>
+        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
+        <div className="absolute -bottom-20 -left-10 w-60 h-60 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
+
+        <Link to="/" className="flex items-center gap-2.5 relative z-10">
+          <img src="/logo.png" alt="FamillyBill HT" className="w-7 h-7 object-contain" />
+          <span className="font-semibold text-white tracking-tight">
+            FamillyBill <span className="px-1 py-0.5 rounded text-xs font-bold" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>HT</span>
+          </span>
         </Link>
-        <div className="space-y-8">
-          <h2 className="text-5xl font-black leading-tight text-white">
-            Rejoignez 50 000<br />
-            familles<br />
-            haïtiennes.
+
+        <div className="relative z-10 space-y-6">
+          <h2 className="text-4xl font-bold text-white leading-tight">
+            Rejoignez 50 000<br />familles haïtiennes.
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {BENEFITS.map((item, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
-                  <Check className="w-3 h-3" style={{ color: 'var(--fb-ink)' }} />
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--lime)' }}>
+                  <Check className="w-3 h-3" style={{ color: 'var(--ink)' }} />
                 </div>
-                <span className="text-sm font-medium text-white">{item}</span>
+                <span className="text-white/70 text-sm">{item}</span>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-sm font-medium text-white/60">
-          Sans frais cachés. Sécurisé.
-        </p>
+
+        <p className="text-white/20 text-xs relative z-10">Sans frais cachés. Sécurisé.</p>
       </div>
 
       {/* Right: form */}
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-sm">
+
+          {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2 lg:hidden mb-8 justify-center">
-            <img src="/logo.png" alt="FamillyBill HT" className="w-8 h-8 object-contain" />
-            <span className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>FamillyBill <span className="text-red-600">HT</span></span>
+            <img src="/logo.png" alt="FamillyBill HT" className="w-7 h-7 object-contain" />
+            <span className="font-semibold text-[var(--ink)]">
+              FamillyBill <span className="px-1 py-0.5 rounded text-xs font-bold" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>HT</span>
+            </span>
           </Link>
 
-          <div className="bg-white rounded-3xl p-8 card-lg border border-border/50">
-            <div className="mb-8">
-              <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Créer un compte</h1>
-              <p className="text-muted-foreground text-sm">Gratuit. Sans frais cachés.</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="fullName" className="text-sm font-semibold">Nom complet</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Marie Jean"
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  className="h-12 rounded-2xl"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-sm font-semibold">Adresse email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="h-12 rounded-2xl"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm font-semibold">Mot de passe</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Au moins 8 caractères"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    className="h-12 rounded-2xl pr-12"
-                    required
-                    minLength={8}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">8+ caractères avec lettres et chiffres</p>
-              </div>
-
-              {error && (
-                <div className="p-3 rounded-2xl bg-destructive/10 text-destructive text-sm">
-                  {error}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full h-12 rounded-2xl font-semibold text-base border-0"
-                style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
-                disabled={loading}
-              >
-                {loading ? 'Création en cours...' : 'Créer un compte'}
-                {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
-              </Button>
-
-              <p className="text-xs text-muted-foreground text-center">
-                En vous inscrivant, vous acceptez nos{' '}
-                <a href="#" className="underline">Conditions d'utilisation</a> et{' '}
-                <a href="#" className="underline">Politique de confidentialité</a>.
-              </p>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Déjà un compte ?{' '}
-                <Link to="/login" className="font-semibold underline underline-offset-2" style={{ color: 'var(--fb-ink)' }}>
-                  Se connecter
-                </Link>
-              </p>
-            </div>
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-[var(--ink)] mb-1">Créer un compte</h1>
+            <p className="text-sm text-[var(--ink-60)]">Gratuit. Sans frais cachés.</p>
           </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="fullName" className="text-sm font-medium text-[var(--ink)]">Nom complet</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Marie Jean"
+                value={fullName}
+                onChange={e => setFullName(e.target.value)}
+                className="h-11 rounded-xl"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium text-[var(--ink)]">Adresse email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="h-11 rounded-xl"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-sm font-medium text-[var(--ink)]">Mot de passe</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Au moins 8 caractères"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="h-11 rounded-xl pr-11"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ink-60)] hover:text-[var(--ink)] cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-[var(--ink-60)]">8+ caractères avec lettres et chiffres</p>
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-red-50 text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-lime w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+              disabled={loading}
+            >
+              {loading ? 'Création en cours...' : 'Créer un compte'}
+              {!loading && <ArrowRight className="w-4 h-4" />}
+            </button>
+
+            <p className="text-xs text-[var(--ink-60)] text-center">
+              En vous inscrivant, vous acceptez nos{' '}
+              <a href="#" className="underline text-[var(--ink)]">Conditions d'utilisation</a> et{' '}
+              <a href="#" className="underline text-[var(--ink)]">Politique de confidentialité</a>.
+            </p>
+          </form>
+
+          <p className="text-sm text-[var(--ink-60)] text-center mt-6">
+            Déjà un compte ?{' '}
+            <Link to="/login" className="font-semibold text-[var(--ink)] underline underline-offset-2">
+              Se connecter
+            </Link>
+          </p>
         </div>
       </div>
     </div>

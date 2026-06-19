@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Copy, Plus, Check, ChevronRight, Info, Repeat } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount } from '@/lib/supabase'
@@ -32,13 +30,13 @@ function CopyButton({ text }: { text: string }) {
       navigator.clipboard.writeText(text)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // fallback: nothing
-    }
+    } catch { /* noop */ }
   }
   return (
-    <button onClick={copy} title="Copy to clipboard" className="p-1.5 rounded-lg hover:bg-accent transition-colors">
-      {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+    <button onClick={copy} title="Copier" className="p-1.5 rounded-lg hover:bg-[var(--surface)] tr cursor-pointer">
+      {copied
+        ? <Check className="w-3.5 h-3.5" style={{ color: 'var(--lime)' }} />
+        : <Copy className="w-3.5 h-3.5 text-[var(--ink-60)]" />}
     </button>
   )
 }
@@ -82,21 +80,22 @@ export function AccountPage() {
       setSelected(data)
       setAddingCurrency('')
     } else {
-      setAddError('Impossible d’ajouter la devise. Réessayez.')
+      setAddError('Impossible d\'ajouter la devise. Réessayez.')
     }
   }
 
   const availableCurrencies = CURRENCIES.filter(c => !accounts.find(a => a.currency === c.code))
 
   return (
-    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--fb-light)' }}>
-      <div className="max-w-4xl mx-auto px-4 pt-8 space-y-6">
+    <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'var(--surface)' }}>
+      <div className="max-w-4xl mx-auto px-4 pt-6 space-y-5">
+
         <div>
-          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--fb-ink)' }}>Compte</h1>
-          <p className="text-sm text-muted-foreground">Vos soldes multi-devises et coordonnées bancaires</p>
+          <h1 className="text-xl font-semibold text-[var(--ink)]">Compte</h1>
+          <p className="text-sm text-[var(--ink-60)]">Vos soldes multi-devises</p>
         </div>
 
-        <div className="grid md:grid-cols-[280px_1fr] gap-6">
+        <div className="grid md:grid-cols-[280px_1fr] gap-4">
           {/* Currency list */}
           <div className="space-y-2">
             {loading ? (
@@ -110,28 +109,34 @@ export function AccountPage() {
                     key={acc.id}
                     onClick={() => setSelected(acc)}
                     className={cn(
-                      "w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left",
-                      isSelected ? "border-2 shadow-sm" : "border-border bg-white hover:shadow-sm"
+                      "w-full flex items-center gap-3 p-4 rounded-2xl border tr text-left cursor-pointer",
+                      isSelected
+                        ? "border-[var(--ink)] bg-white"
+                        : "border-[var(--border)] bg-white hover:bg-[var(--surface)]"
                     )}
-                    style={isSelected ? { borderColor: 'var(--fb-red)', backgroundColor: 'white' } : {}}
+                    style={isSelected ? { borderWidth: 2 } : {}}
                   >
                     <span className="text-2xl">{curr?.flag}</span>
                     <div className="flex-1">
-                      <p className="font-semibold text-sm">{acc.currency}</p>
-                      <p className="text-xs text-muted-foreground">{formatCurrency(acc.balance, acc.currency)}</p>
+                      <p className="font-semibold text-sm text-[var(--ink)]">{acc.currency}</p>
+                      <p className="text-xs text-[var(--ink-60)]">{formatCurrency(acc.balance, acc.currency)}</p>
                     </div>
-                    {acc.is_main && <Badge variant="secondary" className="text-xs rounded-full">Principal</Badge>}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    {acc.is_main && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                        Principal
+                      </span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-[var(--ink-30)]" />
                   </button>
                 )
               })
             )}
 
             {/* Add currency */}
-            <div className="bg-white rounded-2xl border border-dashed border-border p-3">
+            <div className="card-flat p-3 border-dashed">
               <div className="flex gap-2">
                 <select
-                  className="flex-1 text-sm rounded-xl border border-border px-2 py-1.5 bg-white"
+                  className="flex-1 text-sm rounded-xl border border-[var(--border)] px-2 py-2 bg-white text-[var(--ink)] cursor-pointer"
                   value={addingCurrency}
                   onChange={e => setAddingCurrency(e.target.value)}
                 >
@@ -140,79 +145,74 @@ export function AccountPage() {
                     <option key={c.code} value={c.code}>{c.flag} {c.code} – {c.name}</option>
                   ))}
                 </select>
-                <Button
-                  size="sm"
-                  className="rounded-xl border-0 font-semibold"
-                  style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
+                <button
+                  className="btn-lime px-3 py-2 rounded-xl font-semibold text-sm flex items-center gap-1 cursor-pointer disabled:opacity-40"
                   onClick={addAccount}
                   disabled={!addingCurrency}
                 >
                   <Plus className="w-4 h-4" />
-                </Button>
+                </button>
               </div>
-              {addError && <p className="text-xs text-destructive mt-2">{addError}</p>}
+              {addError && <p className="text-xs text-red-500 mt-2">{addError}</p>}
             </div>
           </div>
 
           {/* Account detail panel */}
           {selected ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Balance card */}
-              <div className="rounded-3xl p-6 border-0" style={{ backgroundColor: 'var(--fb-ink)' }}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">{getCurrency(selected.currency)?.flag}</span>
-                      <p className="text-white/60 text-sm font-medium">{getCurrency(selected.currency)?.name}</p>
-                    </div>
-                    <p className="text-4xl font-black text-white tabular-nums">
-                      {formatCurrency(selected.balance, selected.currency)}
-                    </p>
+              <div className="card-dark p-6 relative overflow-hidden">
+                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">{getCurrency(selected.currency)?.flag}</span>
+                    <p className="text-white/60 text-sm">{getCurrency(selected.currency)?.name}</p>
+                    {selected.is_main && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded ml-auto" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                        Principal
+                      </span>
+                    )}
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <Button
-                      size="sm"
-                      className="rounded-xl font-semibold border-0"
-                      style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
-                    >
+                  <p className="text-3xl font-bold text-white tabular-nums mb-4">
+                    {formatCurrency(selected.balance, selected.currency)}
+                  </p>
+                  <div className="flex gap-2">
+                    <button className="btn-lime px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer">
                       Ajouter des fonds
-                    </Button>
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl font-semibold text-white border-white/30 hover:bg-white/10 hover:text-white hover:border-white/50"
-                    >
-                      <Link to="/transfer">Envoyer</Link>
-                    </Button>
+                    </button>
+                    <Link to="/transfer">
+                      <button className="px-4 py-2 rounded-xl text-sm font-semibold border border-white/30 text-white hover:bg-white/10 tr cursor-pointer">
+                        Envoyer
+                      </button>
+                    </Link>
                   </div>
                 </div>
               </div>
 
               {/* Local account details */}
               {LOCAL_DETAILS[selected.currency] ? (
-                <div className="bg-white rounded-3xl p-6 border border-border space-y-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Coordonnées bancaires</h3>
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
+                <div className="card-flat p-5 space-y-4">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h3 className="font-semibold text-[var(--ink)]">Coordonnées bancaires</h3>
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
                       <Check className="w-3 h-3" />
                       Réception gratuite
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Recevez des paiements en {selected.currency} comme un local. Partagez ces coordonnées.
+                  <p className="text-sm text-[var(--ink-60)]">
+                    Recevez des paiements en {selected.currency} comme un local.
                   </p>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {LOCAL_DETAILS[selected.currency].map((detail, i) => {
                       const accountNum = LOCAL_ACCOUNT_NUMBERS[selected.currency]?.[detail.type] ?? ''
                       return (
-                        <div key={i} className="p-4 rounded-2xl bg-muted/40 space-y-1.5">
+                        <div key={i} className="p-3 rounded-xl bg-[var(--surface)] space-y-1">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{detail.type}</p>
-                            <Badge variant="outline" className="text-xs rounded-full">{detail.label}</Badge>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-60)]">{detail.type}</p>
+                            <span className="text-[10px] text-[var(--ink-60)] border border-[var(--border)] px-1.5 py-0.5 rounded">{detail.label}</span>
                           </div>
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-mono text-sm font-semibold break-all">{accountNum}</p>
+                            <p className="font-mono text-sm font-medium text-[var(--ink)] break-all">{accountNum}</p>
                             <CopyButton text={accountNum} />
                           </div>
                         </div>
@@ -220,14 +220,14 @@ export function AccountPage() {
                     })}
                   </div>
                   <div className="flex items-start gap-2 p-3 rounded-xl bg-blue-50">
-                    <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
+                    <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-500" />
                     <p className="text-xs text-blue-700">Les virements internationaux sont gratuits dans la plupart des devises.</p>
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-3xl p-6 border border-border">
-                  <h3 className="font-bold mb-2" style={{ color: 'var(--fb-ink)' }}>Détenir {selected.currency}</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="card-flat p-5">
+                  <h3 className="font-semibold text-[var(--ink)] mb-2">Détenir {selected.currency}</h3>
+                  <p className="text-sm text-[var(--ink-60)]">
                     Convertissez vers {selected.currency} depuis vos autres devises au taux réel.
                   </p>
                 </div>
@@ -235,12 +235,12 @@ export function AccountPage() {
 
               {/* Convert */}
               <Link to="/transfer?mode=convert">
-                <div className="bg-white rounded-2xl p-4 border border-border flex items-center justify-between hover:shadow-sm transition-all">
+                <div className="card-flat flex items-center justify-between px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer">
                   <div>
-                    <p className="font-semibold text-sm">Convertir {selected.currency}</p>
-                    <p className="text-xs text-muted-foreground">Échangez vos devises au taux réel</p>
+                    <p className="font-semibold text-sm text-[var(--ink)]">Convertir {selected.currency}</p>
+                    <p className="text-xs text-[var(--ink-60)]">Échangez au taux réel</p>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-sm" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
+                  <div className="flex items-center gap-1.5 btn-lime px-3 py-1.5 rounded-xl text-sm font-semibold">
                     <Repeat className="w-4 h-4" />
                     Convertir
                   </div>
@@ -248,7 +248,7 @@ export function AccountPage() {
               </Link>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl p-8 border border-border text-center text-muted-foreground text-sm">
+            <div className="card-flat p-8 text-center text-[var(--ink-60)] text-sm">
               Sélectionnez une devise
             </div>
           )}

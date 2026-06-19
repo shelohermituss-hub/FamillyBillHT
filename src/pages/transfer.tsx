@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, Loader2, Info, ChevronLeft, ArrowLeftRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CURRENCIES, calculateTransfer, formatCurrency, getCurrency } from '@/lib/currencies'
@@ -25,22 +24,22 @@ function CurrencyPill({ code, onChange }: { code: string; onChange: (c: string) 
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 border-border hover:border-foreground/30 bg-white transition-colors font-bold text-sm"
+        className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--border)] hover:border-[var(--ink-30)] bg-[var(--surface)] tr font-semibold text-sm cursor-pointer"
       >
-        <span className="text-xl leading-none">{curr?.flag}</span>
-        <span>{code}</span>
-        <svg className="w-3 h-3 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span className="text-lg leading-none">{curr?.flag}</span>
+        <span className="text-[var(--ink)]">{code}</span>
+        <svg className="w-3 h-3 text-[var(--ink-30)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full mt-2 right-0 z-20 bg-white border border-border rounded-2xl shadow-xl w-64 overflow-hidden">
-            <div className="p-2 border-b border-border">
+          <div className="absolute top-full mt-2 right-0 z-20 bg-white border border-[var(--border)] rounded-2xl shadow-xl w-64 overflow-hidden">
+            <div className="p-2 border-b border-[var(--border)]">
               <Input
                 autoFocus
-                placeholder="Rechercher des devises..."
+                placeholder="Rechercher..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="h-8 text-sm rounded-xl"
@@ -52,17 +51,17 @@ function CurrencyPill({ code, onChange }: { code: string; onChange: (c: string) 
                   key={c.code}
                   type="button"
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 hover:bg-accent text-left text-sm transition-colors",
-                    c.code === code && "bg-accent"
+                    "w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--surface)] text-left text-sm tr cursor-pointer",
+                    c.code === code && "bg-[var(--surface)]"
                   )}
                   onClick={() => { onChange(c.code); setOpen(false); setSearch('') }}
                 >
                   <span className="text-lg leading-none">{c.flag}</span>
                   <div>
-                    <span className="font-bold">{c.code}</span>
-                    <span className="text-muted-foreground ml-2 text-xs">{c.name}</span>
+                    <span className="font-semibold text-[var(--ink)]">{c.code}</span>
+                    <span className="text-[var(--ink-60)] ml-2 text-xs">{c.name}</span>
                   </div>
-                  {c.code === code && <CheckCircle2 className="w-4 h-4 ml-auto shrink-0" style={{ color: 'var(--fb-red)' }} />}
+                  {c.code === code && <CheckCircle2 className="w-4 h-4 ml-auto shrink-0" style={{ color: 'var(--lime)' }} />}
                 </button>
               ))}
             </div>
@@ -91,6 +90,7 @@ export function TransferPage() {
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [txId, setTxId] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
   const sendAmount = parseFloat(amount) || 0
   const calc = calculateTransfer(sendAmount, fromCurrency, toCurrency)
@@ -107,8 +107,6 @@ export function TransferPage() {
     if (idx <= 0) navigate(-1)
     else setStep(STEPS[idx - 1])
   }
-
-  const [submitError, setSubmitError] = useState('')
 
   async function submit() {
     if (!user) return
@@ -144,37 +142,35 @@ export function TransferPage() {
   const visibleIdx = visibleSteps.indexOf(step)
 
   return (
-    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--fb-light)' }}>
-      <div className="max-w-lg mx-auto px-4 pt-8">
+    <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'var(--surface)' }}>
+      <div className="max-w-lg mx-auto px-4 pt-6">
 
-        {/* Header */}
         {step !== 'success' && (
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center gap-3 mb-6">
             <button
               onClick={goBack}
-              className="w-9 h-9 rounded-xl hover:bg-white flex items-center justify-center transition-colors border border-border bg-white/60"
+              className="w-9 h-9 rounded-full border border-[var(--border)] bg-white flex items-center justify-center tr hover:bg-[var(--surface)] cursor-pointer"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4 text-[var(--ink)]" />
             </button>
             <div>
-              <h1 className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>
-                {isConvert ? 'Convertir' : 'Envoyer'}
+              <h1 className="text-xl font-semibold text-[var(--ink)]">
+                {isConvert ? 'Convertir des devises' : 'Envoyer de l\'argent'}
               </h1>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-[var(--ink-60)]">
                 Étape {visibleIdx + 1} sur {visibleSteps.length}
               </p>
             </div>
           </div>
         )}
 
-        {/* Progress bar */}
         {step !== 'success' && (
-          <div className="flex gap-1.5 mb-8">
+          <div className="flex gap-1.5 mb-6">
             {visibleSteps.map((s, i) => (
               <div
                 key={s}
-                className="h-1 flex-1 rounded-full transition-all duration-300"
-                style={i <= visibleIdx ? { backgroundColor: 'var(--fb-red)' } : { backgroundColor: 'oklch(0.922 0.005 120)' }}
+                className="h-1 flex-1 rounded-full tr"
+                style={{ background: i <= visibleIdx ? 'var(--lime)' : 'var(--surface-2)' }}
               />
             ))}
           </div>
@@ -182,16 +178,15 @@ export function TransferPage() {
 
         {/* STEP 1: Amount */}
         {step === 'amount' && (
-          <div className="bg-white rounded-3xl p-6 border border-border shadow-sm space-y-5">
-            {/* You send */}
+          <div className="card-flat p-6 space-y-5">
             <div className="space-y-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Vous envoyez</p>
-              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 border-border focus-within:border-foreground transition-colors">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Vous envoyez</p>
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
                 <Input
                   type="number"
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
-                  className="border-0 shadow-none text-3xl font-black p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent"
+                  className="border-0 shadow-none text-3xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent text-[var(--ink)]"
                   min="0"
                   placeholder="0"
                 />
@@ -199,41 +194,38 @@ export function TransferPage() {
               </div>
             </div>
 
-            {/* Fee breakdown */}
-            <div className="space-y-2 py-3 border-y border-border">
+            <div className="space-y-2.5 py-3 border-y border-[var(--border)]">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Frais de transfert</span>
-                <span className="font-semibold">− {formatCurrency(calc.fee, fromCurrency)}</span>
+                <span className="text-[var(--ink-60)]">Frais de transfert</span>
+                <span className="font-medium text-[var(--ink)]">− {formatCurrency(calc.fee, fromCurrency)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Montant converti</span>
-                <span className="font-semibold">{formatCurrency(calc.amountAfterFee, fromCurrency)}</span>
+                <span className="text-[var(--ink-60)]">Montant converti</span>
+                <span className="font-medium text-[var(--ink)]">{formatCurrency(calc.amountAfterFee, fromCurrency)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-[var(--ink-60)]">
                   <span>Taux de change</span>
                   <Info className="w-3.5 h-3.5" />
                 </div>
-                <span className="font-semibold">1 {fromCurrency} = {calc.rate.toFixed(4)} {toCurrency}</span>
+                <span className="font-medium text-[var(--ink)]">1 {fromCurrency} = {calc.rate.toFixed(4)} {toCurrency}</span>
               </div>
             </div>
 
-            {/* Swap */}
-            <div className="flex justify-center -my-2">
+            <div className="flex justify-center">
               <button
                 type="button"
                 onClick={swap}
-                className="w-10 h-10 rounded-full border-2 border-border bg-white hover:bg-accent flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                className="w-9 h-9 rounded-full border border-[var(--border)] bg-white hover:bg-[var(--surface)] flex items-center justify-center tr cursor-pointer"
               >
-                <ArrowLeftRight className="w-4 h-4 text-muted-foreground" />
+                <ArrowLeftRight className="w-4 h-4 text-[var(--ink-60)]" />
               </button>
             </div>
 
-            {/* Recipient gets */}
             <div className="space-y-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Le bénéficiaire reçoit</p>
-              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 border-border bg-muted/30">
-                <p className="text-3xl font-black flex-1 tabular-nums">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Le bénéficiaire reçoit</p>
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+                <p className="text-3xl font-bold flex-1 tabular-nums text-[var(--ink)]">
                   {calc.received > 0 ? calc.received.toLocaleString('fr-FR', {
                     minimumFractionDigits: toCurr?.decimals ?? 2,
                     maximumFractionDigits: toCurr?.decimals ?? 2,
@@ -243,133 +235,130 @@ export function TransferPage() {
               </div>
             </div>
 
-            {/* Rate guarantee */}
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium" style={{ background: 'var(--lime-light)', color: 'var(--ink)' }}>
+              <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: 'var(--lime)' }} />
               <span>Taux garanti pendant 48 heures</span>
             </div>
 
-            <Button
-              className="w-full h-12 rounded-2xl font-bold text-base border-0"
-              style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
+            <button
+              className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
               onClick={() => setStep(isConvert ? 'review' : 'recipient')}
               disabled={!sendAmount || sendAmount <= 0}
             >
               Continuer
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
         {/* STEP 2: Recipient */}
         {step === 'recipient' && (
-          <div className="bg-white rounded-3xl p-6 border border-border shadow-sm space-y-5">
+          <div className="card-flat p-6 space-y-5">
             <div>
-              <h2 className="text-xl font-black" style={{ color: 'var(--fb-ink)' }}>À qui envoyez-vous ?</h2>
-              <p className="text-sm text-muted-foreground mt-1">Saisissez les coordonnées du bénéficiaire</p>
+              <h2 className="text-lg font-semibold text-[var(--ink)]">À qui envoyez-vous ?</h2>
+              <p className="text-sm text-[var(--ink-60)] mt-1">Coordonnées du bénéficiaire</p>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold">Nom complet <span className="text-red-400">*</span></Label>
+                <Label className="text-sm font-medium text-[var(--ink)]">Nom complet <span className="text-red-400">*</span></Label>
                 <Input
                   value={recipientName}
                   onChange={e => setRecipientName(e.target.value)}
                   placeholder="ex. Marie Jean"
-                  className="h-12 rounded-2xl"
+                  className="h-11 rounded-xl"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold">Email <span className="text-muted-foreground font-normal">(optionnel)</span></Label>
+                <Label className="text-sm font-medium text-[var(--ink)]">Email <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
                 <Input
                   type="email"
                   value={recipientEmail}
                   onChange={e => setRecipientEmail(e.target.value)}
                   placeholder="sophie@example.com"
-                  className="h-12 rounded-2xl"
+                  className="h-11 rounded-xl"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold">IBAN / N° de compte <span className="text-muted-foreground font-normal">(optionnel)</span></Label>
+                <Label className="text-sm font-medium text-[var(--ink)]">IBAN / N° de compte <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
                 <Input
                   value={recipientAccount}
                   onChange={e => setRecipientAccount(e.target.value)}
-                  placeholder="FR76 1234 5678 9012 3456 7890 123"
-                  className="h-12 rounded-2xl font-mono text-sm"
+                  placeholder="FR76 1234 5678 ..."
+                  className="h-11 rounded-xl font-mono text-sm"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold">Note <span className="text-muted-foreground font-normal">(optionnel)</span></Label>
+                <Label className="text-sm font-medium text-[var(--ink)]">Note <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
                 <Input
                   value={note}
                   onChange={e => setNote(e.target.value)}
-                  placeholder="Objet du paiement ?"
-                  className="h-12 rounded-2xl"
+                  placeholder="Objet du paiement"
+                  className="h-11 rounded-xl"
                 />
               </div>
             </div>
 
-            <Button
-              className="w-full h-12 rounded-2xl font-bold text-base border-0"
-              style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
+            <button
+              className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
               onClick={() => setStep('review')}
               disabled={!recipientName.trim()}
             >
               Continuer
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
         {/* STEP 3: Review */}
         {step === 'review' && (
-          <div className="bg-white rounded-3xl p-6 border border-border shadow-sm space-y-5">
+          <div className="card-flat p-6 space-y-5">
             <div>
-              <h2 className="text-xl font-black" style={{ color: 'var(--fb-ink)' }}>Vérifier votre virement</h2>
-              <p className="text-sm text-muted-foreground mt-1">Veuillez confirmer les informations</p>
+              <h2 className="text-lg font-semibold text-[var(--ink)]">Récapitulatif</h2>
+              <p className="text-sm text-[var(--ink-60)] mt-1">Vérifiez les informations avant de confirmer</p>
             </div>
 
-            <div className="space-y-0 divide-y divide-border rounded-2xl border border-border overflow-hidden">
+            <div className="rounded-xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
               {[
                 { label: 'Vous envoyez', value: `${fromCurr?.flag} ${formatCurrency(sendAmount, fromCurrency)}` },
                 { label: 'Frais', value: `− ${formatCurrency(calc.fee, fromCurrency)}` },
                 { label: 'Taux de change', value: `1 ${fromCurrency} = ${calc.rate.toFixed(4)} ${toCurrency}` },
-                { label: 'Le bénéficiaire reçoit', value: `${toCurr?.flag} ${formatCurrency(calc.received, toCurrency)}`, bold: true },
+                { label: 'Le bénéficiaire reçoit', value: `${toCurr?.flag} ${formatCurrency(calc.received, toCurrency)}`, highlight: true },
                 ...(recipientName ? [{ label: 'À', value: recipientName }] : []),
                 ...(recipientAccount ? [{ label: 'Compte', value: recipientAccount, mono: true }] : []),
                 ...(note ? [{ label: 'Note', value: note, italic: true }] : []),
               ].map((row, i) => (
-                <div key={i} className={cn("flex justify-between items-center px-4 py-3", row.bold && "bg-muted/30")}>
-                  <span className="text-sm text-muted-foreground">{row.label}</span>
+                <div key={i} className={cn("flex justify-between items-center px-4 py-3", row.highlight && "bg-[var(--lime-light)]")}>
+                  <span className="text-sm text-[var(--ink-60)]">{row.label}</span>
                   <span className={cn(
-                    "text-sm",
-                    row.bold ? "font-black text-base" : "font-semibold",
+                    "text-sm text-[var(--ink)]",
+                    row.highlight ? "font-bold text-base" : "font-medium",
                     row.mono && "font-mono text-xs",
-                    row.italic && "italic text-muted-foreground"
-                  )} style={row.bold ? { color: 'var(--fb-ink)' } : {}}>
+                    row.italic && "italic text-[var(--ink-60)]"
+                  )}>
                     {row.value}
                   </span>
                 </div>
               ))}
             </div>
 
-            <Button
-              className="w-full h-12 rounded-2xl font-bold text-base border-0"
-              style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
+            {submitError && (
+              <div className="p-3 rounded-xl text-sm text-red-600 bg-red-50">
+                {submitError}
+              </div>
+            )}
+
+            <button
+              className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
               onClick={submit}
               disabled={submitting}
             >
               {submitting
-                ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Traitement...</>
-                : <>Confirmer & envoyer {fromCurr?.flag} {formatCurrency(sendAmount, fromCurrency)}</>
+                ? <><Loader2 className="w-4 h-4 animate-spin" />Traitement...</>
+                : <>Confirmer — {fromCurr?.flag} {formatCurrency(sendAmount, fromCurrency)}</>
               }
-            </Button>
-            {submitError && (
-              <div className="p-3 rounded-2xl text-sm text-destructive" style={{ backgroundColor: 'oklch(0.577 0.245 27.325 / 0.1)' }}>
-                {submitError}
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground text-center">
+            </button>
+            <p className="text-xs text-[var(--ink-60)] text-center">
               En confirmant, vous acceptez nos conditions de virement.
             </p>
           </div>
@@ -377,49 +366,47 @@ export function TransferPage() {
 
         {/* STEP 4: Success */}
         {step === 'success' && (
-          <div className="bg-white rounded-3xl p-8 border border-border shadow-sm text-center space-y-6">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg" style={{ backgroundColor: 'var(--fb-red)' }}>
-              <CheckCircle2 className="w-10 h-10" style={{ color: 'white' }} />
+          <div className="card-flat p-8 text-center space-y-6">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto" style={{ background: 'var(--lime)' }}>
+              <CheckCircle2 className="w-8 h-8" style={{ color: 'var(--ink)' }} />
             </div>
             <div>
-              <h2 className="text-2xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Virement envoyé !</h2>
-              <p className="text-muted-foreground text-sm">
-                Votre virement de {fromCurr?.flag} {formatCurrency(sendAmount, fromCurrency)} est en cours.
+              <h2 className="text-xl font-semibold text-[var(--ink)] mb-2">Virement envoyé</h2>
+              <p className="text-sm text-[var(--ink-60)]">
+                {fromCurr?.flag} {formatCurrency(sendAmount, fromCurrency)} est en cours de traitement.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl text-left space-y-2.5" style={{ backgroundColor: 'var(--fb-light)' }}>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Référence</span>
-                <span className="font-mono font-bold text-xs">{txId ? txId.slice(0, 8).toUpperCase() : '—'}</span>
+            <div className="text-left rounded-xl border border-[var(--border)] divide-y divide-[var(--border)] overflow-hidden">
+              <div className="flex justify-between px-4 py-3 text-sm">
+                <span className="text-[var(--ink-60)]">Référence</span>
+                <span className="font-mono font-semibold text-xs text-[var(--ink)]">{txId ? txId.slice(0, 8).toUpperCase() : '—'}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Le bénéficiaire reçoit</span>
-                <span className="font-bold">{toCurr?.flag} {formatCurrency(calc.received, toCurrency)}</span>
+              <div className="flex justify-between px-4 py-3 text-sm">
+                <span className="text-[var(--ink-60)]">Bénéficiaire reçoit</span>
+                <span className="font-semibold text-[var(--ink)]">{toCurr?.flag} {formatCurrency(calc.received, toCurrency)}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Livraison estimée</span>
-                <span className="font-bold" style={{ color: 'var(--fb-red)' }}>Sous 24 heures</span>
+              <div className="flex justify-between px-4 py-3 text-sm">
+                <span className="text-[var(--ink-60)]">Délai estimé</span>
+                <span className="font-semibold" style={{ color: 'var(--ink)' }}>Sous 24 heures</span>
               </div>
               {recipientName && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">À</span>
-                  <span className="font-semibold">{recipientName}</span>
+                <div className="flex justify-between px-4 py-3 text-sm">
+                  <span className="text-[var(--ink-60)]">À</span>
+                  <span className="font-medium text-[var(--ink)]">{recipientName}</span>
                 </div>
               )}
             </div>
 
             <div className="flex flex-col gap-2">
-              <Button
-                className="w-full h-12 rounded-2xl font-bold border-0"
-                style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
+              <button
+                className="btn-lime w-full h-12 rounded-xl font-semibold text-sm cursor-pointer"
                 onClick={() => navigate('/dashboard')}
               >
                 Retour au tableau de bord
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full h-12 rounded-2xl font-bold"
+              </button>
+              <button
+                className="w-full h-12 rounded-xl font-semibold text-sm border border-[var(--border)] text-[var(--ink)] hover:bg-[var(--surface)] tr cursor-pointer"
                 onClick={() => {
                   setStep('amount')
                   setAmount('500')
@@ -431,7 +418,7 @@ export function TransferPage() {
                 }}
               >
                 Nouveau virement
-              </Button>
+              </button>
             </div>
           </div>
         )}
