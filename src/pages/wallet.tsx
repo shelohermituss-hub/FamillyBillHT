@@ -1,21 +1,225 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   Eye, EyeOff, Lock, Fingerprint, Key,
   ArrowUpRight, ArrowDownLeft, Repeat, Plus,
   ChevronRight, Download, Shield, ChevronLeft, ChevronRight as CRight, Check,
+  Copy, QrCode, X, Loader2,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount } from '@/lib/supabase'
-import { formatCurrency, getCurrency, getRate } from '@/lib/currencies'
+import { formatCurrency, getCurrency, getRate, CURRENCIES } from '@/lib/currencies'
 import { CurrencyIcon } from '@/components/currency-icon'
 import { cn } from '@/lib/utils'
 
 const PIN_KEY    = 'fb-wallet-pin'
 const LOCKED_KEY = 'fb-wallet-locked'
 
-// ── PIN pad ───────────────────────────────────────────────────────────────────
+// ── Deposit Modal ──────────────────────────────────────────────────────────────
+function DepositModal({
+  accounts,
+  defaultCurrency,
+  onClose,
+  onSuccess,
+}: {
+  accounts: CurrencyAccount[]
+  defaultCurrency: string
+  onClose: () => void
+  onSuccess: (currency: string, amount: number) => void
+}) {
+  const { user } = useAuth()
+  const [currency, setCurrency] = useState(defaultCurrency)
+  const [amount, setAmount] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+
+  async function confirm() {
+    if (!user || !parseFloat(amount)) return
+    setLoading(true)
+    const numAmount = parseFloat(amount)
+    const acc = accounts.find(a => a.currency === currency)
+
+    if (acc) {
+      await supabase.from('currency_accounts')
+        .update({ balance: acc.balance + numAmount })
+        .eq('id', acc.id)
+    } else {
+      await supabase.from('currency_accounts').insert({
+        user_id: user.id, currency, balance: numAmount, is_main: false,
+      })
+    }
+
+    await supabase.from('transactions').insert({
+      user_id: user.id, type: 'deposit', status: 'completed',
+      amount: numAmount, currency, fee: 0,
+      reference: `DEP-${Date.now()}`,
+    })
+
+    setLoading(false)
+    setDone(true)
+    setTimeout(() => { onSuccess(currency, numAmount); onClose() }, 1200)
+  }
+
+  const curr = getCurrency(currency)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-t-3xl md:rounded-3xl p-6 space-y-5 animate-fade-in-up"
+        style={{ background: 'var(--card-bg)' }}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[var(--ink)]">Ajouter des fonds</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--surface)] tr cursor-pointer">
+            <X className="w-4 h-4 text-[var(--ink-60)]" />
+          </button>
+        </div>
+
+        {done ? (
+          <div className="text-center py-6 space-y-3">
+            <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center" style={{ background: 'var(--lime)' }}>
+              <Check className="w-8 h-8" style={{ color: 'var(--ink)' }} />
+            </div>
+            <p className="font-semibold text-[var(--ink)]">Fonds ajoutés !</p>
+            <p className="text-sm text-[var(--ink-60)]">{formatCurrency(parseFloat(amount), currency)} crédité sur votre compte</p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Devise</label>
+              <select
+                value={currency}
+                onChange={e => setCurrency(e.target.value)}
+                className="w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-medium bg-[var(--card-bg)] text-[var(--ink)] cursor-pointer focus:outline-none focus:border-[var(--ink-30)]"
+              >
+                {CURRENCIES.slice(0, 10).map(c => (
+                  <option key={c.code} value={c.code}>{c.flag} {c.code} — {c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Montant</label>
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
+                <span className="text-lg font-semibold text-[var(--ink-60)]">{curr?.symbol}</span>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  min="0"
+                  className="flex-1 text-2xl font-bold bg-transparent text-[var(--ink)] outline-none tabular-nums"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              {[50, 100, 250, 500].map(v => (
+                <button
+                  key={v}
+                  onClick={() => setAmount(v.toString())}
+                  className={cn(
+                    "flex-1 py-2 rounded-xl text-xs font-semibold border tr cursor-pointer",
+                    amount === v.toString()
+                      ? "text-[var(--ink)]"
+                      : "border-[var(--border)] text-[var(--ink-60)] hover:bg-[var(--surface)]"
+                  )}
+                  style={amount === v.toString() ? { background: 'var(--lime)', borderColor: 'var(--lime)' } : {}}
+                >
+                  {curr?.symbol}{v}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={confirm}
+              disabled={loading || !parseFloat(amount)}
+              className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              Confirmer l'ajout
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Receive Modal ──────────────────────────────────────────────────────────────
+function ReceiveModal({
+  account,
+  onClose,
+}: {
+  account: CurrencyAccount
+  onClose: () => void
+}) {
+  const [copied, setCopied] = useState(false)
+  const curr = getCurrency(account.currency)
+
+  const accountInfo = account.account_number ?? account.iban ?? `FB-${account.id.slice(0, 8).toUpperCase()}`
+
+  function copy(text: string) {
+    navigator.clipboard.writeText(text).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-t-3xl md:rounded-3xl p-6 space-y-5 animate-fade-in-up"
+        style={{ background: 'var(--card-bg)' }}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[var(--ink)]">Recevoir {account.currency}</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--surface)] tr cursor-pointer">
+            <X className="w-4 h-4 text-[var(--ink-60)]" />
+          </button>
+        </div>
+
+        {/* QR code placeholder */}
+        <div className="flex justify-center">
+          <div className="w-44 h-44 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-[var(--border)]"
+            style={{ background: 'var(--surface)' }}>
+            <QrCode className="w-16 h-16 text-[var(--ink-30)]" />
+            <p className="text-[10px] text-[var(--ink-60)] mt-2 font-medium">{curr?.flag} {account.currency}</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="p-4 rounded-2xl border border-[var(--border)]" style={{ background: 'var(--surface)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)] mb-1.5">N° de compte</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-mono text-sm font-semibold text-[var(--ink)] break-all">{accountInfo}</p>
+              <button
+                onClick={() => copy(accountInfo)}
+                className="shrink-0 p-2 rounded-lg hover:bg-[var(--surface-2)] tr cursor-pointer"
+              >
+                {copied
+                  ? <Check className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+                  : <Copy className="w-4 h-4 text-[var(--ink-60)]" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm" style={{ background: 'var(--lime-light)', color: 'var(--ink)' }}>
+            <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--lime)' }} />
+            <span className="font-medium">Réception gratuite en {account.currency}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full h-11 rounded-xl font-semibold text-sm border border-[var(--border)] text-[var(--ink)] hover:bg-[var(--surface)] tr cursor-pointer"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── PIN pad ────────────────────────────────────────────────────────────────────
 function PinPad({
   title,
   subtitle,
@@ -62,9 +266,7 @@ function PinPad({
         ))}
       </div>
 
-      {error && (
-        <p className="text-sm text-red-500 -mt-4">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500 -mt-4">{error}</p>}
 
       <div className="grid grid-cols-3 gap-3">
         {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((k, i) =>
@@ -72,8 +274,8 @@ function PinPad({
             <button
               key={i}
               onClick={() => k === '⌫' ? del() : press(k)}
-              className="w-[72px] h-[72px] rounded-2xl font-semibold text-xl flex items-center justify-center tr cursor-pointer border border-[var(--border)] hover:bg-[var(--surface-2)]"
-              style={{ background: 'var(--card-bg)', color: 'var(--ink)' }}
+              className="w-[72px] h-[72px] rounded-2xl font-semibold text-xl flex items-center justify-center tr cursor-pointer hover:bg-[var(--surface-2)]"
+              style={{ background: 'var(--card-bg)', color: 'var(--ink)', boxShadow: '0 1px 3px rgba(14,15,12,0.08)' }}
             >
               {k}
             </button>
@@ -90,35 +292,41 @@ function PinPad({
   )
 }
 
-// ── Currency card (dark, like screenshot) ─────────────────────────────────────
+// ── Currency card ──────────────────────────────────────────────────────────────
 function CurrencyCard({
   account,
   visible,
   isPrimary,
+  onDeposit,
+  onReceive,
 }: {
   account: CurrencyAccount
   visible: boolean
   isPrimary: boolean
+  onDeposit: () => void
+  onReceive: () => void
 }) {
   const curr = getCurrency(account.currency)
 
   return (
     <div
       className="relative rounded-3xl p-6 overflow-hidden shrink-0 w-full"
-      style={{ background: 'var(--ink)' }}
+      style={{ background: 'var(--ink)', boxShadow: '0 8px 40px rgba(14,15,12,0.22), 0 2px 8px rgba(14,15,12,0.14)' }}
     >
-      {/* Decorative circles */}
-      <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
-      <div className="absolute -bottom-14 -left-6 w-48 h-48 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
+      <div className="absolute -top-10 -right-10 w-52 h-52 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
+      <div className="absolute -bottom-14 -left-8 w-52 h-52 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
+      <div className="absolute top-1/2 right-8 w-24 h-24 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
 
       <div className="relative z-10">
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden border border-white/20">
-              <CurrencyIcon code={account.currency} className="w-10 h-10" />
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+              <CurrencyIcon code={account.currency} className="w-11 h-11" />
             </div>
-            <span className="text-white/70 text-sm font-medium">{curr?.name}</span>
+            <div>
+              <span className="text-white font-semibold text-sm">{account.currency}</span>
+              <p className="text-white/50 text-xs">{curr?.name}</p>
+            </div>
           </div>
           {isPrimary && (
             <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
@@ -127,48 +335,53 @@ function CurrencyCard({
           )}
         </div>
 
-        {/* Balance */}
-        <p className="text-4xl font-bold text-white tabular-nums mb-5 leading-none">
+        <p className="text-[11px] font-medium uppercase tracking-widest text-white/40 mb-1">Solde disponible</p>
+        <p className="text-4xl font-bold text-white tabular-nums mb-6 leading-none">
           {visible
-            ? `${curr?.code} ${account.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : `${curr?.code} ••• •••`}
+            ? `${curr?.symbol} ${account.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : `${curr?.symbol} ••• •••`}
         </p>
 
-        {/* Actions */}
         <div className="flex gap-3">
-          <button className="flex-1 h-11 rounded-2xl font-semibold text-sm cursor-pointer tr hover:opacity-90"
-            style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
-            Ajouter des fonds
+          <button
+            onClick={onDeposit}
+            className="flex-1 h-11 rounded-2xl font-semibold text-sm cursor-pointer tr"
+            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+          >
+            + Ajouter des fonds
           </button>
-          <Link to="/transfer" className="flex-1">
-            <button className="w-full h-11 rounded-2xl font-semibold text-sm border border-white/30 text-white hover:bg-white/10 tr cursor-pointer">
-              Envoyer
-            </button>
-          </Link>
+          <button
+            onClick={onReceive}
+            className="flex-1 h-11 rounded-2xl font-semibold text-sm border border-white/25 text-white hover:bg-white/10 tr cursor-pointer"
+          >
+            Recevoir
+          </button>
         </div>
       </div>
     </div>
   )
 }
 
-// ── Main wallet view ──────────────────────────────────────────────────────────
+// ── Main wallet view ───────────────────────────────────────────────────────────
 function WalletMain({
   accounts,
   loading,
   onLock,
   onChangePIN,
+  onAccountsUpdated,
 }: {
   accounts: CurrencyAccount[]
   loading: boolean
   onLock: () => void
   onChangePIN: () => void
+  onAccountsUpdated: () => void
 }) {
+  const navigate = useNavigate()
   const [visible, setVisible]   = useState(true)
   const [cardIdx, setCardIdx]   = useState(0)
-  const [addingCurrency, setAddingCurrency] = useState('')
-  const { user } = useAuth()
+  const [showDeposit, setShowDeposit] = useState(false)
+  const [showReceive, setShowReceive] = useState(false)
 
-  // Sort: USD first (primary), then main accounts, then rest
   const sorted = [...accounts].sort((a, b) => {
     if (a.currency === 'USD') return -1
     if (b.currency === 'USD') return 1
@@ -183,36 +396,38 @@ function WalletMain({
 
   const activeAcc = sorted[cardIdx]
 
-  async function addAccount() {
-    if (!user || !addingCurrency) return
-    const { data } = await supabase.from('currency_accounts').insert({
-      user_id: user.id,
-      currency: addingCurrency,
-      balance: 0,
-      is_main: false,
-    }).select().single()
-    if (data) {
-      accounts.push(data)
-      setAddingCurrency('')
-    }
-  }
-
   const QUICK_ACTIONS = [
-    { icon: ArrowUpRight, label: 'Payer',     href: '/bills',              lime: true  },
-    { icon: ArrowUpRight, label: 'Envoyer',   href: '/transfer',           lime: false },
-    { icon: ArrowDownLeft,label: 'Recevoir',  href: '/wallet',             lime: false },
-    { icon: Repeat,       label: 'Convertir', href: '/transfer?mode=convert', lime: false },
+    { icon: ArrowUpRight, label: 'Payer',     action: () => navigate('/bills'),              lime: true  },
+    { icon: ArrowUpRight, label: 'Envoyer',   action: () => navigate('/transfer'),           lime: false },
+    { icon: ArrowDownLeft,label: 'Recevoir',  action: () => setShowReceive(true),            lime: false },
+    { icon: Repeat,       label: 'Convertir', action: () => navigate('/transfer?mode=convert'), lime: false },
   ]
 
   return (
     <div className="space-y-5">
+      {showDeposit && activeAcc && (
+        <DepositModal
+          accounts={accounts}
+          defaultCurrency={activeAcc.currency}
+          onClose={() => setShowDeposit(false)}
+          onSuccess={() => { setShowDeposit(false); onAccountsUpdated() }}
+        />
+      )}
+      {showReceive && activeAcc && (
+        <ReceiveModal
+          account={activeAcc}
+          onClose={() => setShowReceive(false)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[var(--ink)]">Mon Portefeuille</h1>
-          <p className="text-sm text-[var(--ink-60)]">Total: {visible
-            ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : '$••• •••'}
+          <p className="text-sm text-[var(--ink-60)]">
+            {visible
+              ? `Total : $${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : 'Total : $••• •••'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -221,9 +436,7 @@ function WalletMain({
             className="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--border)] tr cursor-pointer"
             style={{ background: 'var(--card-bg)' }}
           >
-            {visible
-              ? <Eye className="w-4 h-4 text-[var(--ink-60)]" />
-              : <EyeOff className="w-4 h-4 text-[var(--ink-60)]" />}
+            {visible ? <Eye className="w-4 h-4 text-[var(--ink-60)]" /> : <EyeOff className="w-4 h-4 text-[var(--ink-60)]" />}
           </button>
           <button
             onClick={onLock}
@@ -235,17 +448,18 @@ function WalletMain({
         </div>
       </div>
 
-      {/* Currency card */}
+      {/* Currency card carousel */}
       {loading ? (
-        <Skeleton className="h-52 rounded-3xl" />
+        <Skeleton className="h-56 rounded-3xl" />
       ) : sorted.length > 0 && activeAcc ? (
         <div>
           <CurrencyCard
             account={activeAcc}
             visible={visible}
             isPrimary={activeAcc.currency === 'USD' || activeAcc.is_main}
+            onDeposit={() => setShowDeposit(true)}
+            onReceive={() => setShowReceive(true)}
           />
-          {/* Dots */}
           {sorted.length > 1 && (
             <div className="flex items-center justify-center gap-2 mt-3">
               <button
@@ -278,33 +492,52 @@ function WalletMain({
             </div>
           )}
         </div>
-      ) : null}
+      ) : (
+        <div className="card-flat p-8 text-center space-y-3">
+          <p className="text-sm text-[var(--ink-60)]">Aucun compte devise configuré.</p>
+        </div>
+      )}
 
       {/* Quick actions */}
-      <div className="grid grid-cols-4 gap-2">
-        {QUICK_ACTIONS.map(({ icon: Icon, label, href, lime }) => (
-          <Link key={label} to={href}>
-            <div className="flex flex-col items-center gap-2 cursor-pointer group">
+      <div className="card-elevated p-4">
+        <div className="grid grid-cols-4 gap-2">
+          {QUICK_ACTIONS.map(({ icon: Icon, label, action, lime }) => (
+            <button key={label} onClick={action} className="flex flex-col items-center gap-2 cursor-pointer group">
               <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center tr"
-                style={lime ? { background: 'var(--lime)' } : { background: 'var(--surface-2)' }}
+                className="rounded-2xl flex items-center justify-center tr group-hover:opacity-85"
+                style={{
+                  width: 52, height: 52,
+                  background: lime ? 'var(--lime)' : 'var(--surface-2)',
+                }}
               >
-                <Icon className="w-5 h-5" style={{ color: lime ? 'var(--ink)' : 'var(--ink-60)' }} />
+                <Icon className="w-6 h-6" style={{ color: lime ? 'var(--ink)' : 'var(--ink-60)' }} />
               </div>
               <span className="text-xs font-medium text-[var(--ink-60)]">{label}</span>
-            </div>
-          </Link>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* All currencies */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-[var(--ink)]">Mes devises</h2>
+          <button
+            onClick={() => setShowDeposit(true)}
+            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl tr cursor-pointer"
+            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+          >
+            <Plus className="w-3 h-3" /> Ajouter
+          </button>
         </div>
         <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
           {loading
             ? [1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-none" />)
+            : sorted.length === 0 ? (
+              <div className="p-6 text-center text-sm text-[var(--ink-60)]">
+                Aucun compte. Ajoutez une devise pour commencer.
+              </div>
+            )
             : sorted.map((acc, i) => {
                 const curr = getCurrency(acc.currency)
                 const usdVal = acc.balance * getRate(acc.currency, 'USD')
@@ -314,24 +547,24 @@ function WalletMain({
                     key={acc.id}
                     onClick={() => setCardIdx(i)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3.5 tr cursor-pointer text-left",
-                      isActive ? "bg-[var(--surface)]" : "hover:bg-[var(--surface)]"
+                      "w-full flex items-center gap-3 px-4 py-4 tr cursor-pointer text-left",
+                      isActive ? "bg-[var(--lime-light)]" : "hover:bg-[var(--surface)]"
                     )}
                   >
-                    <CurrencyIcon code={acc.currency} className="w-9 h-9 shrink-0" />
+                    <CurrencyIcon code={acc.currency} className="w-10 h-10 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[var(--ink)]">
-                        {acc.currency}
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-[var(--ink)]">{acc.currency}</p>
                         {(acc.currency === 'USD' || acc.is_main) && (
-                          <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
                             Principal
                           </span>
                         )}
-                      </p>
+                      </div>
                       <p className="text-xs text-[var(--ink-60)]">{curr?.name}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold text-[var(--ink)] tabular-nums">
+                      <p className="text-sm font-bold text-[var(--ink)] tabular-nums">
                         {visible ? formatCurrency(acc.balance, acc.currency) : `${curr?.symbol} ••••`}
                       </p>
                       <p className="text-xs text-[var(--ink-60)] tabular-nums">
@@ -341,50 +574,29 @@ function WalletMain({
                     {isActive && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--lime)' }} />}
                   </button>
                 )
-              })}
-
-          {/* Add currency row */}
-          <div className="px-4 py-3 flex gap-2 items-center">
-            <select
-              value={addingCurrency}
-              onChange={e => setAddingCurrency(e.target.value)}
-              className="flex-1 text-sm rounded-xl border border-[var(--border)] px-3 py-2 bg-[var(--card-bg)] text-[var(--ink)] cursor-pointer focus:outline-none"
-            >
-              <option value="">+ Ajouter une devise...</option>
-              {['USD','EUR','HTG','GBP','CAD','AUD','CHF']
-                .filter(c => !accounts.find(a => a.currency === c))
-                .map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <button
-              onClick={addAccount}
-              disabled={!addingCurrency}
-              className="h-9 px-4 rounded-xl text-sm font-semibold cursor-pointer disabled:opacity-40"
-              style={{ background: 'var(--lime)', color: 'var(--ink)' }}
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
+              })
+          }
         </div>
       </section>
 
       {/* Wallet controls */}
-      <section>
-        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)] px-1 mb-2">Paramètres du portefeuille</p>
+      <section className="pb-4">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)] px-1 mb-3">Paramètres du portefeuille</p>
         <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
           {[
-            { icon: Lock,         label: 'Verrouiller le portefeuille', desc: 'Protéger avec votre PIN',              action: onLock,       color: undefined },
-            { icon: Key,          label: 'Changer le PIN',              desc: 'Modifier votre code secret',           action: onChangePIN,  color: undefined },
-            { icon: Fingerprint,  label: 'Authentification biométrique', desc: 'Face ID / Empreinte digitale',        action: () => {},     color: undefined },
-            { icon: Shield,       label: 'Sécurité du compte',          desc: 'Double vérification activée',         action: () => {},     color: undefined },
-            { icon: Download,     label: 'Exporter l\'historique',      desc: 'Relevé PDF de vos transactions',      action: () => {},     color: undefined },
+            { icon: Lock,        label: 'Verrouiller le portefeuille', desc: 'Protéger avec votre PIN',          action: onLock,      danger: false },
+            { icon: Key,         label: 'Changer le PIN',              desc: 'Modifier votre code secret',       action: onChangePIN, danger: false },
+            { icon: Fingerprint, label: 'Biométrie',                   desc: 'Face ID / Empreinte digitale',     action: () => {},    danger: false },
+            { icon: Shield,      label: 'Sécurité',                    desc: 'Double vérification activée',      action: () => {},    danger: false },
+            { icon: Download,    label: 'Exporter l\'historique',      desc: 'Relevé PDF de vos transactions',   action: () => navigate('/history'), danger: false },
           ].map(({ icon: Icon, label, desc, action }) => (
             <button
               key={label}
               onClick={action}
-              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left"
+              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[var(--surface)] tr cursor-pointer text-left"
             >
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-[var(--surface-2)]">
-                <Icon className="w-4 h-4 text-[var(--ink-60)]" />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
+                <Icon className="w-5 h-5 text-[var(--ink-60)]" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-[var(--ink)]">{label}</p>
@@ -399,13 +611,12 @@ function WalletMain({
   )
 }
 
-// ── Locked view ───────────────────────────────────────────────────────────────
+// ── Locked view ────────────────────────────────────────────────────────────────
 function WalletLocked({ onUnlock }: { onUnlock: () => void }) {
   const [error, setError] = useState('')
 
   function handlePin(pin: string) {
-    const stored = localStorage.getItem(PIN_KEY)
-    if (pin === stored) {
+    if (pin === localStorage.getItem(PIN_KEY)) {
       localStorage.setItem(LOCKED_KEY, 'false')
       setError('')
       onUnlock()
@@ -418,23 +629,18 @@ function WalletLocked({ onUnlock }: { onUnlock: () => void }) {
     <div className="min-h-[70vh] flex flex-col items-center justify-center">
       <div className="w-full max-w-xs">
         <div className="text-center mb-2">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center border-2" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}>
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--surface-2)', boxShadow: '0 4px 16px rgba(14,15,12,0.08)' }}>
             <Lock className="w-8 h-8 text-[var(--ink-60)]" />
           </div>
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Portefeuille verrouillé</p>
         </div>
-        <PinPad
-          title="Entrez votre PIN"
-          subtitle="Déverrouillez votre portefeuille"
-          error={error}
-          onComplete={handlePin}
-        />
+        <PinPad title="Entrez votre PIN" subtitle="Déverrouillez votre portefeuille" error={error} onComplete={handlePin} />
       </div>
     </div>
   )
 }
 
-// ── Setup / first-time view ───────────────────────────────────────────────────
+// ── Setup ─────────────────────────────────────────────────────────────────────
 type SetupView = 'intro' | 'set-pin' | 'confirm-pin' | 'done'
 
 function WalletSetup({ onCreated }: { onCreated: () => void }) {
@@ -442,12 +648,7 @@ function WalletSetup({ onCreated }: { onCreated: () => void }) {
   const [pendingPin, setPendingPin] = useState('')
   const [error, setError] = useState('')
 
-  function handleSetPin(pin: string) {
-    setPendingPin(pin)
-    setView('confirm-pin')
-    setError('')
-  }
-
+  function handleSetPin(pin: string) { setPendingPin(pin); setView('confirm-pin'); setError('') }
   function handleConfirmPin(pin: string) {
     if (pin === pendingPin) {
       localStorage.setItem(PIN_KEY, pin)
@@ -463,7 +664,7 @@ function WalletSetup({ onCreated }: { onCreated: () => void }) {
 
   if (view === 'intro') return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center gap-6 animate-fade-in-up">
-      <div className="w-24 h-24 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)' }}>
+      <div className="w-24 h-24 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(159,232,112,0.4)' }}>
         <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--ink)' }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2M16 12h5m0 0-2-2m2 2-2 2" />
         </svg>
@@ -474,23 +675,20 @@ function WalletSetup({ onCreated }: { onCreated: () => void }) {
           Créez votre portefeuille sécurisé pour payer, envoyer et recevoir des fonds en multi-devises.
         </p>
       </div>
-      <div className="w-full max-w-xs space-y-3 text-left">
+      <div className="card-elevated w-full max-w-xs p-4 space-y-3 text-left">
         {[
-          { emoji: '🔐', text: 'Protégé par un code PIN' },
-          { emoji: '💳', text: 'Multi-devises (USD, HTG, EUR...)' },
-          { emoji: '⚡', text: 'Paiements instantanés' },
-          { emoji: '🌍', text: 'Envois internationaux' },
-        ].map(({ emoji, text }) => (
+          { icon: '🔐', text: 'Protégé par un code PIN à 4 chiffres' },
+          { icon: '💳', text: 'Multi-devises (USD, HTG, EUR…)' },
+          { icon: '⚡', text: 'Paiements de factures instantanés' },
+          { icon: '🌍', text: 'Envois internationaux au meilleur taux' },
+        ].map(({ icon, text }) => (
           <div key={text} className="flex items-center gap-3 text-sm text-[var(--ink)]">
-            <span className="text-lg">{emoji}</span>
+            <span className="text-xl w-7 shrink-0 text-center">{icon}</span>
             {text}
           </div>
         ))}
       </div>
-      <button
-        onClick={() => setView('set-pin')}
-        className="btn-lime w-full max-w-xs h-12 rounded-xl font-semibold text-sm cursor-pointer"
-      >
+      <button onClick={() => setView('set-pin')} className="btn-lime w-full max-w-xs h-12 rounded-xl font-semibold text-sm cursor-pointer">
         Créer mon portefeuille
       </button>
     </div>
@@ -498,7 +696,7 @@ function WalletSetup({ onCreated }: { onCreated: () => void }) {
 
   if (view === 'done') return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center gap-4 animate-scale-in">
-      <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)' }}>
+      <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(159,232,112,0.4)' }}>
         <Check className="w-10 h-10" style={{ color: 'var(--ink)' }} />
       </div>
       <h2 className="text-xl font-semibold text-[var(--ink)]">Portefeuille créé !</h2>
@@ -508,49 +706,27 @@ function WalletSetup({ onCreated }: { onCreated: () => void }) {
 
   return (
     <div className="max-w-xs mx-auto">
-      {view === 'set-pin' ? (
-        <PinPad
-          title="Choisissez un PIN"
-          subtitle="Code à 4 chiffres pour sécuriser votre portefeuille"
-          error={error}
-          onComplete={handleSetPin}
-          onCancel={() => setView('intro')}
-        />
-      ) : (
-        <PinPad
-          title="Confirmez le PIN"
-          subtitle="Ressaisissez votre code pour confirmer"
-          error={error}
-          onComplete={handleConfirmPin}
-          onCancel={() => { setView('set-pin'); setError('') }}
-        />
-      )}
+      {view === 'set-pin'
+        ? <PinPad title="Choisissez un PIN" subtitle="Code à 4 chiffres pour sécuriser votre portefeuille" error={error} onComplete={handleSetPin} onCancel={() => setView('intro')} />
+        : <PinPad title="Confirmez le PIN" subtitle="Ressaisissez votre code pour confirmer" error={error} onComplete={handleConfirmPin} onCancel={() => { setView('set-pin'); setError('') }} />}
     </div>
   )
 }
 
-// ── Change PIN view ───────────────────────────────────────────────────────────
+// ── Change PIN ─────────────────────────────────────────────────────────────────
 function ChangePIN({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState<'current' | 'new' | 'confirm'>('current')
   const [newPin, setNewPin] = useState('')
   const [error, setError] = useState('')
 
   function handleCurrent(pin: string) {
-    if (pin === localStorage.getItem(PIN_KEY)) {
-      setError(''); setStep('new')
-    } else {
-      setError('PIN incorrect.')
-    }
+    if (pin === localStorage.getItem(PIN_KEY)) { setError(''); setStep('new') }
+    else setError('PIN incorrect.')
   }
   function handleNew(pin: string) { setNewPin(pin); setStep('confirm'); setError('') }
   function handleConfirm(pin: string) {
-    if (pin === newPin) {
-      localStorage.setItem(PIN_KEY, pin)
-      onDone()
-    } else {
-      setError('Les codes ne correspondent pas.')
-      setNewPin(''); setStep('new')
-    }
+    if (pin === newPin) { localStorage.setItem(PIN_KEY, pin); onDone() }
+    else { setError('Les codes ne correspondent pas.'); setNewPin(''); setStep('new') }
   }
 
   return (
@@ -565,7 +741,7 @@ function ChangePIN({ onDone }: { onDone: () => void }) {
   )
 }
 
-// ── Page root ─────────────────────────────────────────────────────────────────
+// ── Page root ──────────────────────────────────────────────────────────────────
 type PageView = 'loading' | 'setup' | 'locked' | 'main' | 'change-pin'
 
 export function WalletPage() {
@@ -577,21 +753,21 @@ export function WalletPage() {
   useEffect(() => {
     const pin    = localStorage.getItem(PIN_KEY)
     const locked = localStorage.getItem(LOCKED_KEY) === 'true'
-    if (!pin)   setView('setup')
+    if (!pin)        setView('setup')
     else if (locked) setView('locked')
-    else        setView('main')
+    else             setView('main')
   }, [])
 
-  useEffect(() => {
+  async function loadAccounts() {
     if (!user) return
-    supabase.from('currency_accounts').select('*')
+    const { data } = await supabase.from('currency_accounts').select('*')
       .eq('user_id', user.id)
       .order('is_main', { ascending: false })
-      .then(({ data }) => {
-        if (data) setAccounts(data)
-        setLoadingAcc(false)
-      })
-  }, [user])
+    if (data) setAccounts(data)
+    setLoadingAcc(false)
+  }
+
+  useEffect(() => { loadAccounts() }, [user])
 
   function handleLock() {
     localStorage.setItem(LOCKED_KEY, 'true')
@@ -605,17 +781,18 @@ export function WalletPage() {
   )
 
   return (
-    <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'var(--surface)' }}>
+    <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
       <div className="max-w-lg mx-auto px-4 pt-6">
-        {view === 'setup'      && <WalletSetup   onCreated={() => setView('main')} />}
-        {view === 'locked'     && <WalletLocked  onUnlock={() => setView('main')} />}
-        {view === 'change-pin' && <ChangePIN      onDone={() => setView('main')} />}
-        {view === 'main'       && (
+        {view === 'setup'      && <WalletSetup onCreated={() => { setView('main'); loadAccounts() }} />}
+        {view === 'locked'     && <WalletLocked onUnlock={() => setView('main')} />}
+        {view === 'change-pin' && <ChangePIN onDone={() => setView('main')} />}
+        {view === 'main' && (
           <WalletMain
             accounts={accounts}
             loading={loadingAcc}
             onLock={handleLock}
             onChangePIN={() => setView('change-pin')}
+            onAccountsUpdated={loadAccounts}
           />
         )}
       </div>

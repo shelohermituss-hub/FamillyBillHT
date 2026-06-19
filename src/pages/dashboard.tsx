@@ -98,20 +98,20 @@ export function DashboardPage() {
             {/* Quick actions */}
             <div className="grid grid-cols-4 gap-2">
               {[
-                { icon: ArrowUpRight, label: 'Envoyer',   href: '/transfer',           lime: true  },
-                { icon: ArrowDownLeft,label: 'Recevoir',  href: '/account',             lime: false },
+                { icon: ArrowUpRight, label: 'Envoyer',   href: '/transfer',             lime: true  },
+                { icon: ArrowDownLeft,label: 'Recevoir',  href: '/wallet',               lime: false },
                 { icon: Repeat,       label: 'Convertir', href: '/transfer?mode=convert', lime: false },
-                { icon: Plus,         label: 'Ajouter',   href: '/account',             lime: false },
+                { icon: Plus,         label: 'Ajouter',   href: '/wallet',               lime: false },
               ].map(({ icon: Icon, label, href, lime }) => (
                 <Link key={label} to={href}>
                   <div className="flex flex-col items-center gap-2 cursor-pointer group">
                     <div className={cn(
-                      "w-11 h-11 rounded-2xl flex items-center justify-center tr",
-                      lime ? "" : "bg-white/10 group-hover:bg-white/20"
+                      "w-13 h-13 rounded-2xl flex items-center justify-center tr",
+                      lime ? "group-hover:opacity-90" : "bg-white/10 group-hover:bg-white/20"
                     )}
-                      style={lime ? { background: 'var(--lime)' } : {}}
+                      style={lime ? { background: 'var(--lime)', width: 52, height: 52 } : { width: 52, height: 52 }}
                     >
-                      <Icon className="w-5 h-5" style={{ color: lime ? 'var(--ink)' : 'white' }} />
+                      <Icon className="w-6 h-6" style={{ color: lime ? 'var(--ink)' : 'white' }} />
                     </div>
                     <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>{label}</span>
                   </div>

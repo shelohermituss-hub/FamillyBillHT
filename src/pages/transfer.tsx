@@ -1,19 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, Loader2, Info, ChevronLeft, ArrowLeftRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CURRENCIES, calculateTransfer, formatCurrency, getCurrency } from '@/lib/currencies'
 import { useAuth } from '@/lib/auth-context'
-import { supabase } from '@/lib/supabase'
+import { supabase, type CurrencyAccount } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 type Step = 'amount' | 'recipient' | 'review' | 'success'
 
-function CurrencyPill({ code, onChange }: { code: string; onChange: (c: string) => void }) {
+function CurrencyPill({ code, onChange, accounts }: {
+  code: string
+  onChange: (c: string) => void
+  accounts?: CurrencyAccount[]
+}) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const curr = getCurrency(code)
+
+  const list = accounts && accounts.length > 0
+    ? accounts.map(a => ({ code: a.currency, balance: a.balance }))
+    : null
+
   const filtered = CURRENCIES.filter(c =>
     c.code.toLowerCase().includes(search.toLowerCase()) ||
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -46,7 +55,35 @@ function CurrencyPill({ code, onChange }: { code: string; onChange: (c: string) 
               />
             </div>
             <div className="max-h-52 overflow-y-auto">
-              {filtered.map(c => (
+              {(list
+                ? list.map(a => getCurrency(a.code)).filter(Boolean)
+                : filtered
+              ).map(c => {
+                if (!c) return null
+                const accBalance = list?.find(a => a.code === c.code)?.balance
+                return (
+                  <button
+                    key={c.code}
+                    type="button"
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--surface)] text-left text-sm tr cursor-pointer",
+                      c.code === code && "bg-[var(--surface)]"
+                    )}
+                    onClick={() => { onChange(c.code); setOpen(false); setSearch('') }}
+                  >
+                    <span className="text-lg leading-none">{c.flag}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-[var(--ink)]">{c.code}</span>
+                      <span className="text-[var(--ink-60)] ml-2 text-xs">{c.name}</span>
+                      {accBalance !== undefined && (
+                        <p className="text-xs text-[var(--ink-60)]">{formatCurrency(accBalance, c.code)}</p>
+                      )}
+                    </div>
+                    {c.code === code && <CheckCircle2 className="w-4 h-4 ml-auto shrink-0" style={{ color: 'var(--lime)' }} />}
+                  </button>
+                )
+              })}
+              {!list && filtered.map(c => (
                 <button
                   key={c.code}
                   type="button"
@@ -81,9 +118,10 @@ export function TransferPage() {
   const isConvert = params.get('mode') === 'convert'
 
   const [step, setStep] = useState<Step>('amount')
-  const [fromCurrency, setFromCurrency] = useState('HTG')
-  const [toCurrency, setToCurrency] = useState('USD')
-  const [amount, setAmount] = useState('500')
+  const [accounts, setAccounts] = useState<CurrencyAccount[]>([])
+  const [fromCurrency, setFromCurrency] = useState('USD')
+  const [toCurrency, setToCurrency] = useState('HTG')
+  const [amount, setAmount] = useState('')
   const [recipientName, setRecipientName] = useState('')
   const [recipientEmail, setRecipientEmail] = useState('')
   const [recipientAccount, setRecipientAccount] = useState('')
@@ -92,10 +130,19 @@ export function TransferPage() {
   const [txId, setTxId] = useState('')
   const [submitError, setSubmitError] = useState('')
 
+  useEffect(() => {
+    if (!user) return
+    supabase.from('currency_accounts').select('*')
+      .eq('user_id', user.id)
+      .then(({ data }) => { if (data) setAccounts(data) })
+  }, [user])
+
   const sendAmount = parseFloat(amount) || 0
   const calc = calculateTransfer(sendAmount, fromCurrency, toCurrency)
   const fromCurr = getCurrency(fromCurrency)
   const toCurr = getCurrency(toCurrency)
+  const fromAccount = accounts.find(a => a.currency === fromCurrency)
+  const hasEnoughBalance = !fromAccount || sendAmount <= fromAccount.balance
 
   function swap() {
     setFromCurrency(toCurrency)
@@ -112,6 +159,7 @@ export function TransferPage() {
     if (!user) return
     setSubmitting(true)
     setSubmitError('')
+
     const { data, error } = await supabase.from('transactions').insert({
       user_id: user.id,
       type: isConvert ? 'convert' : 'send',
@@ -128,12 +176,38 @@ export function TransferPage() {
       note: note || null,
       reference: `TRF-${Date.now()}`,
     }).select().single()
-    if (error) {
+
+    if (error || !data) {
       setSubmitError('Virement échoué. Réessayez.')
       setSubmitting(false)
       return
     }
-    if (data) setTxId(data.id)
+
+    // Deduct from source account
+    if (fromAccount) {
+      await supabase.from('currency_accounts')
+        .update({ balance: Math.max(0, fromAccount.balance - sendAmount - calc.fee) })
+        .eq('id', fromAccount.id)
+    }
+
+    // For conversions: credit target account
+    if (isConvert) {
+      const toAccount = accounts.find(a => a.currency === toCurrency)
+      if (toAccount) {
+        await supabase.from('currency_accounts')
+          .update({ balance: toAccount.balance + calc.received })
+          .eq('id', toAccount.id)
+      } else if (user) {
+        await supabase.from('currency_accounts').insert({
+          user_id: user.id,
+          currency: toCurrency,
+          balance: calc.received,
+          is_main: false,
+        })
+      }
+    }
+
+    setTxId(data.id)
     setSubmitting(false)
     setStep('success')
   }
@@ -179,19 +253,33 @@ export function TransferPage() {
         {/* STEP 1: Amount */}
         {step === 'amount' && (
           <div className="card-flat p-6 space-y-5">
+            {/* Balance indicator */}
+            {fromAccount && (
+              <div className="flex items-center justify-between text-xs text-[var(--ink-60)]">
+                <span>Solde disponible</span>
+                <span className="font-semibold text-[var(--ink)]">{formatCurrency(fromAccount.balance, fromCurrency)}</span>
+              </div>
+            )}
+
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Vous envoyez</p>
-              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
+              <div className={cn(
+                "flex items-center gap-3 px-4 py-3.5 rounded-2xl border tr",
+                !hasEnoughBalance && sendAmount > 0 ? "border-red-300" : "border-[var(--border)] focus-within:border-[var(--ink-30)]"
+              )}>
                 <Input
                   type="number"
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
                   className="border-0 shadow-none text-3xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent text-[var(--ink)]"
                   min="0"
-                  placeholder="0"
+                  placeholder="0.00"
                 />
-                <CurrencyPill code={fromCurrency} onChange={setFromCurrency} />
+                <CurrencyPill code={fromCurrency} onChange={setFromCurrency} accounts={accounts} />
               </div>
+              {!hasEnoughBalance && sendAmount > 0 && (
+                <p className="text-xs text-red-500">Solde insuffisant</p>
+              )}
             </div>
 
             <div className="space-y-2.5 py-3 border-y border-[var(--border)]">
@@ -200,7 +288,7 @@ export function TransferPage() {
                 <span className="font-medium text-[var(--ink)]">− {formatCurrency(calc.fee, fromCurrency)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--ink-60)]">Montant converti</span>
+                <span className="text-[var(--ink-60)]">Montant net</span>
                 <span className="font-medium text-[var(--ink)]">{formatCurrency(calc.amountAfterFee, fromCurrency)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -243,7 +331,7 @@ export function TransferPage() {
             <button
               className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
               onClick={() => setStep(isConvert ? 'review' : 'recipient')}
-              disabled={!sendAmount || sendAmount <= 0}
+              disabled={!sendAmount || sendAmount <= 0 || !hasEnoughBalance}
             >
               Continuer
               <ArrowRight className="w-4 h-4" />
@@ -343,9 +431,7 @@ export function TransferPage() {
             </div>
 
             {submitError && (
-              <div className="p-3 rounded-xl text-sm text-red-600 bg-red-50">
-                {submitError}
-              </div>
+              <div className="p-3 rounded-xl text-sm text-red-600 bg-red-50">{submitError}</div>
             )}
 
             <button
@@ -355,8 +441,7 @@ export function TransferPage() {
             >
               {submitting
                 ? <><Loader2 className="w-4 h-4 animate-spin" />Traitement...</>
-                : <>Confirmer — {fromCurr?.flag} {formatCurrency(sendAmount, fromCurrency)}</>
-              }
+                : <>Confirmer — {fromCurr?.flag} {formatCurrency(sendAmount, fromCurrency)}</>}
             </button>
             <p className="text-xs text-[var(--ink-60)] text-center">
               En confirmant, vous acceptez nos conditions de virement.
@@ -371,7 +456,9 @@ export function TransferPage() {
               <CheckCircle2 className="w-8 h-8" style={{ color: 'var(--ink)' }} />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-[var(--ink)] mb-2">Virement envoyé</h2>
+              <h2 className="text-xl font-semibold text-[var(--ink)] mb-2">
+                {isConvert ? 'Conversion effectuée' : 'Virement envoyé'}
+              </h2>
               <p className="text-sm text-[var(--ink-60)]">
                 {fromCurr?.flag} {formatCurrency(sendAmount, fromCurrency)} est en cours de traitement.
               </p>
@@ -383,12 +470,14 @@ export function TransferPage() {
                 <span className="font-mono font-semibold text-xs text-[var(--ink)]">{txId ? txId.slice(0, 8).toUpperCase() : '—'}</span>
               </div>
               <div className="flex justify-between px-4 py-3 text-sm">
-                <span className="text-[var(--ink-60)]">Bénéficiaire reçoit</span>
+                <span className="text-[var(--ink-60)]">{isConvert ? 'Vous recevez' : 'Bénéficiaire reçoit'}</span>
                 <span className="font-semibold text-[var(--ink)]">{toCurr?.flag} {formatCurrency(calc.received, toCurrency)}</span>
               </div>
               <div className="flex justify-between px-4 py-3 text-sm">
                 <span className="text-[var(--ink-60)]">Délai estimé</span>
-                <span className="font-semibold" style={{ color: 'var(--ink)' }}>Sous 24 heures</span>
+                <span className="font-semibold" style={{ color: 'var(--ink)' }}>
+                  {isConvert ? 'Instantané' : 'Sous 24 heures'}
+                </span>
               </div>
               {recipientName && (
                 <div className="flex justify-between px-4 py-3 text-sm">
@@ -401,21 +490,13 @@ export function TransferPage() {
             <div className="flex flex-col gap-2">
               <button
                 className="btn-lime w-full h-12 rounded-xl font-semibold text-sm cursor-pointer"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/wallet')}
               >
-                Retour au tableau de bord
+                Retour au portefeuille
               </button>
               <button
                 className="w-full h-12 rounded-xl font-semibold text-sm border border-[var(--border)] text-[var(--ink)] hover:bg-[var(--surface)] tr cursor-pointer"
-                onClick={() => {
-                  setStep('amount')
-                  setAmount('500')
-                  setRecipientName('')
-                  setRecipientEmail('')
-                  setRecipientAccount('')
-                  setNote('')
-                  setTxId('')
-                }}
+                onClick={() => { setStep('amount'); setAmount(''); setRecipientName(''); setRecipientEmail(''); setRecipientAccount(''); setNote(''); setTxId('') }}
               >
                 Nouveau virement
               </button>
