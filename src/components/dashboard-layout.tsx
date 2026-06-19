@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, ArrowUpRight, Wallet, CreditCard, Clock, LogOut, Bell, Moon, Sun, User } from 'lucide-react'
+import { Home, Wallet, CreditCard, Clock, LogOut, Bell, Moon, Sun, User, Receipt } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useTheme } from '@/lib/theme-context'
 import { useNotifications } from '@/lib/notifications-context'
@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { icon: Home,         label: 'Accueil',    href: '/dashboard' },
-  { icon: ArrowUpRight, label: 'Envoyer',    href: '/transfer'  },
+  { icon: Receipt,      label: 'Payer',      href: '/bills'     },
   { icon: Wallet,       label: 'Compte',     href: '/account'   },
   { icon: CreditCard,   label: 'Carte',      href: '/card'      },
   { icon: Clock,        label: 'Historique', href: '/history'   },

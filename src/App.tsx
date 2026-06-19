@@ -13,6 +13,7 @@ import { AccountPage } from '@/pages/account'
 import { CardPage } from '@/pages/card'
 import { HistoryPage } from '@/pages/history'
 import { ProfilePage } from '@/pages/profile'
+import { BillsPage } from '@/pages/bills'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -72,6 +73,13 @@ function AppRoutes() {
           <ProtectedRoute>
             <DashboardLayout>
               <TransferPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/bills" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <BillsPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />
