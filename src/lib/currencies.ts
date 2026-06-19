@@ -7,6 +7,7 @@ export type Currency = {
 }
 
 export const CURRENCIES: Currency[] = [
+  { code: 'HTG', name: 'Gourde haïtienne', symbol: 'G', flag: '🇭🇹', decimals: 2 },
   { code: 'EUR', name: 'Euro', symbol: '€', flag: '🇪🇺', decimals: 2 },
   { code: 'USD', name: 'US Dollar', symbol: '$', flag: '🇺🇸', decimals: 2 },
   { code: 'GBP', name: 'British Pound', symbol: '£', flag: '🇬🇧', decimals: 2 },
@@ -51,7 +52,7 @@ export const CURRENCIES: Currency[] = [
 
 // Simulated mid-market rates (vs USD)
 const RATES_VS_USD: Record<string, number> = {
-  EUR: 0.92, USD: 1, GBP: 0.79, CAD: 1.36, AUD: 1.53, JPY: 149.5,
+  HTG: 134.5, EUR: 0.92, USD: 1, GBP: 0.79, CAD: 1.36, AUD: 1.53, JPY: 149.5,
   CHF: 0.88, INR: 83.2, MXN: 17.1, BRL: 4.97, SGD: 1.34, HKD: 7.82,
   NOK: 10.5, SEK: 10.4, DKK: 6.89, PLN: 3.98, CZK: 23.1, HUF: 355,
   RON: 4.58, BGN: 1.80, TRY: 30.5, ZAR: 18.7, NZD: 1.63, THB: 35.1,

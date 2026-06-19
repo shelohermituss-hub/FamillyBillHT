@@ -61,20 +61,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   async function signUp(email: string, password: string, fullName: string) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName } },
+    })
     if (error) return { error }
     if (data.user) {
       await supabase.from('wise_users').upsert({
         id: data.user.id, email, full_name: fullName, verified: false,
       })
       await supabase.from('currency_accounts').upsert([
-        { user_id: data.user.id, currency: 'EUR', balance: 2450.00, is_main: true },
-        { user_id: data.user.id, currency: 'USD', balance: 1820.50, is_main: false },
-        { user_id: data.user.id, currency: 'GBP', balance: 890.25, is_main: false },
+        { user_id: data.user.id, currency: 'HTG', balance: 245000.00, is_main: true },
+        { user_id: data.user.id, currency: 'USD', balance: 1820.50,   is_main: false },
+        { user_id: data.user.id, currency: 'EUR', balance: 890.25,    is_main: false },
       ], { onConflict: 'user_id,currency' })
       await supabase.from('jars').upsert([
-        { user_id: data.user.id, name: 'Holiday Fund', currency: 'USD', balance: 500, goal: 2000, color: '#9fe870' },
-        { user_id: data.user.id, name: 'Emergency Fund', currency: 'EUR', balance: 1200, goal: 5000, color: '#a8d8ea' },
+        { user_id: data.user.id, name: 'Fonds Vacances',  currency: 'USD', balance: 500,  goal: 2000, color: '#dc1f1f' },
+        { user_id: data.user.id, name: 'Fonds Urgences', currency: 'EUR', balance: 1200, goal: 5000, color: '#0d1b4b' },
       ], { onConflict: 'id' })
       await fetchProfile(data.user.id)
     }
