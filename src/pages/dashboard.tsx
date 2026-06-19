@@ -38,8 +38,8 @@ const RATE_PAIRS = [
 const RATE_SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', BRL: 'R$', CAD: 'C$' }
 
 const FLAG_ICONS: Record<string, string> = {
-  USD: '/icons/currencies/usd.jpg',
-  EUR: '/icons/currencies/eur.png',
+  USD: '/icons/currencies/usd.png',
+  EUR: '/icons/currencies/eur-new.png',
   BRL: '/icons/currencies/brl.jpg',
   CAD: '/icons/currencies/cad.png',
 }

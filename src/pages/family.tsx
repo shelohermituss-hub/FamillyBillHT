@@ -84,7 +84,14 @@ function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreat
       currency: 'HTG',
     })
     setSaving(false)
-    if (err) { setError('Erreur lors de la création. Réessayez.'); return }
+    if (err) {
+      if (err.message?.includes('does not exist') || err.code === '42P01') {
+        setError('Les tables familiales n\'existent pas encore. Appliquez la migration SQL dans votre projet Supabase.')
+      } else {
+        setError(err.message ?? 'Erreur lors de la création. Réessayez.')
+      }
+      return
+    }
     onCreate()
     onClose()
   }

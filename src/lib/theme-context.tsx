@@ -9,6 +9,11 @@ const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
+    // v2 migration: reset to light theme default
+    if (!localStorage.getItem('fb-theme-v2')) {
+      localStorage.setItem('fb-theme', 'light')
+      localStorage.setItem('fb-theme-v2', '1')
+    }
     return (localStorage.getItem('fb-theme') as Theme) ?? 'light'
   })
 

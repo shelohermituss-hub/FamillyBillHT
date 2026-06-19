@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   User, FileText, KeyRound, Fingerprint, ShieldCheck,
@@ -255,9 +255,24 @@ function Field({ label, icon, children }: { label: string; icon: React.ReactNode
 type ModalType = 'account' | 'statements' | 'limits' | null
 
 export function ProfilePage() {
-  const { profile, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const { theme, toggle: toggleTheme } = useTheme()
   const navigate = useNavigate()
+
+  const [displayCode, setDisplayCode] = useState<string>(profile?.user_code ?? '')
+
+  // Generate user_code if missing
+  const ensureUserCode = useCallback(async () => {
+    if (!user || profile?.user_code) return
+    const code = 'FB' + Math.random().toString(36).slice(2, 8).toUpperCase()
+    await supabase.from('wise_users').update({ user_code: code }).eq('id', user.id)
+    setDisplayCode(code)
+  }, [user, profile?.user_code])
+
+  useEffect(() => {
+    if (profile?.user_code) setDisplayCode(profile.user_code)
+    else ensureUserCode()
+  }, [profile?.user_code, ensureUserCode])
 
   const [modal,        setModal]        = useState<ModalType>(null)
   const [biometric,    setBiometric]    = useState(() => localStorage.getItem('fb-biometric') === 'true')
@@ -273,8 +288,8 @@ export function ProfilePage() {
   }
 
   function copyUserCode() {
-    if (!profile?.user_code) return
-    navigator.clipboard.writeText(profile.user_code)
+    if (!displayCode) return
+    navigator.clipboard.writeText(displayCode)
     setCodeCopied(true)
     setTimeout(() => setCodeCopied(false), 2000)
   }
@@ -320,19 +335,23 @@ export function ProfilePage() {
           </div>
 
           {/* User ID card */}
-          {profile?.user_code && (
-            <div
-              className="flex items-center gap-3 p-3 rounded-2xl"
-              style={{ background: 'var(--ink)' }}
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  Mon ID FamillyBill
-                </p>
+          <div
+            className="flex items-center gap-3 p-3 rounded-2xl"
+            style={{ background: 'var(--ink)' }}
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                Mon ID FamillyBill
+              </p>
+              {displayCode ? (
                 <p className="text-base font-black tracking-widest font-mono" style={{ color: 'var(--lime)' }}>
-                  {profile.user_code}
+                  {displayCode}
                 </p>
-              </div>
+              ) : (
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>Génération…</p>
+              )}
+            </div>
+            {displayCode && (
               <button
                 onClick={copyUserCode}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tr cursor-pointer shrink-0"
@@ -341,8 +360,8 @@ export function ProfilePage() {
                 {codeCopied ? <Check className="w-3.5 h-3.5" style={{ color: 'var(--lime)' }} /> : <Copy className="w-3.5 h-3.5" />}
                 {codeCopied ? 'Copié !' : 'Copier'}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Compte section */}

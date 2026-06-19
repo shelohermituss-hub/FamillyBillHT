@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Loader2, Info, ChevronLeft, ArrowLeftRight } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Loader2, Info, ChevronLeft, ArrowLeftRight, Users, Globe, Search, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CURRENCIES, calculateTransfer, formatCurrency, getCurrency } from '@/lib/currencies'
@@ -9,6 +9,7 @@ import { supabase, type CurrencyAccount } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 type Step = 'amount' | 'recipient' | 'review' | 'success'
+type RecipientMode = 'famillyBill' | 'external'
 
 function CurrencyPill({ code, onChange, accounts }: {
   code: string
@@ -114,7 +115,7 @@ const STEPS: Step[] = ['amount', 'recipient', 'review', 'success']
 export function TransferPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const isConvert = params.get('mode') === 'convert'
 
   const [step, setStep] = useState<Step>('amount')
@@ -122,6 +123,12 @@ export function TransferPage() {
   const [fromCurrency, setFromCurrency] = useState('USD')
   const [toCurrency, setToCurrency] = useState('HTG')
   const [amount, setAmount] = useState('')
+  const [recipientMode, setRecipientMode] = useState<RecipientMode>('famillyBill')
+  const [recipientCode, setRecipientCode] = useState('')
+  const [recipientFound, setRecipientFound] = useState<{ id: string; name: string; code: string } | null>(null)
+  const [searchingCode, setSearchingCode] = useState(false)
+  const [codeError, setCodeError] = useState('')
+  const recipientCodeTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [recipientName, setRecipientName] = useState('')
   const [recipientEmail, setRecipientEmail] = useState('')
   const [recipientAccount, setRecipientAccount] = useState('')
@@ -147,6 +154,31 @@ export function TransferPage() {
   function swap() {
     setFromCurrency(toCurrency)
     setToCurrency(fromCurrency)
+  }
+
+  function handleCodeChange(v: string) {
+    const val = v.toUpperCase().slice(0, 8)
+    setRecipientCode(val)
+    setRecipientFound(null)
+    setCodeError('')
+    clearTimeout(recipientCodeTimeout.current)
+    if (val.length === 8) {
+      setSearchingCode(true)
+      recipientCodeTimeout.current = setTimeout(async () => {
+        const { data } = await supabase
+          .from('wise_users')
+          .select('id, full_name, user_code')
+          .eq('user_code', val)
+          .maybeSingle()
+        setSearchingCode(false)
+        if (data) {
+          setRecipientFound({ id: data.id, name: data.full_name, code: data.user_code })
+          setRecipientName(data.full_name)
+        } else {
+          setCodeError('Aucun utilisateur trouvé avec cet ID.')
+        }
+      }, 300)
+    }
   }
 
   function goBack() {
@@ -205,6 +237,40 @@ export function TransferPage() {
           is_main: false,
         })
       }
+    }
+
+    // For FamillyBill inter-user transfers: credit recipient account
+    if (!isConvert && recipientMode === 'famillyBill' && recipientFound) {
+      const { data: recipAcc } = await supabase
+        .from('currency_accounts')
+        .select('*')
+        .eq('user_id', recipientFound.id)
+        .eq('currency', fromCurrency)
+        .maybeSingle()
+
+      if (recipAcc) {
+        await supabase.from('currency_accounts')
+          .update({ balance: recipAcc.balance + calc.received })
+          .eq('id', recipAcc.id)
+      } else {
+        await supabase.from('currency_accounts').insert({
+          user_id: recipientFound.id,
+          currency: fromCurrency,
+          balance: calc.received,
+          is_main: false,
+        })
+      }
+      // Create receive transaction for recipient
+      await supabase.from('transactions').insert({
+        user_id: recipientFound.id,
+        type: 'receive',
+        status: 'completed',
+        amount: calc.received,
+        currency: fromCurrency,
+        fee: 0,
+        recipient_name: profile?.full_name ?? 'FamillyBill HT',
+        reference: data.reference,
+      })
     }
 
     setTxId(data.id)
@@ -341,60 +407,157 @@ export function TransferPage() {
 
         {/* STEP 2: Recipient */}
         {step === 'recipient' && (
-          <div className="card-flat p-6 space-y-5">
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--ink)]">À qui envoyez-vous ?</h2>
-              <p className="text-sm text-[var(--ink-60)] mt-1">Coordonnées du bénéficiaire</p>
+          <div className="space-y-4">
+            {/* Mode toggle */}
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl" style={{ background: 'var(--surface-2)' }}>
+              {([
+                { mode: 'famillyBill' as RecipientMode, label: 'FamillyBill HT', Icon: Users },
+                { mode: 'external'    as RecipientMode, label: 'Virement externe', Icon: Globe },
+              ]).map(({ mode, label, Icon }) => (
+                <button
+                  key={mode}
+                  onClick={() => { setRecipientMode(mode); setRecipientFound(null); setRecipientCode(''); setCodeError('') }}
+                  className={cn(
+                    "flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold tr cursor-pointer",
+                    recipientMode === mode ? "text-[var(--ink)]" : "text-[var(--ink-60)]"
+                  )}
+                  style={recipientMode === mode ? { background: 'var(--card-bg)', boxShadow: '0 1px 4px rgba(14,15,12,0.08)' } : {}}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              ))}
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-[var(--ink)]">Nom complet <span className="text-red-400">*</span></Label>
-                <Input
-                  value={recipientName}
-                  onChange={e => setRecipientName(e.target.value)}
-                  placeholder="ex. Marie Jean"
-                  className="h-11 rounded-xl"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-[var(--ink)]">Email <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
-                <Input
-                  type="email"
-                  value={recipientEmail}
-                  onChange={e => setRecipientEmail(e.target.value)}
-                  placeholder="sophie@example.com"
-                  className="h-11 rounded-xl"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-[var(--ink)]">IBAN / N° de compte <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
-                <Input
-                  value={recipientAccount}
-                  onChange={e => setRecipientAccount(e.target.value)}
-                  placeholder="FR76 1234 5678 ..."
-                  className="h-11 rounded-xl font-mono text-sm"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-[var(--ink)]">Note <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
-                <Input
-                  value={note}
-                  onChange={e => setNote(e.target.value)}
-                  placeholder="Objet du paiement"
-                  className="h-11 rounded-xl"
-                />
-              </div>
-            </div>
+            <div className="card-flat p-6 space-y-5">
+              {/* FamillyBill mode */}
+              {recipientMode === 'famillyBill' && (
+                <>
+                  <div>
+                    <h2 className="text-lg font-semibold text-[var(--ink)]">Envoyer à un utilisateur</h2>
+                    <p className="text-sm text-[var(--ink-60)] mt-1">Entrez l'ID FamillyBill du destinataire</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-[var(--ink)]">ID FamillyBill</Label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                        {searchingCode
+                          ? <Loader2 className="w-4 h-4 animate-spin text-[var(--ink-60)]" />
+                          : <Search className="w-4 h-4 text-[var(--ink-60)]" />}
+                      </div>
+                      <Input
+                        value={recipientCode}
+                        onChange={e => handleCodeChange(e.target.value)}
+                        placeholder="FB2F4A1B"
+                        className="h-12 rounded-xl pl-10 font-mono tracking-widest text-base uppercase"
+                        maxLength={8}
+                      />
+                      {recipientCode && (
+                        <button
+                          onClick={() => { setRecipientCode(''); setRecipientFound(null); setCodeError('') }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+                        >
+                          <X className="w-4 h-4 text-[var(--ink-60)]" />
+                        </button>
+                      )}
+                    </div>
+                    {codeError && <p className="text-xs text-red-500">{codeError}</p>}
+                  </div>
 
-            <button
-              className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
-              onClick={() => setStep('review')}
-              disabled={!recipientName.trim()}
-            >
-              Continuer
-              <ArrowRight className="w-4 h-4" />
-            </button>
+                  {/* Found user card */}
+                  {recipientFound && (
+                    <div className="flex items-center gap-3 p-4 rounded-2xl animate-fade-in-up"
+                      style={{ background: 'var(--lime-light)', border: '1.5px solid var(--lime)' }}>
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm text-white shrink-0"
+                        style={{ background: 'var(--ink)' }}>
+                        {recipientFound.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[var(--ink)]">{recipientFound.name}</p>
+                        <p className="text-xs font-mono text-[var(--ink-60)]">{recipientFound.code}</p>
+                      </div>
+                      <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: 'var(--lime)' }} />
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-[var(--ink)]">Note <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
+                    <Input
+                      value={note}
+                      onChange={e => setNote(e.target.value)}
+                      placeholder="Objet du paiement"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+
+                  <button
+                    className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+                    onClick={() => setStep('review')}
+                    disabled={!recipientFound}
+                  >
+                    Continuer
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+
+              {/* External mode */}
+              {recipientMode === 'external' && (
+                <>
+                  <div>
+                    <h2 className="text-lg font-semibold text-[var(--ink)]">À qui envoyez-vous ?</h2>
+                    <p className="text-sm text-[var(--ink-60)] mt-1">Coordonnées du bénéficiaire</p>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-medium text-[var(--ink)]">Nom complet <span className="text-red-400">*</span></Label>
+                      <Input
+                        value={recipientName}
+                        onChange={e => setRecipientName(e.target.value)}
+                        placeholder="ex. Marie Jean"
+                        className="h-11 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-medium text-[var(--ink)]">Email <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
+                      <Input
+                        type="email"
+                        value={recipientEmail}
+                        onChange={e => setRecipientEmail(e.target.value)}
+                        placeholder="sophie@example.com"
+                        className="h-11 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-medium text-[var(--ink)]">IBAN / N° de compte <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
+                      <Input
+                        value={recipientAccount}
+                        onChange={e => setRecipientAccount(e.target.value)}
+                        placeholder="FR76 1234 5678 ..."
+                        className="h-11 rounded-xl font-mono text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-medium text-[var(--ink)]">Note <span className="text-[var(--ink-30)]">(optionnel)</span></Label>
+                      <Input
+                        value={note}
+                        onChange={e => setNote(e.target.value)}
+                        placeholder="Objet du paiement"
+                        className="h-11 rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+                    onClick={() => setStep('review')}
+                    disabled={!recipientName.trim()}
+                  >
+                    Continuer
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
 

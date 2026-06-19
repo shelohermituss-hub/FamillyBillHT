@@ -2,8 +2,8 @@ import { getCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 
 const CUSTOM_ICONS: Record<string, string> = {
-  EUR: '/icons/currencies/eur.png',
-  USD: '/icons/currencies/usd.jpg',
+  EUR: '/icons/currencies/eur-new.png',
+  USD: '/icons/currencies/usd.png',
   BRL: '/icons/currencies/brl.jpg',
   HTG: '/icons/currencies/htg.jpg',
   CAD: '/icons/currencies/cad.png',
