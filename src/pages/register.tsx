@@ -41,7 +41,7 @@ export function RegisterPage() {
       }
       setLoading(false)
     } else {
-      navigate('/dashboard')
+      navigate('/setup')
     }
   }
 

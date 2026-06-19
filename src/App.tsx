@@ -2,11 +2,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme-context'
 import { NotificationsProvider } from '@/lib/notifications-context'
-import { Navbar } from '@/components/navbar'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { LandingPage } from '@/pages/landing'
 import { LoginPage } from '@/pages/login'
 import { RegisterPage } from '@/pages/register'
+import { ForgotPasswordPage } from '@/pages/forgot-password'
+import { SetupPage } from '@/pages/setup'
 import { DashboardPage } from '@/pages/dashboard'
 import { TransferPage } from '@/pages/transfer'
 import { AccountPage } from '@/pages/account'
@@ -14,6 +15,8 @@ import { CardPage } from '@/pages/card'
 import { HistoryPage } from '@/pages/history'
 import { ProfilePage } from '@/pages/profile'
 import { BillsPage } from '@/pages/bills'
+import { WalletPage } from '@/pages/wallet'
+import { FamilyPage } from '@/pages/family'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -43,12 +46,11 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes with top navbar */}
+        {/* Public routes */}
         <Route path="/" element={
-          <>
-            <Navbar />
+          <PublicRoute>
             <LandingPage />
-          </>
+          </PublicRoute>
         } />
         <Route path="/login" element={
           <PublicRoute>
@@ -59,6 +61,14 @@ function AppRoutes() {
           <PublicRoute>
             <RegisterPage />
           </PublicRoute>
+        } />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+        {/* Post-registration setup wizard */}
+        <Route path="/setup" element={
+          <ProtectedRoute>
+            <SetupPage />
+          </ProtectedRoute>
         } />
 
         {/* Protected dashboard routes */}
@@ -83,6 +93,13 @@ function AppRoutes() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
+        <Route path="/wallet" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <WalletPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
         <Route path="/account" element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -101,6 +118,13 @@ function AppRoutes() {
           <ProtectedRoute>
             <DashboardLayout>
               <HistoryPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/family" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <FamilyPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

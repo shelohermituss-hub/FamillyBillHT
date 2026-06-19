@@ -141,12 +141,17 @@ export function LoginPage() {
             </button>
           </form>
 
-          <p className="text-sm text-[var(--ink-60)] text-center mt-6">
-            Pas encore de compte ?{' '}
-            <Link to="/register" className="font-semibold text-[var(--ink)] underline underline-offset-2">
-              S'inscrire gratuitement
+          <div className="mt-6 space-y-3 text-center">
+            <Link to="/forgot-password" className="block text-sm font-medium tr hover:opacity-70" style={{ color: 'var(--ink-60)' }}>
+              Mot de passe oublié ?
             </Link>
-          </p>
+            <p className="text-sm text-[var(--ink-60)]">
+              Pas encore de compte ?{' '}
+              <Link to="/register" className="font-semibold text-[var(--ink)] underline underline-offset-2">
+                S'inscrire gratuitement
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
