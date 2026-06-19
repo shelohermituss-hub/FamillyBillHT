@@ -17,6 +17,7 @@ export type WiseUser = {
   full_name: string
   avatar_url?: string
   verified: boolean
+  user_code?: string
   created_at: string
 }
 
@@ -47,7 +48,7 @@ export type Jar = {
 export type Transaction = {
   id: string
   user_id: string
-  type: 'send' | 'receive' | 'convert' | 'deposit' | 'withdraw'
+  type: 'send' | 'receive' | 'convert' | 'deposit' | 'withdraw' | 'bill_payment'
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
   amount: number
   currency: string

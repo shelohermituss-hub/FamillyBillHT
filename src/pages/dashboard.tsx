@@ -37,9 +37,16 @@ const RATE_PAIRS = [
 
 const RATE_SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', BRL: 'R$', CAD: 'C$' }
 
+const FLAG_ICONS: Record<string, string> = {
+  USD: '/icons/currencies/usd.jpg',
+  EUR: '/icons/currencies/eur.png',
+  BRL: '/icons/currencies/brl.jpg',
+  CAD: '/icons/currencies/cad.png',
+}
+
 function CurrencyBadge({ code, color }: { code: string; color: string }) {
-  if (code === 'USD') return <img src="/icons/currencies/usd.jpg" className="w-9 h-9 rounded-full object-cover shrink-0" alt="USD" onError={e => (e.currentTarget.style.display = 'none')} />
-  if (code === 'EUR') return <img src="/icons/currencies/eur.png" className="w-9 h-9 rounded-full object-cover shrink-0" alt="EUR" onError={e => (e.currentTarget.style.display = 'none')} />
+  const src = FLAG_ICONS[code]
+  if (src) return <img src={src} className="w-9 h-9 rounded-full object-cover shrink-0" alt={code} onError={e => (e.currentTarget.style.display = 'none')} />
   return (
     <div
       className="w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0"
@@ -85,8 +92,18 @@ function RateTicker({ visible }: { visible: boolean }) {
           const isUp = chg >= 0
 
           return (
-            <div key={from} className="card-flat p-4 space-y-2">
-              <div className="flex items-center justify-between">
+            <div key={from} className="card-flat p-4 space-y-2 overflow-hidden relative">
+              {/* Bleed decorative circle */}
+              <div
+                className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-[0.07] pointer-events-none"
+                style={{ background: color }}
+              />
+              <div
+                className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full opacity-[0.05] pointer-events-none"
+                style={{ background: color }}
+              />
+
+              <div className="flex items-center justify-between relative">
                 <div className="flex items-center gap-2">
                   <CurrencyBadge code={from} color={color} />
                   <div>
@@ -102,7 +119,7 @@ function RateTicker({ visible }: { visible: boolean }) {
                   {Math.abs(chg * 100).toFixed(2)}%
                 </div>
               </div>
-              <div>
+              <div className="relative">
                 {visible ? (
                   <>
                     <p className="text-lg font-bold text-[var(--ink)] tabular-nums leading-tight">

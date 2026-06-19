@@ -4,7 +4,7 @@ import {
   User, FileText, KeyRound, Fingerprint, ShieldCheck,
   MapPin, Languages, Gauge, ChevronRight,
   LogOut, Moon, Sun, Check, X, Download, Bell,
-  Phone, Mail, Edit3, Loader2,
+  Phone, Mail, Edit3, Loader2, Copy,
 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/lib/auth-context'
@@ -266,9 +266,17 @@ export function ProfilePage() {
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('fb-notif') !== 'false')
   const [showLang,     setShowLang]     = useState(false)
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('fb-lang') ?? 'Français')
+  const [codeCopied,   setCodeCopied]   = useState(false)
 
   function toggle(key: string, val: boolean, setter: (v: boolean) => void) {
     setter(val); localStorage.setItem(key, String(val))
+  }
+
+  function copyUserCode() {
+    if (!profile?.user_code) return
+    navigator.clipboard.writeText(profile.user_code)
+    setCodeCopied(true)
+    setTimeout(() => setCodeCopied(false), 2000)
   }
 
   const initials = (profile?.full_name ?? 'U')
@@ -286,7 +294,7 @@ export function ProfilePage() {
 
         {/* Profile header card */}
         <div className="card-flat p-5 animate-fade-in-up">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 mb-4">
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white shrink-0 relative"
               style={{ background: 'var(--ink)' }}
@@ -310,6 +318,31 @@ export function ProfilePage() {
               <Edit3 className="w-4 h-4 text-[var(--ink-60)]" />
             </button>
           </div>
+
+          {/* User ID card */}
+          {profile?.user_code && (
+            <div
+              className="flex items-center gap-3 p-3 rounded-2xl"
+              style={{ background: 'var(--ink)' }}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  Mon ID FamillyBill
+                </p>
+                <p className="text-base font-black tracking-widest font-mono" style={{ color: 'var(--lime)' }}>
+                  {profile.user_code}
+                </p>
+              </div>
+              <button
+                onClick={copyUserCode}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tr cursor-pointer shrink-0"
+                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
+              >
+                {codeCopied ? <Check className="w-3.5 h-3.5" style={{ color: 'var(--lime)' }} /> : <Copy className="w-3.5 h-3.5" />}
+                {codeCopied ? 'Copié !' : 'Copier'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Compte section */}

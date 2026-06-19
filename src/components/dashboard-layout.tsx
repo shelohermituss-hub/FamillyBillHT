@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Wallet, Clock, LogOut, Bell, Moon, Sun, User, Receipt, X } from 'lucide-react'
+import { Home, Wallet, BarChart2, LogOut, Bell, Moon, Sun, User, Receipt, X, Users } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useTheme } from '@/lib/theme-context'
 import { useNotifications } from '@/lib/notifications-context'
@@ -9,10 +9,11 @@ import { NotificationsPanel } from '@/components/notifications-panel'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { icon: Home,    label: 'Accueil',    href: '/dashboard' },
-  { icon: Receipt, label: 'Payer',      href: '/bills'     },
-  { icon: Wallet,  label: 'Wallet',     href: '/wallet'    },
-  { icon: Clock,   label: 'Historique', href: '/history'   },
+  { icon: Home,     label: 'Accueil',      href: '/dashboard'  },
+  { icon: Receipt,  label: 'Payer',        href: '/bills'      },
+  { icon: Wallet,   label: 'Wallet',       href: '/wallet'     },
+  { icon: Users,    label: 'Famille',      href: '/family'     },
+  { icon: BarChart2, label: 'Statistiques', href: '/history'   },
 ]
 
 function isActive(href: string, path: string) {

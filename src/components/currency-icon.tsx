@@ -4,6 +4,9 @@ import { cn } from '@/lib/utils'
 const CUSTOM_ICONS: Record<string, string> = {
   EUR: '/icons/currencies/eur.png',
   USD: '/icons/currencies/usd.jpg',
+  BRL: '/icons/currencies/brl.jpg',
+  HTG: '/icons/currencies/htg.jpg',
+  CAD: '/icons/currencies/cad.png',
 }
 
 export function CurrencyIcon({
