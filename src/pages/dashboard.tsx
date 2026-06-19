@@ -114,7 +114,7 @@ export function DashboardPage() {
         </div>
 
         {/* Total balance hero */}
-        <div className="rounded-3xl p-6" style={{ backgroundColor: 'var(--fb-ink)' }}>
+        <div className="rounded-3xl p-6 card-lg" style={{ backgroundColor: 'var(--fb-ink)' }}>
           <div className="flex items-start justify-between mb-6">
             <div>
               <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-2">Solde total</p>
@@ -178,7 +178,7 @@ export function DashboardPage() {
                 const curr = getCurrency(acc.currency)
                 return (
                   <Link to="/account" key={acc.id}>
-                    <div className="bg-white rounded-2xl px-4 py-3.5 border border-border flex items-center gap-4 hover:shadow-md transition-all">
+                    <div className="bg-white rounded-2xl px-4 py-3.5 border border-border flex items-center gap-4 card-sm hover:card-md transition-all">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-muted shrink-0">
                         {curr?.flag ?? '💰'}
                       </div>
@@ -222,7 +222,7 @@ export function DashboardPage() {
                 const curr = getCurrency(jar.currency)
                 const progress = jar.goal ? Math.min((jar.balance / jar.goal) * 100, 100) : 0
                 return (
-                  <div key={jar.id} className="bg-white rounded-2xl p-5 border border-border hover:shadow-md transition-all">
+                  <div key={jar.id} className="bg-white rounded-2xl p-5 border border-border card-sm hover:card-md transition-all">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <p className="font-bold text-sm" style={{ color: 'var(--fb-ink)' }}>{jar.name}</p>

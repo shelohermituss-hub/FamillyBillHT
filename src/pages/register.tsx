@@ -84,7 +84,7 @@ export function RegisterPage() {
             <span className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>FamillyBill <span className="text-red-600">HT</span></span>
           </Link>
 
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-border">
+          <div className="bg-white rounded-3xl p-8 card-lg border border-border/50">
             <div className="mb-8">
               <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--fb-ink)' }}>Créer un compte</h1>
               <p className="text-muted-foreground text-sm">Gratuit. Sans frais cachés.</p>

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -125,7 +126,10 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Source Sans 3', system-ui, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6, .font-black, .font-extrabold, .font-bold {
+    font-family: 'Lexend', system-ui, sans-serif;
   }
 }
 
@@ -138,4 +142,8 @@
     background-color: var(--fb-red-hover);
     color: white;
   }
+  /* Professional card shadow system */
+  .card-sm  { box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04); }
+  .card-md  { box-shadow: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04); }
+  .card-lg  { box-shadow: 0 8px 24px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.06); }
 }
