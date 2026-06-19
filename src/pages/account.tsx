@@ -92,7 +92,7 @@ export function AccountPage() {
     <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--fb-light)' }}>
       <div className="max-w-4xl mx-auto px-4 pt-8 space-y-6">
         <div>
-          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--fb-ink)' }}>Account</h1>
+          <h1 className="text-3xl font-black mb-1" style={{ color: 'var(--fb-ink)' }}>Compte</h1>
           <p className="text-sm text-muted-foreground">Vos soldes multi-devises et coordonnées bancaires</p>
         </div>
 
@@ -113,14 +113,14 @@ export function AccountPage() {
                       "w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left",
                       isSelected ? "border-2 shadow-sm" : "border-border bg-white hover:shadow-sm"
                     )}
-                    style={isSelected ? { borderColor: 'var(--fb-ink)', backgroundColor: 'white' } : {}}
+                    style={isSelected ? { borderColor: 'var(--fb-red)', backgroundColor: 'white' } : {}}
                   >
                     <span className="text-2xl">{curr?.flag}</span>
                     <div className="flex-1">
                       <p className="font-semibold text-sm">{acc.currency}</p>
                       <p className="text-xs text-muted-foreground">{formatCurrency(acc.balance, acc.currency)}</p>
                     </div>
-                    {acc.is_main && <Badge variant="secondary" className="text-xs rounded-full">Main</Badge>}
+                    {acc.is_main && <Badge variant="secondary" className="text-xs rounded-full">Principal</Badge>}
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </button>
                 )
@@ -135,7 +135,7 @@ export function AccountPage() {
                   value={addingCurrency}
                   onChange={e => setAddingCurrency(e.target.value)}
                 >
-                  <option value="">Add a currency...</option>
+                  <option value="">Ajouter une devise...</option>
                   {availableCurrencies.map(c => (
                     <option key={c.code} value={c.code}>{c.flag} {c.code} – {c.name}</option>
                   ))}
@@ -175,7 +175,7 @@ export function AccountPage() {
                       className="rounded-xl font-semibold border-0"
                       style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}
                     >
-                      Add money
+                      Ajouter des fonds
                     </Button>
                     <Button
                       asChild
@@ -183,7 +183,7 @@ export function AccountPage() {
                       variant="outline"
                       className="rounded-xl font-semibold text-white border-white/30 hover:bg-white/10 hover:text-white hover:border-white/50"
                     >
-                      <Link to="/transfer">Send</Link>
+                      <Link to="/transfer">Envoyer</Link>
                     </Button>
                   </div>
                 </div>
@@ -193,10 +193,10 @@ export function AccountPage() {
               {LOCAL_DETAILS[selected.currency] ? (
                 <div className="bg-white rounded-3xl p-6 border border-border space-y-4">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Local account details</h3>
+                    <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Coordonnées bancaires</h3>
                     <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
                       <Check className="w-3 h-3" />
-                      Free to receive
+                      Réception gratuite
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -242,14 +242,14 @@ export function AccountPage() {
                   </div>
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-sm" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
                     <Repeat className="w-4 h-4" />
-                    Convert
+                    Convertir
                   </div>
                 </div>
               </Link>
             </div>
           ) : (
             <div className="bg-white rounded-3xl p-8 border border-border text-center text-muted-foreground text-sm">
-              Select a currency to view details
+              Sélectionnez une devise
             </div>
           )}
         </div>
