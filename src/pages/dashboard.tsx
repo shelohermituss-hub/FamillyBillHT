@@ -1,325 +1,282 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, ArrowDownLeft, Repeat, Plus, CreditCard, Eye, EyeOff, ChevronRight, Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { ArrowUpRight, ArrowDownLeft, Repeat, Plus, Eye, EyeOff, ChevronRight, TrendingUp } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Jar, type Transaction } from '@/lib/supabase'
 import { formatCurrency, getCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 
-function getGreeting() {
+function greeting() {
   const h = new Date().getHours()
   if (h < 12) return 'Bonjour'
   if (h < 18) return 'Bon après-midi'
   return 'Bonsoir'
 }
 
-function QuickAction({ icon: Icon, label, href, accent }: { icon: React.ElementType; label: string; href: string; accent?: boolean }) {
-  return (
-    <Link to={href}>
-      <div className={cn(
-        "flex flex-col items-center gap-2 p-4 rounded-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer",
-        accent ? "" : "bg-white/10 hover:bg-white/20"
-      )}
-        style={accent ? { backgroundColor: 'var(--fb-red)' } : {}}
-      >
-        <div className={cn(
-          "w-10 h-10 rounded-full flex items-center justify-center",
-          accent ? "bg-black/10" : "bg-white/15"
-        )}>
-          <Icon className="w-5 h-5" style={{ color: 'white' }} />
-        </div>
-        <span className="text-xs font-semibold" style={{ color: 'white' }}>
-          {label}
-        </span>
-      </div>
-    </Link>
-  )
+const TX_LABEL: Record<string, string> = {
+  send: 'Envoi', receive: 'Réception', convert: 'Conversion',
+  deposit: 'Dépôt', withdraw: 'Retrait',
 }
-
-const TX_STATUS_FR: Record<string, string> = {
-  pending: 'En attente',
-  processing: 'En cours',
-  completed: 'Complété',
-  failed: 'Échoué',
-  cancelled: 'Annulé',
-}
-
-const TX_TYPE_FR: Record<string, string> = {
-  send: 'Envoi',
-  receive: 'Réception',
-  convert: 'Conversion',
-  deposit: 'Dépôt',
-  withdraw: 'Retrait',
+const TX_STATUS: Record<string, string> = {
+  pending: 'En attente', processing: 'En cours',
+  completed: 'Complété', failed: 'Échoué', cancelled: 'Annulé',
 }
 
 export function DashboardPage() {
   const { user, profile } = useAuth()
-  const [accounts, setAccounts] = useState<CurrencyAccount[]>([])
-  const [jars, setJars] = useState<Jar[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [balanceVisible, setBalanceVisible] = useState(true)
+  const [accounts, setAccounts]     = useState<CurrencyAccount[]>([])
+  const [jars, setJars]             = useState<Jar[]>([])
+  const [transactions, setTx]       = useState<Transaction[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [visible, setVisible]       = useState(true)
 
   useEffect(() => {
     if (!user) return
-    async function load() {
-      const [accRes, jarRes, txRes] = await Promise.all([
-        supabase.from('currency_accounts').select('*').eq('user_id', user!.id).order('is_main', { ascending: false }),
-        supabase.from('jars').select('*').eq('user_id', user!.id),
-        supabase.from('transactions').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }).limit(10),
-      ])
-      if (accRes.data) setAccounts(accRes.data)
-      if (jarRes.data) setJars(jarRes.data)
-      if (txRes.data) setTransactions(txRes.data)
+    Promise.all([
+      supabase.from('currency_accounts').select('*').eq('user_id', user.id).order('is_main', { ascending: false }),
+      supabase.from('jars').select('*').eq('user_id', user.id),
+      supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+    ]).then(([a, j, t]) => {
+      if (a.data) setAccounts(a.data)
+      if (j.data) setJars(j.data)
+      if (t.data) setTx(t.data)
       setLoading(false)
-    }
-    load()
+    })
   }, [user])
 
-  const totalInEur = accounts.reduce((sum, a) => {
-    const rates: Record<string, number> = { EUR: 1, USD: 0.92, GBP: 1.16, CAD: 0.68, AUD: 0.60, JPY: 0.0062, CHF: 1.09, HTG: 0.0068 }
-    return sum + a.balance * (rates[a.currency] ?? 0.92)
-  }, 0)
-
-  const firstName = profile?.full_name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'là'
+  const htgRates: Record<string, number> = {
+    HTG: 1, EUR: 148, USD: 134.5, GBP: 170, CAD: 99, AUD: 88, CHF: 153,
+  }
+  const totalHTG = accounts.reduce((s, a) => s + a.balance * (htgRates[a.currency] ?? 134.5), 0)
+  const firstName = profile?.full_name?.split(' ')[0] ?? 'là'
 
   return (
-    <div className="min-h-screen pb-16 md:pb-12" style={{ backgroundColor: 'var(--fb-light)' }}>
-      <div className="max-w-5xl mx-auto px-4 pt-8 space-y-6">
+    <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'var(--surface)' }}>
+      <div className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
 
-        {/* Greeting */}
+        {/* Greeting row */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground font-medium">{getGreeting()},</p>
-            <h1 className="text-2xl font-black" style={{ color: 'var(--fb-ink)' }}>
-              {firstName} 👋
-            </h1>
+            <p className="text-sm text-[var(--ink-60)]">{greeting()},</p>
+            <h1 className="text-xl font-semibold text-[var(--ink)] mt-0.5">{firstName}</h1>
           </div>
-          <div className="flex items-center gap-2">
-            {profile && !profile.verified && (
-              <Badge variant="outline" className="rounded-full text-xs font-medium border-orange-300 text-orange-600 bg-orange-50">
-                Vérifier identité
-              </Badge>
-            )}
-            <Link to="/card">
-              <Button variant="outline" size="sm" className="rounded-2xl font-semibold gap-1.5">
-                <CreditCard className="w-4 h-4" />
-                Carte
-              </Button>
-            </Link>
-          </div>
+          <button
+            onClick={() => setVisible(!visible)}
+            aria-label={visible ? 'Masquer le solde' : 'Afficher le solde'}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white tr cursor-pointer border border-[var(--border)] bg-white"
+          >
+            {visible
+              ? <Eye className="w-4 h-4 text-[var(--ink-60)]" />
+              : <EyeOff className="w-4 h-4 text-[var(--ink-60)]" />}
+          </button>
         </div>
 
-        {/* Total balance hero */}
-        <div className="rounded-3xl p-6 card-lg" style={{ backgroundColor: 'var(--fb-ink)' }}>
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-2">Solde total</p>
-              <div className="flex items-center gap-3">
-                {loading ? (
-                  <Skeleton className="h-10 w-40 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
-                ) : (
-                  <h2 className="text-4xl font-black text-white tabular-nums">
-                    {balanceVisible
-                      ? `€ ${totalInEur.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                      : '€ •••,•••'}
-                  </h2>
-                )}
-                <button
-                  onClick={() => setBalanceVisible(!balanceVisible)}
-                  className="text-white/30 hover:text-white/80 transition-colors p-1 rounded-lg hover:bg-white/10"
-                >
-                  {balanceVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
-              </div>
-              <p className="text-white/30 text-xs mt-1">
-                {accounts.length} devise{accounts.length > 1 ? 's' : ''} · approx. en EUR
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--fb-red)' }}>
-              <Sparkles className="w-6 h-6" style={{ color: 'white' }} />
-            </div>
-          </div>
+        {/* Balance card */}
+        <div className="card-dark p-6 relative overflow-hidden" style={{ background: 'var(--ink)' }}>
+          {/* Decorative circle */}
+          <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
+          <div className="absolute -bottom-12 -left-8 w-48 h-48 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
 
-          {/* Quick actions */}
-          <div className="grid grid-cols-4 gap-2">
-            <QuickAction icon={ArrowUpRight} label="Envoyer" href="/transfer" accent />
-            <QuickAction icon={ArrowDownLeft} label="Recevoir" href="/account" />
-            <QuickAction icon={Repeat} label="Convertir" href="/transfer?mode=convert" />
-            <QuickAction icon={Plus} label="Ajouter" href="/account" />
-          </div>
-        </div>
-
-        {/* Currency accounts */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg" style={{ color: 'var(--fb-ink)' }}>Vos devises</h2>
-            <Link to="/account" className="text-sm font-semibold hover:underline" style={{ color: 'var(--fb-red)' }}>
-              Tout voir
-            </Link>
-          </div>
-          <div className="space-y-2">
+          <div className="relative z-10">
+            <p className="text-xs font-medium uppercase tracking-widest mb-3" style={{ color: 'var(--lime)' }}>
+              Solde total
+            </p>
             {loading ? (
-              [1, 2, 3].map(i => <Skeleton key={i} className="h-[72px] rounded-2xl" />)
-            ) : accounts.length === 0 ? (
-              <div className="bg-white rounded-3xl p-6 border border-border text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Aucun compte devise.</p>
-                <Link to="/account">
-                  <Button size="sm" className="rounded-2xl border-0 font-semibold mt-1" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
-                    Ouvrir mon premier compte
-                  </Button>
-                </Link>
-              </div>
+              <Skeleton className="h-10 w-48 mb-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }} />
             ) : (
-              accounts.map(acc => {
-                const curr = getCurrency(acc.currency)
-                return (
-                  <Link to="/account" key={acc.id}>
-                    <div className="bg-white rounded-2xl px-4 py-3.5 border border-border flex items-center gap-4 card-sm hover:card-md transition-all">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-muted shrink-0">
-                        {curr?.flag ?? '💰'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-sm">{acc.currency}</p>
-                          {acc.is_main && (
-                            <Badge variant="secondary" className="text-xs rounded-full px-2 py-0 font-medium">Principal</Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{curr?.name}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="font-bold text-sm" style={{ color: 'var(--fb-ink)' }}>
-                          {balanceVisible ? formatCurrency(acc.balance, acc.currency) : `${curr?.symbol ?? ''} ••••`}
-                        </p>
-                        {acc.iban && <p className="text-xs text-muted-foreground">IBAN</p>}
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                    </div>
-                  </Link>
-                )
-              })
+              <p className="text-4xl font-bold text-white tabular-nums leading-none mb-1">
+                {visible
+                  ? `G ${totalHTG.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}`
+                  : 'G ••• •••'}
+              </p>
             )}
+            <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              {accounts.length} devise{accounts.length !== 1 ? 's' : ''} · en HTG
+            </p>
+
+            {/* Quick actions */}
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { icon: ArrowUpRight, label: 'Envoyer',   href: '/transfer',           lime: true  },
+                { icon: ArrowDownLeft,label: 'Recevoir',  href: '/account',             lime: false },
+                { icon: Repeat,       label: 'Convertir', href: '/transfer?mode=convert', lime: false },
+                { icon: Plus,         label: 'Ajouter',   href: '/account',             lime: false },
+              ].map(({ icon: Icon, label, href, lime }) => (
+                <Link key={label} to={href}>
+                  <div className="flex flex-col items-center gap-2 cursor-pointer group">
+                    <div className={cn(
+                      "w-11 h-11 rounded-2xl flex items-center justify-center tr",
+                      lime ? "" : "bg-white/10 group-hover:bg-white/20"
+                    )}
+                      style={lime ? { background: 'var(--lime)' } : {}}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: lime ? 'var(--ink)' : 'white' }} />
+                    </div>
+                    <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>{label}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Currencies */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-[var(--ink)]">Vos devises</h2>
+            <Link to="/account" className="text-xs font-medium tr hover:opacity-70" style={{ color: 'var(--ink-60)' }}>
+              Tout voir →
+            </Link>
+          </div>
+
+          <div className="space-y-2">
+            {loading
+              ? [1,2,3].map(i => <Skeleton key={i} className="h-[68px] rounded-2xl" />)
+              : accounts.length === 0
+                ? (
+                  <div className="card-flat p-6 text-center">
+                    <p className="text-sm text-[var(--ink-60)] mb-3">Aucun compte devise.</p>
+                    <Link to="/account">
+                      <button className="btn-lime px-4 py-2 rounded-xl text-sm cursor-pointer">
+                        Ouvrir un compte
+                      </button>
+                    </Link>
+                  </div>
+                )
+                : accounts.map(acc => {
+                    const curr = getCurrency(acc.currency)
+                    return (
+                      <Link to="/account" key={acc.id}>
+                        <div className="card-flat flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-[var(--surface)] shrink-0 select-none">
+                            {curr?.flag}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-[var(--ink)]">{acc.currency}
+                              {acc.is_main && (
+                                <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                                  Principal
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-[var(--ink-60)] mt-0.5">{curr?.name}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-semibold text-[var(--ink)] tabular-nums">
+                              {visible ? formatCurrency(acc.balance, acc.currency) : `${curr?.symbol} ••••`}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-[var(--ink-30)] shrink-0" />
+                        </div>
+                      </Link>
+                    )
+                  })
+            }
+          </div>
+        </section>
 
         {/* Jars */}
         {(loading || jars.length > 0) && (
-          <div>
+          <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-lg" style={{ color: 'var(--fb-ink)' }}>Coffres</h2>
-              <button className="text-sm font-semibold hover:underline" style={{ color: 'var(--fb-red)' }}>
-                + Nouveau coffre
+              <h2 className="text-sm font-semibold text-[var(--ink)]">Coffres d'épargne</h2>
+              <button className="text-xs font-medium text-[var(--ink-60)] hover:opacity-70 tr cursor-pointer">
+                + Nouveau
               </button>
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {loading ? (
-                [1, 2].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)
-              ) : jars.map(jar => {
-                const curr = getCurrency(jar.currency)
-                const progress = jar.goal ? Math.min((jar.balance / jar.goal) * 100, 100) : 0
-                return (
-                  <div key={jar.id} className="bg-white rounded-2xl p-5 border border-border card-sm hover:card-md transition-all">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-bold text-sm" style={{ color: 'var(--fb-ink)' }}>{jar.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{curr?.flag} {jar.currency}</p>
-                      </div>
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: jar.color + '30' }}>
-                        🏺
-                      </div>
-                    </div>
-                    <p className="font-black text-xl mb-2" style={{ color: 'var(--fb-ink)' }}>
-                      {balanceVisible ? formatCurrency(jar.balance, jar.currency) : '••••'}
-                    </p>
-                    {jar.goal && (
-                      <div className="space-y-1">
-                        <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${progress}%`, backgroundColor: 'var(--fb-red)' }}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {progress.toFixed(0)}% de l'objectif {formatCurrency(jar.goal, jar.currency)}
+            <div className="grid grid-cols-2 gap-2">
+              {loading
+                ? [1,2].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)
+                : jars.map(jar => {
+                    const curr = getCurrency(jar.currency)
+                    const pct = jar.goal ? Math.min((jar.balance / jar.goal) * 100, 100) : 0
+                    return (
+                      <div key={jar.id} className="card-flat p-4 cursor-pointer hover:bg-[var(--surface)] tr">
+                        <p className="text-xs font-semibold text-[var(--ink)] truncate">{jar.name}</p>
+                        <p className="text-xs text-[var(--ink-60)] mb-2">{curr?.flag} {jar.currency}</p>
+                        <p className="text-base font-bold text-[var(--ink)] tabular-nums mb-2">
+                          {visible ? formatCurrency(jar.balance, jar.currency) : '••••'}
                         </p>
+                        {jar.goal && (
+                          <>
+                            <div className="h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
+                              <div className="h-full rounded-full tr" style={{ width: `${pct}%`, background: 'var(--lime)' }} />
+                            </div>
+                            <p className="text-[10px] text-[var(--ink-60)] mt-1">{pct.toFixed(0)}%</p>
+                          </>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
+                    )
+                  })
+              }
             </div>
-          </div>
+          </section>
         )}
 
         {/* Recent transactions */}
-        <div>
+        <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg" style={{ color: 'var(--fb-ink)' }}>Activité récente</h2>
-            <Link to="/history" className="text-sm font-semibold hover:underline" style={{ color: 'var(--fb-red)' }}>
-              Tout voir
+            <h2 className="text-sm font-semibold text-[var(--ink)]">Activité récente</h2>
+            <Link to="/history" className="text-xs font-medium text-[var(--ink-60)] hover:opacity-70 tr">
+              Tout voir →
             </Link>
           </div>
+
           {loading ? (
-            <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}</div>
+            <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}</div>
           ) : transactions.length === 0 ? (
-            <div className="bg-white rounded-3xl p-8 border border-border text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center" style={{ backgroundColor: 'var(--fb-light)' }}>
-                <ArrowUpRight className="w-6 h-6 text-muted-foreground" />
+            <div className="card-flat p-8 text-center">
+              <div className="w-10 h-10 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'var(--lime-light)' }}>
+                <TrendingUp className="w-5 h-5" style={{ color: 'var(--ink)' }} />
               </div>
-              <div>
-                <p className="font-semibold text-sm">Aucune transaction</p>
-                <p className="text-xs text-muted-foreground mt-1">Envoyez ou ajoutez des fonds pour commencer.</p>
-              </div>
+              <p className="text-sm font-medium text-[var(--ink)]">Aucune transaction</p>
+              <p className="text-xs text-[var(--ink-60)] mt-1 mb-4">Envoyez ou ajoutez des fonds pour commencer.</p>
               <Link to="/transfer">
-                <Button size="sm" className="rounded-2xl border-0 font-semibold" style={{ backgroundColor: 'var(--fb-red)', color: 'white' }}>
-                  Envoyer
-                </Button>
+                <button className="btn-lime px-4 py-2 rounded-xl text-sm cursor-pointer">Envoyer</button>
               </Link>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {transactions.map(tx => {
-                const isSend = tx.type === 'send' || tx.type === 'withdraw'
+                const isSend    = tx.type === 'send' || tx.type === 'withdraw'
                 const isReceive = tx.type === 'receive' || tx.type === 'deposit'
-                const curr = getCurrency(tx.currency)
-
+                const curr      = getCurrency(tx.currency)
                 return (
-                  <div key={tx.id} className="bg-white rounded-2xl px-4 py-3.5 border border-border flex items-center gap-3 hover:shadow-sm transition-all">
+                  <div key={tx.id} className="card-flat flex items-center gap-3 px-4 py-3 hover:bg-[var(--surface)] tr cursor-pointer">
                     <div className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                      isSend ? "bg-red-50" : tx.type === 'convert' ? "bg-gray-100" : "bg-green-50"
+                      "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                      isSend ? "bg-red-50" : isReceive ? "bg-[var(--lime-light)]" : "bg-[var(--surface)]"
                     )}>
-                      {tx.type === 'convert'
-                        ? <Repeat className="w-5 h-5 text-gray-500" />
-                        : isSend
-                          ? <ArrowUpRight className="w-5 h-5" style={{ color: 'var(--fb-red)' }} />
-                          : <ArrowDownLeft className="w-5 h-5 text-green-600" />
-                      }
+                      {isSend
+                        ? <ArrowUpRight className="w-4 h-4 text-red-500" />
+                        : isReceive
+                          ? <ArrowDownLeft className="w-4 h-4" style={{ color: 'var(--ink)' }} />
+                          : <Repeat className="w-4 h-4 text-[var(--ink-60)]" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">
+                      <p className="text-sm font-medium text-[var(--ink)] truncate">
                         {tx.type === 'convert'
-                          ? `Conversion ${tx.currency} → ${tx.target_currency}`
-                          : tx.recipient_name ?? 'Transfert'}
+                          ? `${tx.currency} → ${tx.target_currency}`
+                          : (tx.recipient_name ?? 'Transfert')}
                       </p>
-                      <p className="text-xs text-muted-foreground">{TX_TYPE_FR[tx.type] ?? tx.type} · {TX_STATUS_FR[tx.status] ?? tx.status}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className={cn("font-bold text-sm", isSend ? "text-red-500" : isReceive ? "text-green-600" : "text-gray-600")}>
-                        {isSend ? '−' : isReceive ? '+' : '↔'}{curr?.symbol}{tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+                      <p className="text-xs text-[var(--ink-60)]">
+                        {TX_LABEL[tx.type]} · {TX_STATUS[tx.status] ?? tx.status}
                       </p>
-                      <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString('fr-FR')}</p>
                     </div>
+                    <p className={cn("text-sm font-semibold tabular-nums shrink-0",
+                      isSend ? "text-red-500" : isReceive ? "" : "text-[var(--ink-60)]"
+                    )}
+                      style={isReceive ? { color: 'var(--ink)' } : {}}>
+                      {isSend ? '−' : isReceive ? '+' : ''}{curr?.symbol}{tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+                    </p>
                   </div>
                 )
               })}
             </div>
           )}
-        </div>
+        </section>
+
       </div>
     </div>
   )
