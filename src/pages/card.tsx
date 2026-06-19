@@ -49,7 +49,7 @@ export function CardPage() {
                 </div>
               </div>
               <div>
-                <p className="text-white/60 text-xs mb-1">Multi-currency</p>
+                <p className="text-white/60 text-xs mb-1">Multi-devises</p>
                 <p className="text-white font-mono tracking-widest text-sm">
                   {showNumber ? '4729 1234 5678 9012' : '•••• •••• •••• 4729'}
                 </p>
@@ -66,7 +66,7 @@ export function CardPage() {
               <div className="absolute inset-0 rounded-3xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
                 <div className="text-center">
                   <Lock className="w-8 h-8 text-white mx-auto mb-1" />
-                  <p className="text-white font-semibold text-sm">Card frozen</p>
+                  <p className="text-white font-semibold text-sm">Carte bloquée</p>
                 </div>
               </div>
             )}
@@ -114,7 +114,7 @@ export function CardPage() {
           <div className="p-5 border-b border-border">
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5" style={{ color: 'var(--fb-ink)' }} />
-              <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Card controls</h3>
+              <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Contrôles de carte</h3>
             </div>
           </div>
           <div className="divide-y divide-border">
@@ -139,9 +139,9 @@ export function CardPage() {
           <div className="p-5 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin className="w-5 h-5" style={{ color: 'var(--fb-ink)' }} />
-              <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Recent spending</h3>
+              <h3 className="font-bold" style={{ color: 'var(--fb-ink)' }}>Dépenses récentes</h3>
             </div>
-            <Badge variant="outline" className="rounded-full text-xs">Card</Badge>
+            <Badge variant="outline" className="rounded-full text-xs">Carte</Badge>
           </div>
           <div className="divide-y divide-border">
             {SPENDING.map((item, i) => (
@@ -163,7 +163,7 @@ export function CardPage() {
 
         {/* Benefits */}
         <div className="rounded-3xl p-6 border border-border" style={{ backgroundColor: 'var(--fb-ink)' }}>
-          <h3 className="font-black text-white mb-4">Card benefits</h3>
+          <h3 className="font-black text-white mb-4">Avantages carte</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
               'Sans frais de change',
@@ -175,7 +175,7 @@ export function CardPage() {
             ].map((b, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--fb-red)' }}>
-                  <Check className="w-2.5 h-2.5" style={{ color: 'var(--fb-ink)' }} />
+                  <Check className="w-2.5 h-2.5" style={{ color: 'white' }} />
                 </div>
                 <span className="text-white/80 text-xs">{b}</span>
               </div>
