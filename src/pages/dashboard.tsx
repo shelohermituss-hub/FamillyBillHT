@@ -7,8 +7,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
-import { formatCurrency, getCurrency, getRate } from '@/lib/currencies'
-import { CurrencyIcon } from '@/components/currency-icon'
+import { getCurrency, getRate } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 import { BILL_CATEGORIES } from '@/lib/haiti-providers'
 
@@ -30,11 +29,26 @@ const TX_STATUS: Record<string, string> = {
 
 // Simulated live rates with micro-fluctuations
 const RATE_PAIRS = [
-  { from: 'USD', to: 'HTG', label: 'Dollar US',    flag: '🇺🇸', color: '#22c55e', seed: 1 },
-  { from: 'EUR', to: 'HTG', label: 'Euro',          flag: '🇪🇺', color: '#3b82f6', seed: 2 },
-  { from: 'BRL', to: 'HTG', label: 'Real brésilien',flag: '🇧🇷', color: '#f59e0b', seed: 3 },
-  { from: 'CAD', to: 'HTG', label: 'Dollar canadien',flag: '🇨🇦', color: '#ef4444', seed: 4 },
+  { from: 'USD', to: 'HTG', label: 'Dollar américain', color: '#22c55e', seed: 1 },
+  { from: 'EUR', to: 'HTG', label: 'Euro',             color: '#3b82f6', seed: 2 },
+  { from: 'BRL', to: 'HTG', label: 'Real brésilien',   color: '#f59e0b', seed: 3 },
+  { from: 'CAD', to: 'HTG', label: 'Dollar canadien',  color: '#ef4444', seed: 4 },
 ]
+
+const RATE_SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', BRL: 'R$', CAD: 'C$' }
+
+function CurrencyBadge({ code, color }: { code: string; color: string }) {
+  if (code === 'USD') return <img src="/icons/currencies/usd.jpg" className="w-9 h-9 rounded-full object-cover shrink-0" alt="USD" onError={e => (e.currentTarget.style.display = 'none')} />
+  if (code === 'EUR') return <img src="/icons/currencies/eur.png" className="w-9 h-9 rounded-full object-cover shrink-0" alt="EUR" onError={e => (e.currentTarget.style.display = 'none')} />
+  return (
+    <div
+      className="w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0"
+      style={{ background: color }}
+    >
+      {RATE_SYMBOLS[code] ?? code.slice(0, 2)}
+    </div>
+  )
+}
 
 function simulatedChange(seed: number): number {
   const t = Math.floor(Date.now() / 60000) // changes per minute
@@ -64,7 +78,7 @@ function RateTicker({ visible }: { visible: boolean }) {
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {RATE_PAIRS.map(({ from, to, label, flag, seed }) => {
+        {RATE_PAIRS.map(({ from, to, label, color, seed }) => {
           const baseRate = getRate(from, to)
           const chg = simulatedChange(seed + tick * 0)
           const rate = baseRate * (1 + chg)
@@ -74,7 +88,7 @@ function RateTicker({ visible }: { visible: boolean }) {
             <div key={from} className="card-flat p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{flag}</span>
+                  <CurrencyBadge code={from} color={color} />
                   <div>
                     <p className="text-xs font-bold text-[var(--ink)] leading-tight">{from}/{to}</p>
                     <p className="text-[10px] text-[var(--ink-60)] leading-tight">{label}</p>
@@ -226,67 +240,6 @@ export function DashboardPage() {
 
         {/* Real-time exchange rates (replacing Vos devises) */}
         <RateTicker visible={visible} />
-
-        {/* Mes devises (replacing Jars) — user accounts in 2-col grid */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-[var(--ink)]">Mes devises</h2>
-            <Link to="/wallet" className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl tr cursor-pointer" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
-              <Plus className="w-3 h-3" /> Gérer
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-2 gap-2">
-              {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
-            </div>
-          ) : accounts.length === 0 ? (
-            <div className="card-flat p-6 text-center">
-              <p className="text-sm text-[var(--ink-60)] mb-3">Aucun compte devise.</p>
-              <Link to="/wallet">
-                <button className="btn-lime px-4 py-2 rounded-xl text-sm cursor-pointer">Créer mon wallet</button>
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {accounts.map((acc, i) => {
-                const curr = getCurrency(acc.currency)
-                const usdEq = acc.balance * getRate(acc.currency, 'USD')
-                return (
-                  <Link key={acc.id} to="/wallet">
-                    <div className={cn("card-flat card-hover p-4 cursor-pointer tr animate-fade-in-up")}
-                      style={{ animationDelay: `${i * 50}ms` }}>
-                      <div className="flex items-center justify-between mb-3">
-                        <CurrencyIcon code={acc.currency} className="w-9 h-9" />
-                        {acc.is_main && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
-                            Principal
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-[var(--ink-60)] mb-0.5">{curr?.name}</p>
-                      <p className="text-base font-bold text-[var(--ink)] tabular-nums leading-tight">
-                        {visible ? formatCurrency(acc.balance, acc.currency) : `${curr?.symbol} ••••`}
-                      </p>
-                      <p className="text-[10px] text-[var(--ink-60)] tabular-nums mt-0.5">
-                        {visible ? `≈ $${usdEq.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '≈ $••••'}
-                      </p>
-                    </div>
-                  </Link>
-                )
-              })}
-              {/* Add currency card */}
-              <Link to="/wallet">
-                <div className="card-flat p-4 cursor-pointer tr hover:bg-[var(--surface)] flex flex-col items-center justify-center h-full min-h-[112px] gap-2 border-dashed">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'var(--lime-light)' }}>
-                    <Plus className="w-4 h-4" style={{ color: 'var(--ink)' }} />
-                  </div>
-                  <p className="text-xs font-semibold text-[var(--ink-60)]">Ajouter</p>
-                </div>
-              </Link>
-            </div>
-          )}
-        </section>
 
         {/* Recent transactions */}
         <section className="pb-4">

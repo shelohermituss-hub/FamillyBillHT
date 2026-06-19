@@ -13,8 +13,21 @@ import { formatCurrency, getCurrency, getRate, CURRENCIES } from '@/lib/currenci
 import { CurrencyIcon } from '@/components/currency-icon'
 import { cn } from '@/lib/utils'
 
-const PIN_KEY    = 'fb-wallet-pin'
-const LOCKED_KEY = 'fb-wallet-locked'
+const pinKey    = (uid: string) => `fb-wallet-pin-${uid}`
+const lockedKey = (uid: string) => `fb-wallet-locked-${uid}`
+
+function getStoredPin(uid: string): string | null {
+  const v = localStorage.getItem(pinKey(uid))
+  if (v) return v
+  // Migrate from old global key (one-time)
+  const old = localStorage.getItem('fb-wallet-pin')
+  if (old) {
+    localStorage.setItem(pinKey(uid), old)
+    localStorage.removeItem('fb-wallet-pin')
+    return old
+  }
+  return null
+}
 
 // ── Deposit Modal ──────────────────────────────────────────────────────────────
 function DepositModal({
@@ -612,12 +625,12 @@ function WalletMain({
 }
 
 // ── Locked view ────────────────────────────────────────────────────────────────
-function WalletLocked({ onUnlock }: { onUnlock: () => void }) {
+function WalletLocked({ userId, onUnlock }: { userId: string; onUnlock: () => void }) {
   const [error, setError] = useState('')
 
   function handlePin(pin: string) {
-    if (pin === localStorage.getItem(PIN_KEY)) {
-      localStorage.setItem(LOCKED_KEY, 'false')
+    if (pin === localStorage.getItem(pinKey(userId))) {
+      localStorage.setItem(lockedKey(userId), 'false')
       setError('')
       onUnlock()
     } else {
@@ -643,7 +656,7 @@ function WalletLocked({ onUnlock }: { onUnlock: () => void }) {
 // ── Setup ─────────────────────────────────────────────────────────────────────
 type SetupView = 'intro' | 'set-pin' | 'confirm-pin' | 'done'
 
-function WalletSetup({ onCreated }: { onCreated: () => void }) {
+function WalletSetup({ userId, onCreated }: { userId: string; onCreated: () => void }) {
   const [view, setView] = useState<SetupView>('intro')
   const [pendingPin, setPendingPin] = useState('')
   const [error, setError] = useState('')
@@ -651,8 +664,8 @@ function WalletSetup({ onCreated }: { onCreated: () => void }) {
   function handleSetPin(pin: string) { setPendingPin(pin); setView('confirm-pin'); setError('') }
   function handleConfirmPin(pin: string) {
     if (pin === pendingPin) {
-      localStorage.setItem(PIN_KEY, pin)
-      localStorage.setItem(LOCKED_KEY, 'false')
+      localStorage.setItem(pinKey(userId), pin)
+      localStorage.setItem(lockedKey(userId), 'false')
       setView('done')
       setTimeout(onCreated, 1200)
     } else {
@@ -714,18 +727,18 @@ function WalletSetup({ onCreated }: { onCreated: () => void }) {
 }
 
 // ── Change PIN ─────────────────────────────────────────────────────────────────
-function ChangePIN({ onDone }: { onDone: () => void }) {
+function ChangePIN({ userId, onDone }: { userId: string; onDone: () => void }) {
   const [step, setStep] = useState<'current' | 'new' | 'confirm'>('current')
   const [newPin, setNewPin] = useState('')
   const [error, setError] = useState('')
 
   function handleCurrent(pin: string) {
-    if (pin === localStorage.getItem(PIN_KEY)) { setError(''); setStep('new') }
+    if (pin === localStorage.getItem(pinKey(userId))) { setError(''); setStep('new') }
     else setError('PIN incorrect.')
   }
   function handleNew(pin: string) { setNewPin(pin); setStep('confirm'); setError('') }
   function handleConfirm(pin: string) {
-    if (pin === newPin) { localStorage.setItem(PIN_KEY, pin); onDone() }
+    if (pin === newPin) { localStorage.setItem(pinKey(userId), pin); onDone() }
     else { setError('Les codes ne correspondent pas.'); setNewPin(''); setStep('new') }
   }
 
@@ -751,12 +764,13 @@ export function WalletPage() {
   const [view, setView] = useState<PageView>('loading')
 
   useEffect(() => {
-    const pin    = localStorage.getItem(PIN_KEY)
-    const locked = localStorage.getItem(LOCKED_KEY) === 'true'
+    if (!user) return
+    const pin    = getStoredPin(user.id)
+    const locked = localStorage.getItem(lockedKey(user.id)) === 'true'
     if (!pin)        setView('setup')
     else if (locked) setView('locked')
     else             setView('main')
-  }, [])
+  }, [user])
 
   async function loadAccounts() {
     if (!user) return
@@ -770,11 +784,12 @@ export function WalletPage() {
   useEffect(() => { loadAccounts() }, [user])
 
   function handleLock() {
-    localStorage.setItem(LOCKED_KEY, 'true')
+    if (!user) return
+    localStorage.setItem(lockedKey(user.id), 'true')
     setView('locked')
   }
 
-  if (view === 'loading') return (
+  if (view === 'loading' || !user) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface)' }}>
       <div className="w-10 h-10 rounded-2xl animate-pulse-lime" style={{ background: 'var(--lime)' }} />
     </div>
@@ -783,9 +798,9 @@ export function WalletPage() {
   return (
     <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
       <div className="max-w-lg mx-auto px-4 pt-6">
-        {view === 'setup'      && <WalletSetup onCreated={() => { setView('main'); loadAccounts() }} />}
-        {view === 'locked'     && <WalletLocked onUnlock={() => setView('main')} />}
-        {view === 'change-pin' && <ChangePIN onDone={() => setView('main')} />}
+        {view === 'setup'      && <WalletSetup userId={user.id} onCreated={() => { setView('main'); loadAccounts() }} />}
+        {view === 'locked'     && <WalletLocked userId={user.id} onUnlock={() => setView('main')} />}
+        {view === 'change-pin' && <ChangePIN userId={user.id} onDone={() => setView('main')} />}
         {view === 'main' && (
           <WalletMain
             accounts={accounts}

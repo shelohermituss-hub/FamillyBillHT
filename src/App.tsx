@@ -2,11 +2,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme-context'
 import { NotificationsProvider } from '@/lib/notifications-context'
-import { Navbar } from '@/components/navbar'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { LandingPage } from '@/pages/landing'
 import { LoginPage } from '@/pages/login'
 import { RegisterPage } from '@/pages/register'
+import { ForgotPasswordPage } from '@/pages/forgot-password'
+import { SetupPage } from '@/pages/setup'
 import { DashboardPage } from '@/pages/dashboard'
 import { TransferPage } from '@/pages/transfer'
 import { AccountPage } from '@/pages/account'
@@ -44,13 +45,8 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes with top navbar */}
-        <Route path="/" element={
-          <>
-            <Navbar />
-            <LandingPage />
-          </>
-        } />
+        {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={
           <PublicRoute>
             <LoginPage />
@@ -60,6 +56,14 @@ function AppRoutes() {
           <PublicRoute>
             <RegisterPage />
           </PublicRoute>
+        } />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+        {/* Post-registration setup wizard */}
+        <Route path="/setup" element={
+          <ProtectedRoute>
+            <SetupPage />
+          </ProtectedRoute>
         } />
 
         {/* Protected dashboard routes */}
