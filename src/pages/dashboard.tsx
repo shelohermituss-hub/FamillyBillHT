@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowUpRight, ArrowDownLeft, Repeat, Plus, Eye, EyeOff,
@@ -38,11 +38,21 @@ const RATE_PAIRS = [
 const RATE_SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', BRL: 'R$', CAD: 'C$' }
 
 const FLAG_ICONS: Record<string, string> = {
+  HTG: '/icons/currencies/htg.png',
   USD: '/icons/currencies/usd.png',
   EUR: '/icons/currencies/eur-new.png',
   BRL: '/icons/currencies/brl.jpg',
   CAD: '/icons/currencies/cad.png',
 }
+
+const ACCOUNT_CARD_STYLES: Record<string, { gradient: string; glowColor: string }> = {
+  HTG: { gradient: 'linear-gradient(135deg, #0a1428 0%, #0d2260 50%, #1A56DB 100%)', glowColor: '#1A56DB' },
+  USD: { gradient: 'linear-gradient(135deg, #021a12 0%, #04422e 50%, #047857 100%)', glowColor: '#10b981' },
+  EUR: { gradient: 'linear-gradient(135deg, #0e0c2a 0%, #1c1862 50%, #4338ca 100%)', glowColor: '#818cf8' },
+  CAD: { gradient: 'linear-gradient(135deg, #1e0404 0%, #5a0e0e 50%, #991b1b 100%)', glowColor: '#f87171' },
+  BRL: { gradient: 'linear-gradient(135deg, #1c0a00 0%, #5c2d06 50%, #92400e 100%)', glowColor: '#fbbf24' },
+}
+const DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #0a1428 0%, #151a3a 50%, #2d3460 100%)', glowColor: '#60a5fa' }
 
 function CurrencyBadge({ code, color }: { code: string; color: string }) {
   const src = FLAG_ICONS[code]
@@ -254,6 +264,17 @@ export function DashboardPage() {
 
   useEffect(() => { load() }, [load])
 
+  const [activeCardIdx, setActiveCardIdx] = useState(0)
+  const cardPtrStart = useRef(0)
+
+  const sorted = [...accounts].sort((a, b) => {
+    if (a.currency === 'HTG') return -1
+    if (b.currency === 'HTG') return 1
+    if (a.currency === 'USD') return -1
+    if (b.currency === 'USD') return 1
+    return b.balance - a.balance
+  })
+
   const totalUSD = accounts.reduce((s, a) => s + a.balance * getRate(a.currency, 'USD'), 0)
   const firstName = profile?.full_name?.split(' ')[0] ?? 'là'
 
@@ -280,49 +301,147 @@ export function DashboardPage() {
           </button>
         </div>
 
-        {/* Balance card */}
-        <div className="relative overflow-hidden animate-fade-in-up stagger-1 rounded-3xl p-6"
-          style={{ background: 'var(--ink)', boxShadow: '0 8px 40px rgba(14,15,12,0.22), 0 2px 8px rgba(14,15,12,0.14)' }}>
-          <div className="absolute -top-10 -right-10 w-52 h-52 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
-          <div className="absolute -bottom-16 -left-8 w-56 h-56 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
-          <div className="absolute top-1/2 right-12 w-28 h-28 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
-
-          <div className="relative z-10">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--lime)' }}>
-              Solde total
-            </p>
+        {/* Account card stack */}
+        <div className="space-y-3 animate-fade-in-up stagger-1">
+          <div
+            className="relative select-none"
+            style={{ height: 195 }}
+            onPointerDown={e => { cardPtrStart.current = e.clientX }}
+            onPointerUp={e => {
+              const d = e.clientX - cardPtrStart.current
+              if (d < -40 && activeCardIdx < sorted.length - 1) setActiveCardIdx(i => i + 1)
+              else if (d > 40 && activeCardIdx > 0) setActiveCardIdx(i => i - 1)
+            }}
+          >
             {loading ? (
-              <Skeleton className="h-10 w-48 mb-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }} />
-            ) : (
-              <p className="text-4xl font-bold text-white tabular-nums leading-none mb-1">
-                {visible
-                  ? `$ ${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                  : '$ ••• •••'}
-              </p>
-            )}
-            <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              {accounts.length} devise{accounts.length !== 1 ? 's' : ''} · en USD
-            </p>
+              <div className="absolute inset-0 rounded-[2rem] animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }} />
+            ) : sorted.length === 0 ? (
+              <div className="absolute inset-0 rounded-[2rem] flex items-center justify-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
+                <p className="text-sm text-[var(--ink-60)]">Aucun compte devise</p>
+              </div>
+            ) : sorted.map((acc, i) => {
+              const offset = i - activeCardIdx
+              if (Math.abs(offset) > 2) return null
+              const cs = ACCOUNT_CARD_STYLES[acc.currency] ?? DEFAULT_CARD_STYLE
+              const scale = 1 - Math.abs(offset) * 0.04
+              const ty = Math.abs(offset) * 10
+              const tx = offset * 6
+              const opacity = 1 - Math.abs(offset) * 0.22
+              const curr = getCurrency(acc.currency)
+              return (
+                <div
+                  key={acc.id}
+                  className="absolute inset-0 rounded-[2rem] overflow-hidden cursor-pointer"
+                  style={{
+                    background: cs.gradient,
+                    transform: `translateX(${tx}%) translateY(${ty}px) scale(${scale})`,
+                    zIndex: sorted.length - Math.abs(offset),
+                    opacity,
+                    boxShadow: offset === 0
+                      ? `0 20px 56px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.07), 0 0 48px ${cs.glowColor}1a`
+                      : '0 4px 16px rgba(0,0,0,0.22)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    transition: 'all 320ms cubic-bezier(0.32,0.72,0,1)',
+                  }}
+                  onClick={() => { if (offset !== 0) setActiveCardIdx(i) }}
+                >
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 55%)' }} />
+                  {offset === 0 && (
+                    <div className="relative h-full p-5 flex flex-col justify-between">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-bold tracking-[0.18em] uppercase" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9 }}>{acc.currency}</p>
+                          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, marginTop: 2 }}>{curr?.name}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={FLAG_ICONS[acc.currency] ?? ''}
+                            alt={acc.currency}
+                            className="w-7 h-7 rounded-full object-cover"
+                            style={{ border: '1.5px solid rgba(255,255,255,0.2)' }}
+                            onError={e => (e.currentTarget.style.display = 'none')}
+                          />
+                          <button
+                            onClick={ev => { ev.stopPropagation(); setVisible(v => !v) }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
+                            style={{ background: 'rgba(255,255,255,0.1)' }}
+                          >
+                            {visible ? <Eye className="w-3.5 h-3.5 text-white/70" /> : <EyeOff className="w-3.5 h-3.5 text-white/70" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500, marginBottom: 4 }}>Solde disponible</p>
+                        <p className="font-bold text-white" style={{ fontSize: 26, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                          {visible
+                            ? `${curr?.symbol} ${acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : `${curr?.symbol} ••••••`}
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <p className="font-mono" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, letterSpacing: '0.12em' }}>
+                          •••• •••• •••• {acc.id.slice(-4).toUpperCase()}
+                        </p>
+                        <div className="w-6 h-6 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
+                          <img src="/logo.png" alt="" className="w-full h-full object-cover" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
 
-            {/* Quick actions */}
-            <div className="grid grid-cols-4 gap-3">
-              {[
-                { icon: ArrowUpRight,  label: 'Envoyer',   action: () => navigate('/transfer'),              lime: true  },
-                { icon: ArrowDownLeft, label: 'Recevoir',  action: () => setShowReceive(true),               lime: false },
-                { icon: Repeat,        label: 'Convertir', action: () => navigate('/transfer?mode=convert'), lime: false },
-                { icon: Plus,          label: 'Ajouter',   action: () => navigate('/wallet'),                lime: false },
-              ].map(({ icon: Icon, label, action, lime }) => (
-                <button key={label} onClick={action} className="flex flex-col items-center gap-2 cursor-pointer group">
-                  <div
-                    className="rounded-2xl flex items-center justify-center tr group-hover:opacity-85"
-                    style={{ width: 52, height: 52, background: lime ? 'var(--lime)' : 'rgba(255,255,255,0.12)' }}
-                  >
-                    <Icon className="w-6 h-6" style={{ color: lime ? 'var(--ink)' : 'white' }} />
-                  </div>
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>{label}</span>
-                </button>
-              ))}
+          {/* Dots + total */}
+          {!loading && sorted.length > 0 && (
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs text-[var(--ink-60)]">
+                {visible
+                  ? `Total : $${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  : 'Total : $•••'}
+              </span>
+              {sorted.length > 1 && (
+                <div className="flex items-center gap-1.5">
+                  {sorted.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveCardIdx(i)}
+                      className="h-1 rounded-full tr cursor-pointer"
+                      style={{
+                        width: i === activeCardIdx ? 20 : 5,
+                        background: i === activeCardIdx ? 'var(--ink)' : 'rgba(14,15,12,0.18)',
+                        transition: 'all 250ms ease',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
+          )}
+
+          {/* Quick actions */}
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { icon: ArrowUpRight,  label: 'Envoyer',   action: () => navigate('/transfer'),              lime: true  },
+              { icon: ArrowDownLeft, label: 'Recevoir',  action: () => setShowReceive(true),               lime: false },
+              { icon: Repeat,        label: 'Convertir', action: () => navigate('/transfer?mode=convert'), lime: false },
+              { icon: Plus,          label: 'Ajouter',   action: () => navigate('/wallet'),                lime: false },
+            ].map(({ icon: Icon, label, action, lime }) => (
+              <button key={label} onClick={action} className="flex flex-col items-center gap-2 cursor-pointer group">
+                <div
+                  className="rounded-2xl flex items-center justify-center tr group-hover:opacity-85"
+                  style={{
+                    width: 52, height: 52,
+                    background: lime ? 'var(--lime)' : 'var(--card-bg)',
+                    border: lime ? 'none' : '1px solid var(--border)',
+                  }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: lime ? '#ffffff' : 'var(--ink-60)' }} />
+                </div>
+                <span className="text-xs font-medium text-[var(--ink-60)]">{label}</span>
+              </button>
+            ))}
           </div>
         </div>
 

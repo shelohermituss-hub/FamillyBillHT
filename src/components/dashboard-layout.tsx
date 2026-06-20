@@ -1,18 +1,65 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Wallet, BarChart2, LogOut, Bell, User, Receipt, X, Users } from 'lucide-react'
+import { LogOut, Bell, User, X } from 'lucide-react'
+
+type IconProps = { className?: string; style?: React.CSSProperties }
+function NavIconHome({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z"/>
+      <path d="M9 21V13h6v8"/>
+    </svg>
+  )
+}
+function NavIconPay({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+      <rect x="2" y="5" width="20" height="14" rx="2.5"/>
+      <path d="M2 10h20"/>
+      <path d="M6 15h4M16 15h2"/>
+    </svg>
+  )
+}
+function NavIconWallet({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+      <path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+      <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+      <circle cx="16.5" cy="13" r="1.25" fill="currentColor" stroke="none"/>
+    </svg>
+  )
+}
+function NavIconFamily({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+      <circle cx="8.5" cy="7" r="3"/>
+      <circle cx="15.5" cy="7" r="3"/>
+      <path d="M2 21v-1.5A5.5 5.5 0 017.5 14h2"/>
+      <path d="M14 14h2.5A5.5 5.5 0 0122 19.5V21"/>
+    </svg>
+  )
+}
+function NavIconStats({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+      <path d="M18 20V10"/>
+      <path d="M12 20V4"/>
+      <path d="M6 20v-6"/>
+    </svg>
+  )
+}
 import { useAuth } from '@/lib/auth-context'
 import { useNotifications } from '@/lib/notifications-context'
 import { NotificationsPanel } from '@/components/notifications-panel'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { icon: Home,     label: 'Accueil',      href: '/dashboard'  },
-  { icon: Receipt,  label: 'Payer',        href: '/bills'      },
-  { icon: Wallet,   label: 'Wallet',       href: '/wallet'     },
-  { icon: Users,    label: 'Famille',      href: '/family'     },
-  { icon: BarChart2, label: 'Statistiques', href: '/history'   },
+  { icon: NavIconHome,   label: 'Accueil',      href: '/dashboard' },
+  { icon: NavIconPay,    label: 'Payer',        href: '/bills'     },
+  { icon: NavIconWallet, label: 'Wallet',       href: '/wallet'    },
+  { icon: NavIconFamily, label: 'Famille',      href: '/family'    },
+  { icon: NavIconStats,  label: 'Statistiques', href: '/history'   },
 ]
 
 function isActive(href: string, path: string) {
