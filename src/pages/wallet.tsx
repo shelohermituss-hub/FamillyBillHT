@@ -343,7 +343,7 @@ function CurrencyCard({
       className="relative rounded-[2rem] overflow-hidden shrink-0 w-full select-none"
       style={{
         background: cs.gradient,
-        boxShadow: `0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07), 0 0 60px ${cs.glowColor}1a`,
+        boxShadow: `0 4px 20px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.06)`,
         border: '1px solid rgba(255,255,255,0.08)',
         height: 200,
       }}
@@ -469,17 +469,24 @@ function WalletMain({
         />
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[var(--ink)]">Mon Portefeuille</h1>
-          <p className="text-sm text-[var(--ink-60)]">
-            {visible
-              ? `Total : $${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : 'Total : $••• •••'}
+      {/* Header with prominent total */}
+      <div>
+        <div className="text-center mb-4">
+          <p className="text-[11px] font-medium text-[var(--ink-60)] mb-1">Total disponible</p>
+          {loading ? (
+            <div className="h-10 w-40 rounded-xl animate-pulse mx-auto" style={{ background: 'var(--border)' }} />
+          ) : (
+            <p className="text-4xl font-bold text-[var(--ink)] tabular-nums leading-none">
+              {visible
+                ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : '$•••'}
+            </p>
+          )}
+          <p className="text-xs text-[var(--ink-60)] mt-1.5">
+            {accounts.length} devise{accounts.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2 mb-2">
           <button
             onClick={() => setVisible(v => !v)}
             className="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--border)] tr cursor-pointer"

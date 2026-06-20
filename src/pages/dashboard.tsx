@@ -2,13 +2,12 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowUpRight, ArrowDownLeft, Repeat, Plus, Eye, EyeOff,
-  TrendingUp, TrendingDown, Zap, X, Share2, Copy, Check, QrCode,
+  TrendingUp, X, Share2, Copy, Check, QrCode,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
 import { getCurrency, getRate } from '@/lib/currencies'
-import { cn } from '@/lib/utils'
 import { BILL_CATEGORIES } from '@/lib/haiti-providers'
 
 function greeting() {
@@ -27,16 +26,6 @@ const TX_STATUS: Record<string, string> = {
   completed: 'Complété', failed: 'Échoué', cancelled: 'Annulé',
 }
 
-// Simulated live rates with micro-fluctuations
-const RATE_PAIRS = [
-  { from: 'USD', to: 'HTG', label: 'Dollar américain', color: '#22c55e', seed: 1 },
-  { from: 'EUR', to: 'HTG', label: 'Euro',             color: '#3b82f6', seed: 2 },
-  { from: 'BRL', to: 'HTG', label: 'Real brésilien',   color: '#f59e0b', seed: 3 },
-  { from: 'CAD', to: 'HTG', label: 'Dollar canadien',  color: '#ef4444', seed: 4 },
-]
-
-const RATE_SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', BRL: 'R$', CAD: 'C$' }
-
 const FLAG_ICONS: Record<string, string> = {
   HTG: '/icons/currencies/htg.png',
   USD: '/icons/currencies/usd.png',
@@ -53,101 +42,6 @@ const ACCOUNT_CARD_STYLES: Record<string, { gradient: string; glowColor: string 
   BRL: { gradient: 'linear-gradient(135deg, #1c0a00 0%, #5c2d06 50%, #92400e 100%)', glowColor: '#fbbf24' },
 }
 const DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #0a1428 0%, #151a3a 50%, #2d3460 100%)', glowColor: '#60a5fa' }
-
-function CurrencyBadge({ code, color }: { code: string; color: string }) {
-  const src = FLAG_ICONS[code]
-  if (src) return <img src={src} className="w-9 h-9 rounded-full object-cover shrink-0" alt={code} onError={e => (e.currentTarget.style.display = 'none')} />
-  return (
-    <div
-      className="w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0"
-      style={{ background: color }}
-    >
-      {RATE_SYMBOLS[code] ?? code.slice(0, 2)}
-    </div>
-  )
-}
-
-function simulatedChange(seed: number, tick: number): number {
-  const v = Math.sin(seed * 31.7 + tick * 0.23) * 0.014 +
-            Math.cos(seed * 17.3 + tick * 0.41) * 0.007
-  return parseFloat(v.toFixed(4))
-}
-
-function RateTicker({ visible }: { visible: boolean }) {
-  const [tick, setTick] = useState(0)
-
-  useEffect(() => {
-    const id = setInterval(() => setTick(t => t + 1), 5000)
-    return () => clearInterval(id)
-  }, [])
-
-  return (
-    <section>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-[var(--ink)]">Taux de change</h2>
-          <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--lime-light)]" style={{ color: 'var(--ink)' }}>
-            <Zap className="w-2.5 h-2.5" style={{ color: 'var(--lime)' }} /> En direct
-          </span>
-        </div>
-        <Link to="/transfer?mode=convert" className="text-xs font-medium tr hover:opacity-70" style={{ color: 'var(--ink-60)' }}>
-          Convertir →
-        </Link>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {RATE_PAIRS.map(({ from, to, label, color, seed }) => {
-          const baseRate = getRate(from, to)
-          const chg = simulatedChange(seed, tick)
-          const rate = baseRate * (1 + chg)
-          const isUp = chg >= 0
-
-          return (
-            <div key={from} className="card-flat p-4 space-y-2 overflow-hidden relative">
-              {/* Bleed decorative circle */}
-              <div
-                className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-[0.07] pointer-events-none"
-                style={{ background: color }}
-              />
-              <div
-                className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full opacity-[0.05] pointer-events-none"
-                style={{ background: color }}
-              />
-
-              <div className="flex items-center justify-between relative">
-                <div className="flex items-center gap-2">
-                  <CurrencyBadge code={from} color={color} />
-                  <div>
-                    <p className="text-xs font-bold text-[var(--ink)] leading-tight">{from}/{to}</p>
-                    <p className="text-[10px] text-[var(--ink-60)] leading-tight">{label}</p>
-                  </div>
-                </div>
-                <div className={cn(
-                  "flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-lg",
-                  isUp ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"
-                )}>
-                  {isUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-                  {Math.abs(chg * 100).toFixed(2)}%
-                </div>
-              </div>
-              <div className="relative">
-                {visible ? (
-                  <>
-                    <p className="text-lg font-bold text-[var(--ink)] tabular-nums leading-tight">
-                      G {rate.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-[10px] text-[var(--ink-60)]">1 {from} en HTG</p>
-                  </>
-                ) : (
-                  <p className="text-lg font-bold text-[var(--ink)]">G •••••</p>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
 
 // ── Receive Modal ────────────────────────────────────────────────────────────
 function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; user_code?: string } | null; onClose: () => void }) {
@@ -283,22 +177,36 @@ export function DashboardPage() {
       {showReceive && <ReceiveModal profile={profile} onClose={() => setShowReceive(false)} />}
       <div className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
 
-        {/* Greeting row */}
+        {/* Greeting row with prominent total balance */}
         <div className="flex items-center justify-between animate-fade-in-up">
           <div>
             <p className="text-sm text-[var(--ink-60)]">{greeting()},</p>
             <h1 className="text-xl font-semibold text-[var(--ink)] mt-0.5">{firstName}</h1>
           </div>
-          <button
-            onClick={() => setVisible(v => !v)}
-            aria-label={visible ? 'Masquer' : 'Afficher'}
-            className="w-9 h-9 flex items-center justify-center rounded-full tr cursor-pointer border border-[var(--border)]"
-            style={{ background: 'var(--card-bg)' }}
-          >
-            {visible
-              ? <Eye className="w-4 h-4 text-[var(--ink-60)]" />
-              : <EyeOff className="w-4 h-4 text-[var(--ink-60)]" />}
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-[11px] font-medium text-[var(--ink-60)] mb-0.5">Solde total</p>
+              {loading ? (
+                <div className="h-7 w-28 rounded-lg animate-pulse" style={{ background: 'var(--border)' }} />
+              ) : (
+                <p className="text-2xl font-bold text-[var(--ink)] leading-none tabular-nums">
+                  {visible
+                    ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : '$•••'}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => setVisible(v => !v)}
+              aria-label={visible ? 'Masquer' : 'Afficher'}
+              className="w-9 h-9 flex items-center justify-center rounded-full tr cursor-pointer border border-[var(--border)] shrink-0"
+              style={{ background: 'var(--card-bg)' }}
+            >
+              {visible
+                ? <Eye className="w-4 h-4 text-[var(--ink-60)]" />
+                : <EyeOff className="w-4 h-4 text-[var(--ink-60)]" />}
+            </button>
+          </div>
         </div>
 
         {/* Account card stack */}
@@ -338,8 +246,8 @@ export function DashboardPage() {
                     zIndex: sorted.length - Math.abs(offset),
                     opacity,
                     boxShadow: offset === 0
-                      ? `0 20px 56px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.07), 0 0 48px ${cs.glowColor}1a`
-                      : '0 4px 16px rgba(0,0,0,0.22)',
+                      ? `0 4px 20px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.07)`
+                      : '0 2px 8px rgba(0,0,0,0.1)',
                     border: '1px solid rgba(255,255,255,0.08)',
                     transition: 'all 320ms cubic-bezier(0.32,0.72,0,1)',
                   }}
@@ -393,30 +301,21 @@ export function DashboardPage() {
             })}
           </div>
 
-          {/* Dots + total */}
-          {!loading && sorted.length > 0 && (
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs text-[var(--ink-60)]">
-                {visible
-                  ? `Total : $${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                  : 'Total : $•••'}
-              </span>
-              {sorted.length > 1 && (
-                <div className="flex items-center gap-1.5">
-                  {sorted.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveCardIdx(i)}
-                      className="h-1 rounded-full tr cursor-pointer"
-                      style={{
-                        width: i === activeCardIdx ? 20 : 5,
-                        background: i === activeCardIdx ? 'var(--ink)' : 'rgba(14,15,12,0.18)',
-                        transition: 'all 250ms ease',
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
+          {/* Dots */}
+          {!loading && sorted.length > 1 && (
+            <div className="flex items-center justify-center gap-1.5">
+              {sorted.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveCardIdx(i)}
+                  className="h-1 rounded-full tr cursor-pointer"
+                  style={{
+                    width: i === activeCardIdx ? 20 : 5,
+                    background: i === activeCardIdx ? 'var(--ink)' : 'rgba(14,15,12,0.18)',
+                    transition: 'all 250ms ease',
+                  }}
+                />
+              ))}
             </div>
           )}
 
@@ -468,9 +367,6 @@ export function DashboardPage() {
             ))}
           </div>
         </section>
-
-        {/* Real-time exchange rates (replacing Vos devises) */}
-        <RateTicker visible={visible} />
 
         {/* Recent transactions */}
         <section className="pb-4">
