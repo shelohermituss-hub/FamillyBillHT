@@ -100,7 +100,7 @@ function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreat
     <Modal title="Créer un portefeuille familial" onClose={onClose}>
       <div className="space-y-4">
         <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-2"
-          style={{ background: 'var(--lime)', boxShadow: '0 4px 20px rgba(228,34,34,0.4)' }}>
+          style={{ background: 'var(--lime)', boxShadow: '0 4px 20px rgba(13,148,136,0.4)' }}>
           <Users className="w-7 h-7" style={{ color: 'var(--ink)' }} />
         </div>
         <p className="text-sm text-[var(--ink-60)] text-center">

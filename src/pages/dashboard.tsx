@@ -196,7 +196,7 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
           <div className="relative z-10">
             {/* Avatar */}
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold mb-4 shrink-0"
-              style={{ background: 'rgba(228,34,34,0.15)', color: 'var(--lime)', border: '1.5px solid rgba(228,34,34,0.3)' }}>
+              style={{ background: 'rgba(13,148,136,0.15)', color: 'var(--lime)', border: '1.5px solid rgba(13,148,136,0.3)' }}>
               <QrCode className="w-6 h-6" />
             </div>
             <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
