@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { PwaPrompt } from '@/components/pwa-prompt'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme-context'
 import { NotificationsProvider } from '@/lib/notifications-context'
@@ -147,6 +148,7 @@ export function App() {
       <NotificationsProvider>
         <AuthProvider>
           <AppRoutes />
+          <PwaPrompt />
         </AuthProvider>
       </NotificationsProvider>
     </ThemeProvider>
