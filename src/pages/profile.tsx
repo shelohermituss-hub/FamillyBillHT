@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   User, FileText, KeyRound, Fingerprint, ShieldCheck,
   MapPin, Languages, Gauge, ChevronRight,
-  LogOut, Moon, Sun, Check, X, Download, Bell,
-  Phone, Mail, Edit3, Loader2, Copy,
+  LogOut, Check, X, Download, Bell,
+  Phone, Mail, Edit3, Loader2, Copy, Camera, Share2, QrCode,
 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/lib/auth-context'
-import { useTheme } from '@/lib/theme-context'
 import { supabase, type Transaction } from '@/lib/supabase'
 import { getCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
@@ -251,28 +250,136 @@ function Field({ label, icon, children }: { label: string; icon: React.ReactNode
   )
 }
 
+// ── Share Profile Modal ───────────────────────────────────────────────────────
+function ShareProfileModal({ name, userCode, onClose }: { name: string; userCode: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  function copy() {
+    navigator.clipboard.writeText(userCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function share() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'FamillyBill HT',
+          text: `Envoyez-moi de l'argent sur FamillyBill HT !\nMon ID: ${userCode}\nNom: ${name}`,
+        })
+        return
+      } catch { /* fallback */ }
+    }
+    copy()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm rounded-t-3xl md:rounded-3xl overflow-hidden animate-fade-in-up"
+        style={{ background: 'var(--card-bg)', boxShadow: '0 -4px 40px rgba(14,15,12,0.18)' }}>
+
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+          <h2 className="text-lg font-semibold text-[var(--ink)]">Partager mon profil</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr" style={{ background: 'var(--surface-2)' }}>
+            <X className="w-4 h-4 text-[var(--ink-60)]" />
+          </button>
+        </div>
+
+        {/* Card */}
+        <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5" style={{ background: 'var(--ink)' }}>
+          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
+          <div className="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(159,232,112,0.15)', border: '1.5px solid rgba(159,232,112,0.3)' }}>
+              <QrCode className="w-7 h-7" style={{ color: 'var(--lime)' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>ID FamillyBill</p>
+              <p className="text-xl font-black tracking-widest font-mono" style={{ color: 'var(--lime)' }}>{userCode}</p>
+              <p className="text-sm font-medium text-white truncate">{name}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 pb-6 grid grid-cols-2 gap-3">
+          <button
+            onClick={copy}
+            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border border-[var(--border)] tr cursor-pointer hover:bg-[var(--surface)]"
+            style={{ color: 'var(--ink)' }}
+          >
+            {copied ? <Check className="w-4 h-4" style={{ color: 'var(--lime)' }} /> : <Copy className="w-4 h-4" />}
+            {copied ? 'Copié !' : 'Copier l\'ID'}
+          </button>
+          <button onClick={share} className="btn-lime flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold cursor-pointer">
+            <Share2 className="w-4 h-4" />
+            Partager
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Profile Page ─────────────────────────────────────────────────────────
 type ModalType = 'account' | 'statements' | 'limits' | null
 
 export function ProfilePage() {
   const { user, profile, signOut } = useAuth()
-  const { theme, toggle: toggleTheme } = useTheme()
   const navigate = useNavigate()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [displayCode, setDisplayCode] = useState<string>(profile?.user_code ?? '')
+  const [displayCode,  setDisplayCode]  = useState<string>((profile as any)?.user_code ?? '')
+  const [avatarUrl,    setAvatarUrl]    = useState<string>((profile as any)?.avatar_url ?? '')
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   // Generate user_code if missing
   const ensureUserCode = useCallback(async () => {
-    if (!user || profile?.user_code) return
+    if (!user || (profile as any)?.user_code) return
     const code = 'FB' + Math.random().toString(36).slice(2, 8).toUpperCase()
     await supabase.from('wise_users').update({ user_code: code }).eq('id', user.id)
     setDisplayCode(code)
-  }, [user, profile?.user_code])
+  }, [user, profile])
 
   useEffect(() => {
-    if (profile?.user_code) setDisplayCode(profile.user_code)
+    const code = (profile as any)?.user_code
+    if (code) setDisplayCode(code)
     else ensureUserCode()
-  }, [profile?.user_code, ensureUserCode])
+    const av = (profile as any)?.avatar_url
+    if (av) setAvatarUrl(av)
+  }, [profile, ensureUserCode])
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploadingAvatar(true)
+    // Resize to 200×200 via canvas
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = async () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 200; canvas.height = 200
+      const ctx = canvas.getContext('2d')!
+      const side = Math.min(img.width, img.height)
+      const sx = (img.width - side) / 2
+      const sy = (img.height - side) / 2
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, 200, 200)
+      URL.revokeObjectURL(url)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+      await supabase.from('wise_users').update({ avatar_url: dataUrl }).eq('id', user.id)
+      setAvatarUrl(dataUrl)
+      setUploadingAvatar(false)
+    }
+    img.src = url
+  }
 
   const [modal,        setModal]        = useState<ModalType>(null)
   const [biometric,    setBiometric]    = useState(() => localStorage.getItem('fb-biometric') === 'true')
@@ -305,16 +412,47 @@ export function ProfilePage() {
       {modal === 'statements' && <StatementsModal     onClose={() => setModal(null)} />}
       {modal === 'limits'     && <LimitsModal         onClose={() => setModal(null)} />}
 
+      {/* Share profile modal */}
+      {showShareModal && (
+        <ShareProfileModal
+          name={profile?.full_name ?? 'Utilisateur'}
+          userCode={displayCode}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAvatarChange}
+      />
+
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-5">
 
         {/* Profile header card */}
         <div className="card-flat p-5 animate-fade-in-up">
           <div className="flex items-center gap-4 mb-4">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white shrink-0 relative"
-              style={{ background: 'var(--ink)' }}
-            >
-              {initials}
+            {/* Avatar with camera button */}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white overflow-hidden relative group cursor-pointer"
+                style={avatarUrl ? {} : { background: 'var(--ink)' }}
+                disabled={uploadingAvatar}
+              >
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                  : <span>{initials}</span>}
+                {/* Camera overlay on hover */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 tr flex items-center justify-center">
+                  {uploadingAvatar
+                    ? <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    : <Camera className="w-5 h-5 text-white" />}
+                </div>
+              </button>
               <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[var(--card-bg)] flex items-center justify-center" style={{ background: 'var(--lime)' }}>
                 <Check className="w-2.5 h-2.5" style={{ color: 'var(--ink)' }} />
               </span>
@@ -362,6 +500,16 @@ export function ProfilePage() {
               </button>
             )}
           </div>
+
+          {/* Share profile button */}
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold tr cursor-pointer"
+            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+          >
+            <Share2 className="w-4 h-4" />
+            Partager mon profil pour recevoir des paiements
+          </button>
         </div>
 
         {/* Compte section */}
@@ -393,20 +541,6 @@ export function ProfilePage() {
 
         {/* Préférences section */}
         <Section title="Préférences" delay={150}>
-          {/* Theme toggle */}
-          <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer" onClick={toggleTheme}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-              {theme === 'dark'
-                ? <Sun  className="w-5 h-5 text-[var(--ink-60)]" />
-                : <Moon className="w-5 h-5 text-[var(--ink-60)]" />}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-[var(--ink)]">Apparence</p>
-              <p className="text-xs text-[var(--ink-60)]">{theme === 'dark' ? 'Mode sombre' : 'Mode clair'}</p>
-            </div>
-            <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
-          </div>
-
           {/* Language */}
           <div className="relative">
             <div

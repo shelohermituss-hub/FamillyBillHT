@@ -67,7 +67,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
 }
 
 // ── Create Wallet Modal ────────────────────────────────────────────────────────
-function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreate: () => void }) {
+function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreate: (w: FamilyWallet) => void }) {
   const { user } = useAuth()
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
@@ -77,12 +77,12 @@ function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreat
     if (!name.trim()) { setError('Entrez un nom pour le portefeuille.'); return }
     if (!user) return
     setSaving(true)
-    const { error: err } = await supabase.from('family_wallets').insert({
+    const { data: newWallet, error: err } = await supabase.from('family_wallets').insert({
       creator_id: user.id,
       name: name.trim(),
       balance: 0,
       currency: 'HTG',
-    })
+    }).select().single()
     setSaving(false)
     if (err) {
       if (err.message?.includes('does not exist') || err.code === '42P01') {
@@ -92,7 +92,7 @@ function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreat
       }
       return
     }
-    onCreate()
+    if (newWallet) onCreate(newWallet as FamilyWallet)
     onClose()
   }
 
@@ -547,7 +547,10 @@ export function FamilyPage() {
       {showCreate && (
         <CreateWalletModal
           onClose={() => setShowCreate(false)}
-          onCreate={loadWallets}
+          onCreate={(newWallet) => {
+            setWallets(prev => [newWallet, ...prev])
+            setSelectedWallet(newWallet)
+          }}
         />
       )}
 

@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Wallet, BarChart2, LogOut, Bell, Moon, Sun, User, Receipt, X, Users } from 'lucide-react'
+import { Home, Wallet, BarChart2, LogOut, Bell, User, Receipt, X, Users } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { useTheme } from '@/lib/theme-context'
 import { useNotifications } from '@/lib/notifications-context'
 import { NotificationsPanel } from '@/components/notifications-panel'
 import { cn } from '@/lib/utils'
@@ -22,27 +21,16 @@ function isActive(href: string, path: string) {
 }
 
 function HeaderActions() {
-  const { theme, toggle } = useTheme()
   const { unreadCount } = useNotifications()
   const { profile } = useAuth()
   const [notifOpen, setNotifOpen] = useState(false)
 
   const initials = (profile?.full_name ?? 'U')
     .split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+  const avatarUrl = (profile as any)?.avatar_url as string | undefined
 
   return (
     <div className="flex items-center gap-1.5">
-      <button
-        onClick={toggle}
-        aria-label="Changer le thème"
-        className="w-8 h-8 flex items-center justify-center rounded-full tr cursor-pointer"
-        style={{ background: 'var(--surface-2)', color: 'var(--ink-60)' }}
-      >
-        {theme === 'dark'
-          ? <Sun  className="w-4 h-4" />
-          : <Moon className="w-4 h-4" />}
-      </button>
-
       <div className="relative">
         <button
           onClick={() => setNotifOpen(v => !v)}
@@ -65,10 +53,12 @@ function HeaderActions() {
 
       <Link to="/profile">
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer hover:opacity-80 tr shrink-0"
-          style={{ background: 'var(--ink)', color: 'white' }}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer hover:opacity-80 tr shrink-0 overflow-hidden"
+          style={avatarUrl ? {} : { background: 'var(--ink)', color: 'white' }}
         >
-          {initials || <User className="w-4 h-4" />}
+          {avatarUrl
+            ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+            : (initials || <User className="w-4 h-4" />)}
         </div>
       </Link>
     </div>
@@ -77,6 +67,7 @@ function HeaderActions() {
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
+  const avatarUrl = (profile as any)?.avatar_url as string | undefined
   const location = useLocation()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -147,10 +138,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <Link to="/profile">
             <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--surface)] tr cursor-pointer">
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                style={{ background: 'var(--ink)', color: 'white' }}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden"
+                style={avatarUrl ? {} : { background: 'var(--ink)', color: 'white' }}
               >
-                {(profile?.full_name ?? 'U')[0].toUpperCase()}
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                  : (profile?.full_name ?? 'U')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate text-[var(--ink)]">{profile?.full_name ?? 'Utilisateur'}</p>

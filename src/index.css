@@ -64,30 +64,7 @@
   --ring:                 #9fe870;
 }
 
-/* ── Dark mode ───────────────────────────────────── */
-.dark {
-  --ink:        #eef0eb;
-  --ink-60:     rgba(238,240,235,0.6);
-  --ink-30:     rgba(238,240,235,0.3);
-  --surface:    #111310;
-  --surface-2:  #1c1e19;
-  --card-bg:    #1a1c18;
-
-  --background:           #111310;
-  --foreground:           #eef0eb;
-  --card:                 #1a1c18;
-  --card-foreground:      #eef0eb;
-  --popover:              #1a1c18;
-  --popover-foreground:   #eef0eb;
-  --secondary:            #1c1e19;
-  --secondary-foreground: #eef0eb;
-  --muted:                #1c1e19;
-  --muted-foreground:     rgba(238,240,235,0.5);
-  --accent:               #1c2f15;
-  --accent-foreground:    #eef0eb;
-  --border:               rgba(238,240,235,0.1);
-  --input:                rgba(238,240,235,0.1);
-}
+/* Dark mode disabled — light only */
 
 /* ── Keyframes ───────────────────────────────────── */
 @keyframes fadeInUp {
@@ -148,9 +125,6 @@
     box-shadow: 0 1px 3px rgba(14,15,12,0.06), 0 1px 2px rgba(14,15,12,0.04);
     transition: box-shadow 200ms ease, transform 200ms ease, border-color 150ms ease;
   }
-  .dark .card-flat {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.2);
-  }
   .card-dark  {
     background: var(--ink);
     border-radius: 1.5rem;
@@ -165,19 +139,12 @@
     box-shadow: 0 4px 16px rgba(14,15,12,0.08), 0 1px 4px rgba(14,15,12,0.05);
     transition: box-shadow 200ms ease, transform 200ms ease;
   }
-  .dark .card-elevated {
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
-  }
 
   /* Interactive card hover lift */
   .card-hover:hover {
     box-shadow: 0 8px 32px rgba(14,15,12,0.11), 0 2px 8px rgba(14,15,12,0.07);
     transform: translateY(-2px);
     border-color: rgba(14,15,12,0.12);
-  }
-  .dark .card-hover:hover {
-    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-    border-color: rgba(238,240,235,0.18);
   }
 
   /* Focus ring */
