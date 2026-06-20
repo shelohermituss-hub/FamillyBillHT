@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
 import { getCurrency, getRate } from '@/lib/currencies'
+import { cn } from '@/lib/utils'
 import { BILL_CATEGORIES } from '@/lib/haiti-providers'
 
 function greeting() {
