@@ -282,50 +282,55 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* ── Main ── */}
-      <main className="flex-1 md:ml-64 pt-14 md:pt-16 min-h-screen pb-24 md:pb-0">
+      <main className="flex-1 md:ml-64 pt-14 md:pt-16 min-h-screen pb-32 md:pb-0">
         {children}
       </main>
 
-      {/* ── Mobile bottom nav ── */}
+      {/* ── Mobile bottom nav (floating pill) ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-3 pt-2 pb-safe"
+        className="md:hidden fixed z-40"
         style={{
-          background: 'var(--card-bg)',
-          borderTop: '1px solid var(--border)',
-          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
-          boxShadow: '0 -4px 24px rgba(14,15,12,0.06)',
+          bottom: 'max(env(safe-area-inset-bottom, 16px), 16px)',
+          left: 16,
+          right: 16,
         }}
       >
-        <div className="flex items-center justify-around gap-1">
+        <div
+          className="flex items-center justify-around px-2 py-2 rounded-[2rem]"
+          style={{
+            background: 'rgba(255,255,255,0.97)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(14,15,12,0.14), 0 2px 8px rgba(14,15,12,0.07)',
+            border: '1px solid rgba(14,15,12,0.06)',
+          }}
+        >
           {NAV_ITEMS.map(item => {
             const active = isActive(item.href, location.pathname)
             return (
               <Link
                 key={item.href}
                 to={item.href}
-                className="flex flex-col items-center gap-1 flex-1 py-1 cursor-pointer"
+                className="flex-1 flex items-center justify-center py-0.5"
               >
                 <div
-                  className="relative flex items-center justify-center tr"
-                  style={{ width: 48, height: 32 }}
+                  className="flex items-center justify-center rounded-2xl tr cursor-pointer"
+                  style={{
+                    width: 48,
+                    height: 40,
+                    background: active ? 'var(--lime)' : 'transparent',
+                    transition: 'background 180ms ease',
+                  }}
                 >
-                  {active && (
-                    <div
-                      className="absolute inset-0 rounded-2xl animate-scale-in"
-                      style={{ background: 'var(--lime)' }}
-                    />
-                  )}
                   <item.icon
-                    className="relative w-[18px] h-[18px] tr"
-                    style={{ color: active ? '#ffffff' : 'var(--ink-30)' }}
+                    className="tr"
+                    style={{
+                      width: 18,
+                      height: 18,
+                      color: active ? '#ffffff' : 'var(--ink-30)',
+                    }}
                   />
                 </div>
-                <span
-                  className="text-[10px] font-semibold leading-none tr"
-                  style={{ color: active ? 'var(--ink)' : 'var(--ink-30)' }}
-                >
-                  {item.label}
-                </span>
               </Link>
             )
           })}
