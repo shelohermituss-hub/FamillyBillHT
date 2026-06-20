@@ -213,7 +213,7 @@ export function DashboardPage() {
         {/* Account card stack */}
         <div className="space-y-3 animate-fade-in-up stagger-1">
           <div
-            className="relative select-none"
+            className="relative select-none overflow-hidden rounded-[2rem]"
             style={{ height: 195 }}
             onPointerDown={e => { cardPtrStart.current = e.clientX }}
             onPointerUp={e => {
