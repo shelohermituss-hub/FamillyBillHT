@@ -460,7 +460,7 @@ export function ProfilePage() {
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-semibold text-[var(--ink)] truncate">{profile?.full_name ?? 'Utilisateur'}</h1>
               <p className="text-sm text-[var(--ink-60)] truncate">{profile?.email ?? ''}</p>
-              <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+              <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--lime)', color: '#ffffff' }}>
                 <Check className="w-2.5 h-2.5" /> Compte vérifié
               </span>
             </div>
@@ -505,7 +505,7 @@ export function ProfilePage() {
           <button
             onClick={() => setShowShareModal(true)}
             className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold tr cursor-pointer"
-            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+            style={{ background: 'var(--lime)', color: '#ffffff' }}
           >
             <Share2 className="w-4 h-4" />
             Partager mon profil pour recevoir des paiements

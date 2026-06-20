@@ -284,10 +284,10 @@ export function HistoryPage() {
                 className={cn(
                   "h-9 px-3 rounded-xl text-sm font-medium tr cursor-pointer",
                   filter === f.value
-                    ? "text-[var(--ink)]"
+                    ? "text-white"
                     : "text-[var(--ink-60)] bg-white border border-[var(--border)] hover:bg-[var(--surface)]"
                 )}
-                style={filter === f.value ? { background: 'var(--lime)' } : {}}
+                style={filter === f.value ? { background: 'var(--lime)', color: '#ffffff' } : { color: 'var(--ink-60)' }}
               >
                 {f.label}
               </button>

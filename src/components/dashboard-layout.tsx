@@ -42,7 +42,7 @@ function HeaderActions() {
           {unreadCount > 0 && (
             <span
               className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-              style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+              style={{ background: 'var(--lime)', color: '#ffffff' }}
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
@@ -92,7 +92,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <span className="block text-sm font-bold text-[var(--ink)] tracking-tight leading-none">FamillyBill</span>
               <span
                 className="text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none mt-0.5 inline-block"
-                style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+                style={{ background: 'var(--lime)', color: '#ffffff' }}
               >HT</span>
             </div>
           </Link>
@@ -112,13 +112,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                       : "hover:bg-[var(--surface)]"
                   )}
                   style={active
-                    ? { background: 'var(--lime)', color: 'var(--ink)' }
+                    ? { background: 'var(--lime)', color: '#ffffff' }
                     : { color: 'var(--ink-60)' }}
                 >
                   <div
                     className="w-8 h-8 flex items-center justify-center rounded-lg shrink-0 tr"
                     style={active
-                      ? { background: 'rgba(14,15,12,0.1)' }
+                      ? { background: 'rgba(255,255,255,0.18)' }
                       : { background: 'transparent' }}
                   >
                     <item.icon className="w-4 h-4" />
@@ -183,7 +183,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             FamillyBill{' '}
             <span
               className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-              style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+              style={{ background: 'var(--lime)', color: '#ffffff' }}
             >HT</span>
           </span>
         </Link>
@@ -236,22 +236,22 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                     <div
                       className="w-10 h-10 flex items-center justify-center rounded-xl shrink-0"
                       style={active
-                        ? { background: 'rgba(14,15,12,0.12)' }
+                        ? { background: 'rgba(255,255,255,0.18)' }
                         : { background: 'var(--surface-2)' }}
                     >
                       <item.icon
                         className="w-5 h-5"
-                        style={{ color: active ? 'var(--ink)' : 'var(--ink-60)' }}
+                        style={{ color: active ? '#ffffff' : 'var(--ink-60)' }}
                       />
                     </div>
                     <span
                       className="text-base font-semibold"
-                      style={{ color: active ? 'var(--ink)' : 'var(--ink-60)' }}
+                      style={{ color: active ? '#ffffff' : 'var(--ink-60)' }}
                     >
                       {item.label}
                     </span>
                     {active && (
-                      <div className="ml-auto w-2 h-2 rounded-full" style={{ background: 'var(--ink)', opacity: 0.4 }} />
+                      <div className="ml-auto w-2 h-2 rounded-full" style={{ background: '#ffffff', opacity: 0.5 }} />
                     )}
                   </div>
                 </Link>
@@ -317,7 +317,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                   )}
                   <item.icon
                     className="relative w-[18px] h-[18px] tr"
-                    style={{ color: active ? 'var(--ink)' : 'var(--ink-30)' }}
+                    style={{ color: active ? '#ffffff' : 'var(--ink-30)' }}
                   />
                 </div>
                 <span

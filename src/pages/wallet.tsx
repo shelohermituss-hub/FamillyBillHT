@@ -91,7 +91,7 @@ function DepositModal({
         {done ? (
           <div className="text-center py-6 space-y-3">
             <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center" style={{ background: 'var(--lime)' }}>
-              <Check className="w-8 h-8" style={{ color: 'var(--ink)' }} />
+              <Check className="w-8 h-8" style={{ color: '#ffffff' }} />
             </div>
             <p className="font-semibold text-[var(--ink)]">Fonds ajoutés !</p>
             <p className="text-sm text-[var(--ink-60)]">{formatCurrency(parseFloat(amount), currency)} crédité sur votre compte</p>
@@ -134,7 +134,7 @@ function DepositModal({
                   className={cn(
                     "flex-1 py-2 rounded-xl text-xs font-semibold border tr cursor-pointer",
                     amount === v.toString()
-                      ? "text-[var(--ink)]"
+                      ? "text-white"
                       : "border-[var(--border)] text-[var(--ink-60)] hover:bg-[var(--surface)]"
                   )}
                   style={amount === v.toString() ? { background: 'var(--lime)', borderColor: 'var(--lime)' } : {}}
@@ -260,7 +260,7 @@ function PinPad({
     <div className="flex flex-col items-center gap-8 py-4 animate-fade-in-up">
       <div className="text-center">
         <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--lime)' }}>
-          <Key className="w-8 h-8" style={{ color: 'var(--ink)' }} />
+          <Key className="w-8 h-8" style={{ color: '#ffffff' }} />
         </div>
         <h2 className="text-xl font-semibold text-[var(--ink)]">{title}</h2>
         <p className="text-sm text-[var(--ink-60)] mt-1">{subtitle}</p>
@@ -342,7 +342,7 @@ function CurrencyCard({
             </div>
           </div>
           {isPrimary && (
-            <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+            <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: 'var(--lime)', color: '#ffffff' }}>
               Principal
             </span>
           )}
@@ -359,7 +359,7 @@ function CurrencyCard({
           <button
             onClick={onDeposit}
             className="flex-1 h-11 rounded-2xl font-semibold text-sm cursor-pointer tr"
-            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+            style={{ background: 'var(--lime)', color: '#ffffff' }}
           >
             + Ajouter des fonds
           </button>
@@ -538,7 +538,7 @@ function WalletMain({
           <button
             onClick={() => setShowDeposit(true)}
             className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl tr cursor-pointer"
-            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+            style={{ background: 'var(--lime)', color: '#ffffff' }}
           >
             <Plus className="w-3 h-3" /> Ajouter
           </button>
@@ -569,7 +569,7 @@ function WalletMain({
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-[var(--ink)]">{acc.currency}</p>
                         {(acc.currency === 'USD' || acc.is_main) && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>
                             Principal
                           </span>
                         )}
@@ -678,7 +678,7 @@ function WalletSetup({ userId, onCreated }: { userId: string; onCreated: () => v
   if (view === 'intro') return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center gap-6 animate-fade-in-up">
       <div className="w-24 h-24 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(26,86,219,0.4)' }}>
-        <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--ink)' }}>
+        <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: '#ffffff' }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2M16 12h5m0 0-2-2m2 2-2 2" />
         </svg>
       </div>
@@ -710,7 +710,7 @@ function WalletSetup({ userId, onCreated }: { userId: string; onCreated: () => v
   if (view === 'done') return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center gap-4 animate-scale-in">
       <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(26,86,219,0.4)' }}>
-        <Check className="w-10 h-10" style={{ color: 'var(--ink)' }} />
+        <Check className="w-10 h-10" style={{ color: '#ffffff' }} />
       </div>
       <h2 className="text-xl font-semibold text-[var(--ink)]">Portefeuille créé !</h2>
       <p className="text-sm text-[var(--ink-60)]">Votre portefeuille est prêt à utiliser.</p>

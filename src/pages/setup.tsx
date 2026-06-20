@@ -37,7 +37,7 @@ function PinPad({
           className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
           style={{ background: 'var(--lime)' }}
         >
-          <Key className="w-8 h-8" style={{ color: 'var(--ink)' }} />
+          <Key className="w-8 h-8" style={{ color: '#ffffff' }} />
         </div>
         <h2 className="text-xl font-bold text-[var(--ink)]">{title}</h2>
         <p className="text-sm text-[var(--ink-60)] mt-1">{subtitle}</p>
@@ -101,7 +101,7 @@ function Steps({ current }: { current: number }) {
                   'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold tr',
                 )}
                 style={
-                  done   ? { background: 'var(--lime)', color: 'var(--ink)' }
+                  done   ? { background: 'var(--lime)', color: '#ffffff' }
                   : active ? { background: 'var(--ink)', color: 'white' }
                   : { background: 'var(--surface-2)', color: 'var(--ink-30)' }
                 }
@@ -176,7 +176,7 @@ export function SetupPage() {
           </div>
           <span className="font-bold text-sm text-[var(--ink)] tracking-tight">
             FamillyBill{' '}
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>HT</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: 'var(--lime)', color: '#ffffff' }}>HT</span>
           </span>
         </div>
       </div>
@@ -195,7 +195,7 @@ export function SetupPage() {
                 className="w-24 h-24 rounded-3xl mx-auto flex items-center justify-center"
                 style={{ background: 'var(--lime)', boxShadow: '0 12px 40px rgba(26,86,219,0.45)' }}
               >
-                <Lock className="w-12 h-12" style={{ color: 'var(--ink)' }} />
+                <Lock className="w-12 h-12" style={{ color: '#ffffff' }} />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-[var(--ink)] mb-2">
@@ -267,7 +267,7 @@ export function SetupPage() {
                 className="w-24 h-24 rounded-3xl mx-auto flex items-center justify-center"
                 style={{ background: 'var(--lime)', boxShadow: '0 12px 40px rgba(26,86,219,0.45)' }}
               >
-                <Check className="w-12 h-12" style={{ color: 'var(--ink)' }} />
+                <Check className="w-12 h-12" style={{ color: '#ffffff' }} />
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-[var(--ink)] mb-2">Tout est prêt !</h2>

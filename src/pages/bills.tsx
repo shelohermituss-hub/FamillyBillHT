@@ -163,7 +163,7 @@ function ProviderStep({
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {provider.instant && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>
                   Instantané
                 </span>
               )}
@@ -319,7 +319,7 @@ function DetailsStep({
               min="1"
               className="border-0 shadow-none text-3xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent text-[var(--ink)]"
             />
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm shrink-0" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm shrink-0" style={{ background: 'var(--lime)', color: '#ffffff' }}>
               <span>🇭🇹</span> HTG
             </div>
           </div>
@@ -384,7 +384,7 @@ function ReviewStep({
           <p className="text-xs text-[var(--ink-60)]">{category.label}</p>
         </div>
         {provider.instant && (
-          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>
             Instantané
           </span>
         )}
@@ -467,7 +467,7 @@ function SuccessStep({
             : <span className="text-5xl">{provider.emoji}</span>}
         </div>
         <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center border-2 border-white" style={{ background: 'var(--lime)' }}>
-          <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--ink)' }} />
+          <CheckCircle2 className="w-4 h-4" style={{ color: '#ffffff' }} />
         </div>
       </div>
 
@@ -499,7 +499,7 @@ function SuccessStep({
         </div>
         <div className="flex justify-between px-4 py-3 text-sm">
           <span className="text-[var(--ink-60)]">Statut</span>
-          <span className="font-semibold px-2 py-0.5 rounded text-xs" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+          <span className="font-semibold px-2 py-0.5 rounded text-xs" style={{ background: 'var(--lime)', color: '#ffffff' }}>
             {provider.instant ? 'Confirmé' : 'En cours'}
           </span>
         </div>

@@ -43,7 +43,7 @@ export function CardPage() {
                 <div className="flex items-center gap-2">
                   <img src="/logo.png" alt="FamillyBill" className="w-5 h-5 object-contain" style={{ opacity: frozen ? 0.5 : 1 }} />
                   <span className="text-white font-semibold text-xs">FamillyBill</span>
-                  <span className="text-[10px] font-bold px-1 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>HT</span>
+                  <span className="text-[10px] font-bold px-1 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>HT</span>
                 </div>
                 {frozen && <Lock className="w-4 h-4 text-white/50" />}
               </div>
