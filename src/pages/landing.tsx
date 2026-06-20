@@ -20,9 +20,9 @@ type Slide = {
 const SLIDES: Slide[] = [
   {
     key: 'welcome',
-    accent: '#9fe870',
+    accent: '#E42222',
     iconBg: '#0e0f0c',
-    iconColor: '#9fe870',
+    iconColor: '#E42222',
     isLight: true,
     Icon: Wallet,
     title: 'Bienvenue sur\nFamillyBill HT',
@@ -31,7 +31,7 @@ const SLIDES: Slide[] = [
   {
     key: 'currencies',
     accent: '#0e0f0c',
-    iconBg: '#9fe870',
+    iconBg: '#E42222',
     iconColor: '#0e0f0c',
     isLight: false,
     Icon: Globe,
@@ -52,7 +52,7 @@ const SLIDES: Slide[] = [
     key: 'security',
     accent: '#f7f8f5',
     iconBg: '#0e0f0c',
-    iconColor: '#9fe870',
+    iconColor: '#E42222',
     isLight: true,
     Icon: Shield,
     title: 'Sécurisé &\nPersonnel',
@@ -95,13 +95,10 @@ export function LandingPage() {
       >
         {/* Logo */}
         <div className="absolute top-5 left-5 flex items-center gap-2">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
-            style={{ background: current.isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }}
-          >
+          <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0">
             <img
               src="/logo.png" alt=""
-              className="w-5 h-5 object-contain"
+              className="w-full h-full object-cover"
               onError={e => (e.currentTarget.style.display = 'none')}
             />
           </div>

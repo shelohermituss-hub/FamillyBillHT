@@ -29,13 +29,13 @@
   --color-ring: var(--ring);
 }
 
-/* ── Light mode ─────────────────────────────────── */
+/* ── Brand colors ────────────────────────────────── */
 :root {
   --radius: 0.75rem;
 
-  --lime:        #9fe870;
-  --lime-hover:  #8edc5f;
-  --lime-light:  #f0fbe8;
+  --lime:        #E42222;
+  --lime-hover:  #C41B1B;
+  --lime-light:  #FEF2F2;
   --ink:         #0e0f0c;
   --ink-60:      rgba(14,15,12,0.6);
   --ink-30:      rgba(14,15,12,0.3);
@@ -49,19 +49,19 @@
   --card-foreground:      #0e0f0c;
   --popover:              #ffffff;
   --popover-foreground:   #0e0f0c;
-  --primary:              #9fe870;
-  --primary-foreground:   #0e0f0c;
+  --primary:              #E42222;
+  --primary-foreground:   #ffffff;
   --secondary:            #f7f8f5;
   --secondary-foreground: #0e0f0c;
   --muted:                #f7f8f5;
   --muted-foreground:     #6b7280;
-  --accent:               #f0fbe8;
+  --accent:               #FEF2F2;
   --accent-foreground:    #0e0f0c;
   --destructive:          #ef4444;
   --destructive-foreground: #ffffff;
   --border:               #e5e7e0;
   --input:                #e5e7e0;
-  --ring:                 #9fe870;
+  --ring:                 #E42222;
 }
 
 /* Dark mode disabled — light only */
@@ -79,9 +79,13 @@
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0);     }
 }
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0);    }
+}
 @keyframes pulseLime {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(159,232,112,0.4); }
-  50%       { box-shadow: 0 0 0 8px rgba(159,232,112,0);   }
+  0%, 100% { box-shadow: 0 0 0 0   rgba(228,34,34,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(228,34,34,0);   }
 }
 
 /* ── Base ────────────────────────────────────────── */
@@ -110,11 +114,11 @@
   /* Primary CTA */
   .btn-lime {
     background-color: var(--lime);
-    color: var(--ink);
+    color: #ffffff;
     font-weight: 600;
     transition: background-color 150ms ease, transform 100ms ease, box-shadow 150ms ease;
   }
-  .btn-lime:hover  { background-color: var(--lime-hover); box-shadow: 0 4px 16px rgba(159,232,112,0.35); }
+  .btn-lime:hover  { background-color: var(--lime-hover); box-shadow: 0 4px 16px rgba(228,34,34,0.35); }
   .btn-lime:active { transform: scale(0.98); }
 
   /* Cards */
@@ -154,10 +158,11 @@
   .tr { transition: all 150ms ease; }
 
   /* Animation classes */
-  .animate-fade-in-up  { animation: fadeInUp  0.35s ease both; }
-  .animate-scale-in    { animation: scaleIn   0.2s  ease both; }
-  .animate-slide-down  { animation: slideDown 0.25s ease both; }
-  .animate-pulse-lime  { animation: pulseLime 2s infinite; }
+  .animate-fade-in-up  { animation: fadeInUp    0.35s ease both; }
+  .animate-scale-in    { animation: scaleIn     0.2s  ease both; }
+  .animate-slide-down  { animation: slideDown   0.25s ease both; }
+  .animate-slide-right { animation: slideInRight 0.25s cubic-bezier(0.32,0.72,0,1) both; }
+  .animate-pulse-lime  { animation: pulseLime   2s infinite; }
 
   /* Stagger delays */
   .stagger-1 { animation-delay: 60ms;  }

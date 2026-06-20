@@ -677,7 +677,7 @@ function WalletSetup({ userId, onCreated }: { userId: string; onCreated: () => v
 
   if (view === 'intro') return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center gap-6 animate-fade-in-up">
-      <div className="w-24 h-24 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(159,232,112,0.4)' }}>
+      <div className="w-24 h-24 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(228,34,34,0.4)' }}>
         <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--ink)' }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2M16 12h5m0 0-2-2m2 2-2 2" />
         </svg>
@@ -709,7 +709,7 @@ function WalletSetup({ userId, onCreated }: { userId: string; onCreated: () => v
 
   if (view === 'done') return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center gap-4 animate-scale-in">
-      <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(159,232,112,0.4)' }}>
+      <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(228,34,34,0.4)' }}>
         <Check className="w-10 h-10" style={{ color: 'var(--ink)' }} />
       </div>
       <h2 className="text-xl font-semibold text-[var(--ink)]">Portefeuille créé !</h2>

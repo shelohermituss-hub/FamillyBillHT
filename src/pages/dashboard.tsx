@@ -196,7 +196,7 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
           <div className="relative z-10">
             {/* Avatar */}
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold mb-4 shrink-0"
-              style={{ background: 'rgba(159,232,112,0.15)', color: 'var(--lime)', border: '1.5px solid rgba(159,232,112,0.3)' }}>
+              style={{ background: 'rgba(228,34,34,0.15)', color: 'var(--lime)', border: '1.5px solid rgba(228,34,34,0.3)' }}>
               <QrCode className="w-6 h-6" />
             </div>
             <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -338,7 +338,7 @@ export function DashboardPage() {
             {BILL_CATEGORIES.slice(0, 8).map(cat => (
               <Link key={cat.id} to={`/bills?category=${cat.id}`}>
                 <div className="flex flex-col items-center gap-2 p-3 rounded-2xl tr cursor-pointer group card-flat card-hover">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center text-xl tr group-hover:scale-110 bg-white border border-[var(--border)]">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center text-xl tr group-hover:scale-110 bg-white">
                     {cat.icon
                       ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain" />
                       : <span style={{ color: cat.color }}>{cat.emoji}</span>}
