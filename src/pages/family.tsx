@@ -67,7 +67,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
 }
 
 // ── Create Wallet Modal ────────────────────────────────────────────────────────
-function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreate: () => void }) {
+function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreate: (w: FamilyWallet) => void }) {
   const { user } = useAuth()
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
@@ -77,12 +77,12 @@ function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreat
     if (!name.trim()) { setError('Entrez un nom pour le portefeuille.'); return }
     if (!user) return
     setSaving(true)
-    const { error: err } = await supabase.from('family_wallets').insert({
+    const { data: newWallet, error: err } = await supabase.from('family_wallets').insert({
       creator_id: user.id,
       name: name.trim(),
       balance: 0,
       currency: 'HTG',
-    })
+    }).select().single()
     setSaving(false)
     if (err) {
       if (err.message?.includes('does not exist') || err.code === '42P01') {
@@ -92,7 +92,7 @@ function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreat
       }
       return
     }
-    onCreate()
+    if (newWallet) onCreate(newWallet as FamilyWallet)
     onClose()
   }
 
@@ -100,7 +100,7 @@ function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreat
     <Modal title="Créer un portefeuille familial" onClose={onClose}>
       <div className="space-y-4">
         <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-2"
-          style={{ background: 'var(--lime)', boxShadow: '0 4px 20px rgba(159,232,112,0.4)' }}>
+          style={{ background: 'var(--lime)', boxShadow: '0 4px 20px rgba(228,34,34,0.4)' }}>
           <Users className="w-7 h-7" style={{ color: 'var(--ink)' }} />
         </div>
         <p className="text-sm text-[var(--ink-60)] text-center">
@@ -547,7 +547,10 @@ export function FamilyPage() {
       {showCreate && (
         <CreateWalletModal
           onClose={() => setShowCreate(false)}
-          onCreate={loadWallets}
+          onCreate={(newWallet) => {
+            setWallets(prev => [newWallet, ...prev])
+            setSelectedWallet(newWallet)
+          }}
         />
       )}
 

@@ -55,7 +55,7 @@ const FILTERS = [
   { value: 'bill_payment', label: 'Factures'    },
 ]
 
-const DONUT_COLORS = ['#ef4444', '#9fe870', '#3b82f6', '#f59e0b', '#8b5cf6']
+const DONUT_COLORS = ['#ef4444', '#E42222', '#3b82f6', '#f59e0b', '#8b5cf6']
 
 // Custom donut center label
 function DonutCenter({ total }: { total: number }) {
@@ -259,7 +259,7 @@ export function HistoryPage() {
                   cursor={{ fill: 'var(--surface)' }}
                 />
                 <Bar dataKey="envois" name="Envois" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="reçus"  name="Reçus"  fill="#9fe870" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="reçus"  name="Reçus"  fill="#E42222" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

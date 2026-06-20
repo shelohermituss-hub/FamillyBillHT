@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowUpRight, ArrowDownLeft, Repeat, Plus, Eye, EyeOff,
-  TrendingUp, TrendingDown, Zap,
+  TrendingUp, TrendingDown, Zap, X, Share2, Copy, Check, QrCode,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
@@ -57,9 +57,9 @@ function CurrencyBadge({ code, color }: { code: string; color: string }) {
   )
 }
 
-function simulatedChange(seed: number): number {
-  const t = Math.floor(Date.now() / 60000) // changes per minute
-  const v = Math.sin(seed * 31.7 + t * 0.17) * 0.008
+function simulatedChange(seed: number, tick: number): number {
+  const v = Math.sin(seed * 31.7 + tick * 0.23) * 0.014 +
+            Math.cos(seed * 17.3 + tick * 0.41) * 0.007
   return parseFloat(v.toFixed(4))
 }
 
@@ -67,7 +67,7 @@ function RateTicker({ visible }: { visible: boolean }) {
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
-    const id = setInterval(() => setTick(t => t + 1), 30000)
+    const id = setInterval(() => setTick(t => t + 1), 5000)
     return () => clearInterval(id)
   }, [])
 
@@ -87,7 +87,7 @@ function RateTicker({ visible }: { visible: boolean }) {
       <div className="grid grid-cols-2 gap-2">
         {RATE_PAIRS.map(({ from, to, label, color, seed }) => {
           const baseRate = getRate(from, to)
-          const chg = simulatedChange(seed + tick * 0)
+          const chg = simulatedChange(seed, tick)
           const rate = baseRate * (1 + chg)
           const isUp = chg >= 0
 
@@ -139,6 +139,99 @@ function RateTicker({ visible }: { visible: boolean }) {
   )
 }
 
+// ── Receive Modal ────────────────────────────────────────────────────────────
+function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; user_code?: string } | null; onClose: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const userCode = (profile as any)?.user_code as string | undefined
+  const name = profile?.full_name ?? 'Utilisateur'
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  function copy() {
+    if (!userCode) return
+    navigator.clipboard.writeText(userCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function share() {
+    if (!userCode) return
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'FamillyBill HT',
+          text: `Envoyez-moi de l'argent sur FamillyBill HT !\nMon ID: ${userCode}\nNom: ${name}`,
+        })
+        return
+      } catch { /* fallback to copy */ }
+    }
+    copy()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm rounded-t-3xl md:rounded-3xl overflow-hidden animate-fade-in-up"
+        style={{ background: 'var(--card-bg)', boxShadow: '0 -4px 40px rgba(14,15,12,0.18)' }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--ink)]">Recevoir de l'argent</h2>
+            <p className="text-xs text-[var(--ink-60)] mt-0.5">Partagez votre ID pour recevoir des paiements</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr" style={{ background: 'var(--surface-2)' }}>
+            <X className="w-4 h-4 text-[var(--ink-60)]" />
+          </button>
+        </div>
+
+        {/* ID card */}
+        <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5" style={{ background: 'var(--ink)' }}>
+          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
+          <div className="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
+          <div className="relative z-10">
+            {/* Avatar */}
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold mb-4 shrink-0"
+              style={{ background: 'rgba(228,34,34,0.15)', color: 'var(--lime)', border: '1.5px solid rgba(228,34,34,0.3)' }}>
+              <QrCode className="w-6 h-6" />
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Mon ID FamillyBill
+            </p>
+            <p className="text-2xl font-black tracking-widest font-mono mb-1" style={{ color: 'var(--lime)' }}>
+              {userCode ?? '—'}
+            </p>
+            <p className="text-sm font-medium text-white">{name}</p>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="px-5 pb-6 grid grid-cols-2 gap-3">
+          <button
+            onClick={copy}
+            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border border-[var(--border)] tr cursor-pointer hover:bg-[var(--surface)]"
+            style={{ color: 'var(--ink)' }}
+          >
+            {copied ? <Check className="w-4 h-4" style={{ color: 'var(--lime)' }} /> : <Copy className="w-4 h-4" />}
+            {copied ? 'Copié !' : 'Copier l\'ID'}
+          </button>
+          <button
+            onClick={share}
+            className="btn-lime flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold cursor-pointer"
+          >
+            <Share2 className="w-4 h-4" />
+            Partager
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function DashboardPage() {
   const { user, profile } = useAuth()
   const navigate = useNavigate()
@@ -146,6 +239,7 @@ export function DashboardPage() {
   const [transactions, setTx]   = useState<Transaction[]>([])
   const [loading, setLoading]   = useState(true)
   const [visible, setVisible]   = useState(true)
+  const [showReceive, setShowReceive] = useState(false)
 
   const load = useCallback(async () => {
     if (!user) return
@@ -165,6 +259,7 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
+      {showReceive && <ReceiveModal profile={profile} onClose={() => setShowReceive(false)} />}
       <div className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
 
         {/* Greeting row */}
@@ -212,10 +307,10 @@ export function DashboardPage() {
             {/* Quick actions */}
             <div className="grid grid-cols-4 gap-3">
               {[
-                { icon: ArrowUpRight, label: 'Envoyer',   action: () => navigate('/transfer'),              lime: true  },
-                { icon: ArrowDownLeft,label: 'Recevoir',  action: () => navigate('/wallet'),                lime: false },
-                { icon: Repeat,       label: 'Convertir', action: () => navigate('/transfer?mode=convert'), lime: false },
-                { icon: Plus,         label: 'Ajouter',   action: () => navigate('/wallet'),                lime: false },
+                { icon: ArrowUpRight,  label: 'Envoyer',   action: () => navigate('/transfer'),              lime: true  },
+                { icon: ArrowDownLeft, label: 'Recevoir',  action: () => setShowReceive(true),               lime: false },
+                { icon: Repeat,        label: 'Convertir', action: () => navigate('/transfer?mode=convert'), lime: false },
+                { icon: Plus,          label: 'Ajouter',   action: () => navigate('/wallet'),                lime: false },
               ].map(({ icon: Icon, label, action, lime }) => (
                 <button key={label} onClick={action} className="flex flex-col items-center gap-2 cursor-pointer group">
                   <div
@@ -243,7 +338,7 @@ export function DashboardPage() {
             {BILL_CATEGORIES.slice(0, 8).map(cat => (
               <Link key={cat.id} to={`/bills?category=${cat.id}`}>
                 <div className="flex flex-col items-center gap-2 p-3 rounded-2xl tr cursor-pointer group card-flat card-hover">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center text-xl tr group-hover:scale-110 bg-white border border-[var(--border)]">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center text-xl tr group-hover:scale-110 bg-white">
                     {cat.icon
                       ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain" />
                       : <span style={{ color: cat.color }}>{cat.emoji}</span>}
