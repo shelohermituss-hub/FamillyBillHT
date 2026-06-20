@@ -33,9 +33,9 @@
 :root {
   --radius: 0.75rem;
 
-  --lime:        #0D9488;
-  --lime-hover:  #0F766E;
-  --lime-light:  #F0FDFA;
+  --lime:        #1A56DB;
+  --lime-hover:  #1447B9;
+  --lime-light:  #EFF6FF;
   --ink:         #0e0f0c;
   --ink-60:      rgba(14,15,12,0.6);
   --ink-30:      rgba(14,15,12,0.3);
@@ -49,19 +49,19 @@
   --card-foreground:      #0e0f0c;
   --popover:              #ffffff;
   --popover-foreground:   #0e0f0c;
-  --primary:              #0D9488;
+  --primary:              #1A56DB;
   --primary-foreground:   #ffffff;
   --secondary:            #f7f8f5;
   --secondary-foreground: #0e0f0c;
   --muted:                #f7f8f5;
   --muted-foreground:     #6b7280;
-  --accent:               #F0FDFA;
+  --accent:               #EFF6FF;
   --accent-foreground:    #0e0f0c;
   --destructive:          #ef4444;
   --destructive-foreground: #ffffff;
   --border:               #e5e7e0;
   --input:                #e5e7e0;
-  --ring:                 #0D9488;
+  --ring:                 #1A56DB;
 }
 
 /* Dark mode disabled — light only */
@@ -84,8 +84,8 @@
   to   { transform: translateX(0);    }
 }
 @keyframes pulseLime {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(13,148,136,0.4); }
-  50%       { box-shadow: 0 0 0 8px rgba(13,148,136,0);   }
+  0%, 100% { box-shadow: 0 0 0 0   rgba(26,86,219,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(26,86,219,0);   }
 }
 
 /* ── Base ────────────────────────────────────────── */
@@ -118,7 +118,7 @@
     font-weight: 600;
     transition: background-color 150ms ease, transform 100ms ease, box-shadow 150ms ease;
   }
-  .btn-lime:hover  { background-color: var(--lime-hover); box-shadow: 0 4px 16px rgba(13,148,136,0.35); }
+  .btn-lime:hover  { background-color: var(--lime-hover); box-shadow: 0 4px 16px rgba(26,86,219,0.35); }
   .btn-lime:active { transform: scale(0.98); }
 
   /* Cards */

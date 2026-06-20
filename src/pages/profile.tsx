@@ -298,7 +298,7 @@ function ShareProfileModal({ name, userCode, onClose }: { name: string; userCode
           <div className="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
           <div className="relative z-10 flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(13,148,136,0.15)', border: '1.5px solid rgba(13,148,136,0.3)' }}>
+              style={{ background: 'rgba(26,86,219,0.15)', border: '1.5px solid rgba(26,86,219,0.3)' }}>
               <QrCode className="w-7 h-7" style={{ color: 'var(--lime)' }} />
             </div>
             <div className="flex-1 min-w-0">

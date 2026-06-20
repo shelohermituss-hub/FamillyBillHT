@@ -20,9 +20,9 @@ type Slide = {
 const SLIDES: Slide[] = [
   {
     key: 'welcome',
-    accent: '#0D9488',
+    accent: '#1A56DB',
     iconBg: '#0e0f0c',
-    iconColor: '#0D9488',
+    iconColor: '#1A56DB',
     isLight: true,
     Icon: Wallet,
     title: 'Bienvenue sur\nFamillyBill HT',
@@ -31,7 +31,7 @@ const SLIDES: Slide[] = [
   {
     key: 'currencies',
     accent: '#0e0f0c',
-    iconBg: '#0D9488',
+    iconBg: '#1A56DB',
     iconColor: '#0e0f0c',
     isLight: false,
     Icon: Globe,
@@ -52,7 +52,7 @@ const SLIDES: Slide[] = [
     key: 'security',
     accent: '#f7f8f5',
     iconBg: '#0e0f0c',
-    iconColor: '#0D9488',
+    iconColor: '#1A56DB',
     isLight: true,
     Icon: Shield,
     title: 'Sécurisé &\nPersonnel',
