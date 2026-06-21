@@ -63,7 +63,7 @@ function groupByDate(txs: Transaction[]) {
 
 // Brand icon for tx (SVG inline, no emoji)
 function TxBrandIcon({ tx }: { tx: Transaction }) {
-  const { isSend, isRecv } = txSign(tx)
+  const { isSend } = txSign(tx)
   if (tx.type === 'convert') {
     return (
       <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
