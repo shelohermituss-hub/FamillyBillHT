@@ -178,7 +178,7 @@ export function TransferPage() {
   }
 
   const [accounts, setAccounts] = useState<CurrencyAccount[]>([])
-  const [loadingAccounts, setLoadingAccounts] = useState(true)
+  const [, setLoadingAccounts] = useState(true)
 
   // Shared state across flows
   const [fromWallet, setFromWallet] = useState<CurrencyAccount | null>(null)
@@ -188,7 +188,7 @@ export function TransferPage() {
   const [note, setNote] = useState('')
   const [pin, setPin] = useState('')
   const [pinError, setPinError] = useState('')
-  const [processing, setProcessing] = useState(false)
+  const [, setProcessing] = useState(false)
   const [txRef, setTxRef] = useState('')
   const [copied, setCopied] = useState(false)
   const [contactsTab, setContactsTab] = useState<'recent' | 'all' | 'favorites'>('recent')
@@ -199,7 +199,7 @@ export function TransferPage() {
   const [recipientName, setRecipientName] = useState('')
   const [recipientAccount, setRecipientAccount] = useState('')
   const [purpose, setPurpose] = useState('')
-  const [bankCurrency, setBankCurrency] = useState('USD')
+  const [bankCurrency] = useState('USD')
 
   // Wallet ID flow specific
   const [walletIdInput, setWalletIdInput] = useState('')
