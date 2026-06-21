@@ -1,50 +1,24 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowUpRight, ArrowDownLeft, Repeat, Plus, Eye, EyeOff,
-  TrendingUp, X, Share2, Copy, Check, QrCode,
+  MoreHorizontal, X, Share2, Copy, Check, QrCode, LayoutGrid,
 } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
-import { getCurrency, getRate } from '@/lib/currencies'
-import { cn } from '@/lib/utils'
-import { BILL_CATEGORIES } from '@/lib/haiti-providers'
+import { formatCurrency, getCurrency, getRate } from '@/lib/currencies'
 
-function greeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Bonjour'
-  if (h < 18) return 'Bon après-midi'
-  return 'Bonsoir'
+const ACCOUNT_CARD_STYLES: Record<string, { gradient: string; glowColor: string }> = {
+  HTG: { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed' },
+  USD: { gradient: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)', glowColor: '#10b981' },
+  EUR: { gradient: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #60a5fa 100%)', glowColor: '#3b82f6' },
+  CAD: { gradient: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 45%, #fb923c 100%)', glowColor: '#f97316' },
+  BRL: { gradient: 'linear-gradient(135deg, #831843 0%, #e11d48 45%, #fb7185 100%)', glowColor: '#f43f5e' },
 }
+const DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed' }
 
-const TX_LABEL: Record<string, string> = {
-  send: 'Envoi', receive: 'Réception', convert: 'Conversion',
-  deposit: 'Dépôt', withdraw: 'Retrait', bill_payment: 'Facture',
-}
-const TX_STATUS: Record<string, string> = {
-  pending: 'En attente', processing: 'En cours',
-  completed: 'Complété', failed: 'Échoué', cancelled: 'Annulé',
-}
+// ── Receive Modal ─────────────────────────────────────────────────────────────
 
-const FLAG_ICONS: Record<string, string> = {
-  HTG: '/icons/currencies/htg.png',
-  USD: '/icons/currencies/usd.png',
-  EUR: '/icons/currencies/eur-new.png',
-  BRL: '/icons/currencies/brl.jpg',
-  CAD: '/icons/currencies/cad.png',
-}
-
-const ACCOUNT_CARD_STYLES: Record<string, { gradient: string; glowColor: string; accent: string }> = {
-  HTG: { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed', accent: 'rgba(167,139,250,0.25)' },
-  USD: { gradient: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)', glowColor: '#10b981', accent: 'rgba(52,211,153,0.25)' },
-  EUR: { gradient: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #60a5fa 100%)', glowColor: '#3b82f6', accent: 'rgba(96,165,250,0.25)' },
-  CAD: { gradient: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 45%, #fb923c 100%)', glowColor: '#f97316', accent: 'rgba(251,146,60,0.25)' },
-  BRL: { gradient: 'linear-gradient(135deg, #831843 0%, #e11d48 45%, #fb7185 100%)', glowColor: '#f43f5e', accent: 'rgba(251,113,133,0.25)' },
-}
-const DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed', accent: 'rgba(167,139,250,0.25)' }
-
-// ── Receive Modal ────────────────────────────────────────────────────────────
 function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; user_code?: string } | null; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
   const userCode = (profile as any)?.user_code as string | undefined
@@ -67,12 +41,9 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
     if (!userCode) return
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: 'FamillyBill HT',
-          text: `Envoyez-moi de l'argent sur FamillyBill HT !\nMon ID: ${userCode}\nNom: ${name}`,
-        })
+        await navigator.share({ title: 'FamillyBill HT', text: `Mon ID: ${userCode}\nNom: ${name}` })
         return
-      } catch { /* fallback to copy */ }
+      } catch { /* fallback */ }
     }
     copy()
   }
@@ -81,55 +52,41 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-sm rounded-t-3xl md:rounded-3xl overflow-hidden animate-fade-in-up"
-        style={{ background: 'var(--card-bg)', boxShadow: '0 -4px 40px rgba(14,15,12,0.18)' }}>
-
-        {/* Header */}
+        style={{ background: '#ffffff', boxShadow: '0 -4px 40px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-4">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--ink)]">Recevoir de l'argent</h2>
-            <p className="text-xs text-[var(--ink-60)] mt-0.5">Partagez votre ID pour recevoir des paiements</p>
+            <h2 className="text-lg font-semibold" style={{ color: '#111' }}>Recevoir de l'argent</h2>
+            <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Partagez votre ID pour recevoir des paiements</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr" style={{ background: 'var(--surface-2)' }}>
-            <X className="w-4 h-4 text-[var(--ink-60)]" />
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr"
+            style={{ background: '#F3F4F6' }}>
+            <X className="w-4 h-4" style={{ color: '#6B7280' }} />
           </button>
         </div>
-
-        {/* ID card */}
-        <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5" style={{ background: 'var(--ink)' }}>
-          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
-          <div className="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
+        <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)' }}>
+          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-20" style={{ background: 'rgba(167,139,250,0.5)' }} />
           <div className="relative z-10">
-            {/* Avatar */}
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold mb-4 shrink-0"
-              style={{ background: 'rgba(26,86,219,0.15)', color: 'var(--lime)', border: '1.5px solid rgba(26,86,219,0.3)' }}>
-              <QrCode className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+              style={{ background: 'rgba(255,255,255,0.15)' }}>
+              <QrCode className="w-6 h-6 text-white" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Mon ID FamillyBill
             </p>
-            <p className="text-2xl font-black tracking-widest font-mono mb-1" style={{ color: 'var(--lime)' }}>
-              {userCode ?? '—'}
-            </p>
+            <p className="text-2xl font-black tracking-widest font-mono mb-1 text-white">{userCode ?? '—'}</p>
             <p className="text-sm font-medium text-white">{name}</p>
           </div>
         </div>
-
-        {/* Actions */}
         <div className="px-5 pb-6 grid grid-cols-2 gap-3">
-          <button
-            onClick={copy}
-            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border border-[var(--border)] tr cursor-pointer hover:bg-[var(--surface)]"
-            style={{ color: 'var(--ink)' }}
-          >
+          <button onClick={copy}
+            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border cursor-pointer tr hover:bg-gray-50"
+            style={{ borderColor: '#E5E7EB', color: '#374151' }}>
             {copied ? <Check className="w-4 h-4" style={{ color: 'var(--lime)' }} /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copié !' : 'Copier l\'ID'}
+            {copied ? 'Copié !' : 'Copier'}
           </button>
-          <button
-            onClick={share}
-            className="btn-lime flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold cursor-pointer"
-          >
-            <Share2 className="w-4 h-4" />
-            Partager
+          <button onClick={share}
+            className="btn-lime flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold cursor-pointer">
+            <Share2 className="w-4 h-4" /> Partager
           </button>
         </div>
       </div>
@@ -137,20 +94,86 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
   )
 }
 
+// ── Mini card icon for wallet entries ─────────────────────────────────────────
+
+function MiniCardIcon({ currency }: { currency: string }) {
+  const cs = ACCOUNT_CARD_STYLES[currency] ?? DEFAULT_CARD_STYLE
+  return (
+    <div className="relative rounded-xl overflow-hidden shrink-0" style={{ width: 52, height: 34, background: cs.gradient }}>
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 60%)' }} />
+      {/* chip */}
+      <div className="absolute bottom-1.5 left-2 w-5 h-3.5 rounded-sm"
+        style={{ background: 'rgba(255,220,100,0.6)', border: '0.5px solid rgba(255,255,255,0.3)' }} />
+      <p className="absolute top-1 right-2 font-bold text-white" style={{ fontSize: 7, letterSpacing: '0.05em' }}>{currency}</p>
+    </div>
+  )
+}
+
+// ── Contact avatar circle ─────────────────────────────────────────────────────
+
+function ContactCircle({ name, color, isAdd }: { name: string; color?: string; isAdd?: boolean }) {
+  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+  return (
+    <div className="flex flex-col items-center gap-1.5 shrink-0">
+      <div
+        className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm tr hover:scale-105 cursor-pointer"
+        style={{
+          background: isAdd ? 'transparent' : (color ?? '#E5E7EB'),
+          color: isAdd ? 'var(--lime)' : '#fff',
+          border: isAdd ? '2px dashed var(--lime)' : '2.5px solid white',
+          boxShadow: isAdd ? 'none' : `0 4px 14px ${color ?? '#E5E7EB'}55`,
+          fontSize: isAdd ? 22 : 14,
+        }}
+      >
+        {isAdd ? '+' : initials}
+      </div>
+      <span className="text-[10px] font-semibold text-center whitespace-nowrap" style={{ color: '#6B7280', maxWidth: 56 }}>
+        {name}
+      </span>
+    </div>
+  )
+}
+
+// ── Rate tile ─────────────────────────────────────────────────────────────────
+
+function RateTile({ from, to, base }: { from: string; to: string; base: string }) {
+  const rate = getRate(to, from)
+  const curr = getCurrency(to)
+  const change = (Math.random() * 3 - 1.5).toFixed(1) // simulated
+  const positive = parseFloat(change) >= 0
+  return (
+    <div className="shrink-0 rounded-2xl p-3 min-w-[110px]" style={{ background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-bold" style={{ color: '#111' }}>{to}</p>
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+          style={{ background: positive ? '#D1FAE5' : '#FEE2E2', color: positive ? '#059669' : '#DC2626' }}>
+          {positive ? '+' : ''}{change}%
+        </span>
+      </div>
+      <p className="font-mono text-xs" style={{ color: '#9CA3AF' }}>
+        {curr?.symbol}{rate.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+      </p>
+      <p className="text-[10px] mt-0.5" style={{ color: '#D1D5DB' }}>per {base}</p>
+    </div>
+  )
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 export function DashboardPage() {
   const { user, profile } = useAuth()
   const navigate = useNavigate()
   const [accounts, setAccounts] = useState<CurrencyAccount[]>([])
-  const [transactions, setTx]   = useState<Transaction[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [visible, setVisible]   = useState(true)
+  const [transactions, setTx] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [visible, setVisible] = useState(true)
   const [showReceive, setShowReceive] = useState(false)
 
   const load = useCallback(async () => {
     if (!user) return
     const [a, t] = await Promise.all([
       supabase.from('currency_accounts').select('*').eq('user_id', user.id).order('is_main', { ascending: false }),
-      supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+      supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
     ])
     if (a.data) setAccounts(a.data)
     if (t.data) setTx(t.data)
@@ -158,9 +181,6 @@ export function DashboardPage() {
   }, [user])
 
   useEffect(() => { load() }, [load])
-
-  const [activeCardIdx, setActiveCardIdx] = useState(0)
-  const cardPtrStart = useRef(0)
 
   const sorted = [...accounts].sort((a, b) => {
     if (a.currency === 'HTG') return -1
@@ -171,342 +191,306 @@ export function DashboardPage() {
   })
 
   const totalUSD = accounts.reduce((s, a) => s + a.balance * getRate(a.currency, 'USD'), 0)
+
   const firstName = profile?.full_name?.split(' ')[0] ?? 'là'
+  const avatarUrl = (profile as any)?.avatar_url as string | undefined
+  const initials = (profile?.full_name ?? 'U').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+
+  // Recent contacts from transactions
+  const recentContacts = (() => {
+    const seen = new Set<string>()
+    const contacts: { name: string; color: string }[] = []
+    const palette = ['#7c3aed', '#059669', '#f97316', '#e11d48', '#2563eb', '#0d9488']
+    for (const tx of transactions) {
+      if (tx.recipient_name && !seen.has(tx.recipient_name)) {
+        seen.add(tx.recipient_name)
+        contacts.push({ name: tx.recipient_name, color: palette[contacts.length % palette.length] })
+      }
+      if (contacts.length >= 4) break
+    }
+    return contacts
+  })()
+
+  // Exchange rate pairs to show
+  const RATE_PAIRS = [
+    { from: 'USD', to: 'EUR', base: 'USD' },
+    { from: 'USD', to: 'HTG', base: 'USD' },
+    { from: 'USD', to: 'CAD', base: 'USD' },
+    { from: 'USD', to: 'BRL', base: 'USD' },
+  ]
+
+  const greetHour = new Date().getHours()
+  const greetWord = greetHour < 12 ? 'Bonjour' : greetHour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
+    <div className="min-h-screen pb-28 md:pb-8" style={{ background: '#F3F4F6' }}>
       {showReceive && <ReceiveModal profile={profile} onClose={() => setShowReceive(false)} />}
-      <div className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
 
-        {/* Greeting row with prominent total balance */}
-        <div className="flex items-center justify-between animate-fade-in-up">
-          <div>
-            <p className="font-medium" style={{ fontSize: 13, color: 'var(--ink-60)' }}>{greeting()},</p>
-            <h1 className="font-extrabold text-[var(--ink)]" style={{ fontSize: 22, letterSpacing: '-0.03em', marginTop: 2 }}>{firstName}</h1>
-          </div>
+      {/* ── Balance section (white card) ── */}
+      <div className="bg-white px-5 pt-5 pb-6" style={{ borderBottom: '1px solid #F3F4F6' }}>
+        {/* Header row */}
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-[11px] font-medium text-[var(--ink-60)] mb-0.5">Solde total</p>
-              {loading ? (
-                <div className="h-7 w-28 rounded-lg animate-pulse" style={{ background: 'var(--border)' }} />
-              ) : (
-                <p className="font-extrabold text-[var(--ink)] leading-none tabular-nums" style={{ fontSize: 24, letterSpacing: '-0.03em' }}>
-                  {visible
-                    ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                    : '$•••'}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={() => setVisible(v => !v)}
-              aria-label={visible ? 'Masquer' : 'Afficher'}
-              className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer shrink-0"
-              style={{ background: 'var(--surface-2)', border: '1.5px solid var(--border)' }}
+            {/* Avatar */}
+            <div
+              className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden cursor-pointer"
+              style={avatarUrl ? {} : { background: 'var(--lime)', color: '#fff' }}
+              onClick={() => navigate('/profile')}
             >
-              {visible
-                ? <Eye className="w-4 h-4 text-[var(--ink-60)]" />
-                : <EyeOff className="w-4 h-4 text-[var(--ink-60)]" />}
+              {avatarUrl
+                ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                : initials}
+            </div>
+            <div>
+              <p className="text-sm" style={{ color: '#9CA3AF' }}>
+                {greetWord},{' '}
+                <span className="font-bold" style={{ color: '#111' }}>{firstName}</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/history">
+              <div className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer hover:bg-gray-50"
+                style={{ background: '#F9FAFB' }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+              </div>
+            </Link>
+            <button
+              className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer hover:bg-gray-50"
+              style={{ background: '#F9FAFB' }}
+              onClick={() => navigate('/wallet')}
+            >
+              <LayoutGrid className="w-4 h-4" style={{ color: '#9CA3AF' }} />
             </button>
           </div>
         </div>
 
-        {/* Account card stack */}
-        <div className="space-y-3 animate-fade-in-up stagger-1">
-          <div
-            className="relative select-none overflow-hidden rounded-[2rem]"
-            style={{ height: 195 }}
-            onPointerDown={e => { cardPtrStart.current = e.clientX }}
-            onPointerUp={e => {
-              const d = e.clientX - cardPtrStart.current
-              if (d < -40 && activeCardIdx < sorted.length - 1) setActiveCardIdx(i => i + 1)
-              else if (d > 40 && activeCardIdx > 0) setActiveCardIdx(i => i - 1)
-            }}
+        {/* Balance */}
+        <p className="text-sm font-medium mb-1" style={{ color: '#9CA3AF' }}>Total Account Balance</p>
+        <div className="flex items-center gap-3 mb-5">
+          {loading ? (
+            <div className="h-12 w-56 rounded-xl animate-pulse bg-gray-100" />
+          ) : (
+            <p className="font-extrabold tabular-nums" style={{ fontSize: 40, color: '#111', letterSpacing: '-0.03em', lineHeight: 1 }}>
+              {visible
+                ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : '$•••••'}
+            </p>
+          )}
+          <button
+            onClick={() => setVisible(v => !v)}
+            className="w-8 h-8 flex items-center justify-center rounded-full tr cursor-pointer shrink-0"
+            style={{ background: '#F3F4F6' }}
           >
-            {loading ? (
-              <div className="absolute inset-0 rounded-[2rem] animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }} />
-            ) : sorted.length === 0 ? (
-              <div className="absolute inset-0 rounded-[2rem] flex items-center justify-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
-                <p className="text-sm text-[var(--ink-60)]">Aucun compte devise</p>
-              </div>
-            ) : sorted.map((acc, i) => {
-              const offset = i - activeCardIdx
-              if (Math.abs(offset) > 2) return null
-              const cs = ACCOUNT_CARD_STYLES[acc.currency] ?? DEFAULT_CARD_STYLE
-              const scale = 1 - Math.abs(offset) * 0.04
-              const ty = Math.abs(offset) * 10
-              const tx = offset * 6
-              const opacity = 1 - Math.abs(offset) * 0.22
-              const curr = getCurrency(acc.currency)
-              return (
-                <div
-                  key={acc.id}
-                  className="absolute inset-0 rounded-[2rem] overflow-hidden cursor-pointer"
-                  style={{
-                    background: cs.gradient,
-                    transform: `translateX(${tx}%) translateY(${ty}px) scale(${scale})`,
-                    zIndex: sorted.length - Math.abs(offset),
-                    opacity,
-                    boxShadow: offset === 0
-                      ? `0 8px 32px ${cs.glowColor}55, 0 0 0 1px rgba(255,255,255,0.1)`
-                      : '0 2px 8px rgba(0,0,0,0.15)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    transition: 'all 320ms cubic-bezier(0.32,0.72,0,1)',
-                  }}
-                  onClick={() => { if (offset !== 0) setActiveCardIdx(i) }}
-                >
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 50%)' }} />
-                  <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl" style={{ background: cs.accent }} />
-                  {offset === 0 && (
-                    <div className="relative h-full p-5 flex flex-col justify-between">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-bold tracking-[0.18em] uppercase" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9 }}>{acc.currency}</p>
-                          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, marginTop: 2 }}>{curr?.name}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <img
-                            src={FLAG_ICONS[acc.currency] ?? ''}
-                            alt={acc.currency}
-                            className="w-7 h-7 rounded-full object-cover"
-                            style={{ border: '1.5px solid rgba(255,255,255,0.2)' }}
-                            onError={e => (e.currentTarget.style.display = 'none')}
-                          />
-                          <button
-                            onClick={ev => { ev.stopPropagation(); setVisible(v => !v) }}
-                            className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
-                            style={{ background: 'rgba(255,255,255,0.1)' }}
-                          >
-                            {visible ? <Eye className="w-3.5 h-3.5 text-white/70" /> : <EyeOff className="w-3.5 h-3.5 text-white/70" />}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500, marginBottom: 4 }}>Solde disponible</p>
-                        <p className="font-bold text-white" style={{ fontSize: 26, letterSpacing: '-0.02em', lineHeight: 1 }}>
-                          {visible
-                            ? `${curr?.symbol} ${acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            : `${curr?.symbol} ••••••`}
-                        </p>
-                      </div>
-                      <div className="flex items-end justify-between">
-                        <p className="font-mono" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, letterSpacing: '0.12em' }}>
-                          •••• •••• •••• {acc.id.slice(-4).toUpperCase()}
-                        </p>
-                        <div className="w-6 h-6 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
-                          <img src="/logo.png" alt="" className="w-full h-full object-cover" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+            {visible
+              ? <Eye className="w-4 h-4" style={{ color: '#9CA3AF' }} />
+              : <EyeOff className="w-4 h-4" style={{ color: '#9CA3AF' }} />}
+          </button>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/transfer')}
+            className="flex items-center gap-2 px-5 h-11 rounded-full text-sm font-semibold text-white cursor-pointer tr hover:opacity-90 active:scale-97"
+            style={{ background: 'var(--lime)', boxShadow: '0 4px 16px rgba(26,86,219,0.3)' }}
+          >
+            <ArrowUpRight className="w-4 h-4" />
+            Transfert
+          </button>
+          <button
+            onClick={() => setShowReceive(true)}
+            className="flex items-center gap-2 px-5 h-11 rounded-full text-sm font-semibold cursor-pointer tr hover:bg-gray-50 active:scale-97"
+            style={{ border: '1.5px solid #E5E7EB', color: '#374151' }}
+          >
+            <ArrowDownLeft className="w-4 h-4" />
+            Recevoir
+          </button>
+          <button
+            onClick={() => navigate('/bills')}
+            className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer tr hover:bg-gray-50 shrink-0"
+            style={{ border: '1.5px solid #E5E7EB' }}
+          >
+            <LayoutGrid className="w-4 h-4" style={{ color: '#374151' }} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Content area ── */}
+      <div className="max-w-2xl mx-auto">
+
+        {/* ── Send Money ── */}
+        <div className="px-4 pt-5 pb-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Envoyer de l'argent</h2>
+          </div>
+          <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-hide">
+            {/* Add new */}
+            <ContactCircle name="Ajouter" isAdd />
+            {/* Recent contacts */}
+            {recentContacts.length > 0
+              ? recentContacts.map(c => <ContactCircle key={c.name} name={c.name.split(' ')[0]} color={c.color} />)
+              : (
+                <>
+                  <ContactCircle name="Jean P." color="#7c3aed" />
+                  <ContactCircle name="Marie D." color="#059669" />
+                  <ContactCircle name="Pierre L." color="#f97316" />
+                  <ContactCircle name="Sophie M." color="#e11d48" />
+                </>
               )
-            })}
+            }
+          </div>
+        </div>
+
+        {/* ── Wallet card ── */}
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+          <div className="flex items-center justify-between px-4 pt-4 pb-3">
+            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Portefeuille</h2>
+            <button
+              onClick={() => navigate('/wallet')}
+              className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer tr hover:opacity-80"
+              style={{ background: 'var(--lime)' }}
+            >
+              <Plus className="w-4 h-4 text-white" />
+            </button>
           </div>
 
-          {/* Dots */}
-          {!loading && sorted.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5">
-              {sorted.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveCardIdx(i)}
-                  className="h-1 rounded-full tr cursor-pointer"
-                  style={{
-                    width: i === activeCardIdx ? 20 : 5,
-                    background: i === activeCardIdx ? 'var(--ink)' : 'rgba(14,15,12,0.18)',
-                    transition: 'all 250ms ease',
-                  }}
-                />
+          {loading ? (
+            <div className="space-y-0 divide-y divide-gray-50">
+              {[1, 2].map(i => (
+                <div key={i} className="flex items-center gap-4 px-4 py-3.5">
+                  <div className="w-[52px] h-[34px] rounded-xl bg-gray-100 animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 bg-gray-100 rounded animate-pulse w-32" />
+                    <div className="h-4 bg-gray-100 rounded animate-pulse w-24" />
+                  </div>
+                </div>
               ))}
             </div>
-          )}
-
-          {/* Quick actions */}
-          <div className="grid grid-cols-4 gap-2.5">
-            {[
-              { icon: ArrowUpRight,  label: 'Envoyer',   action: () => navigate('/transfer'),              lime: true  },
-              { icon: ArrowDownLeft, label: 'Recevoir',  action: () => setShowReceive(true),               lime: false },
-              { icon: Repeat,        label: 'Convertir', action: () => navigate('/transfer?mode=convert'), lime: false },
-              { icon: Plus,          label: 'Ajouter',   action: () => navigate('/wallet'),                lime: false },
-            ].map(({ icon: Icon, label, action, lime }) => (
-              <button key={label} onClick={action} className="flex flex-col items-center gap-2 cursor-pointer group">
-                <div
-                  className="rounded-2xl flex items-center justify-center tr"
-                  style={{
-                    width: 56, height: 56,
-                    background: lime ? 'var(--lime)' : 'var(--card-bg)',
-                    boxShadow: lime
-                      ? '0 6px 20px rgba(26,86,219,0.35), 0 2px 6px rgba(26,86,219,0.2)'
-                      : '0 2px 8px rgba(13,27,75,0.08), 0 1px 3px rgba(13,27,75,0.05)',
-                    border: lime ? 'none' : '1px solid var(--border)',
-                  }}
-                >
-                  <Icon
-                    className="tr group-hover:scale-110"
-                    style={{ width: 20, height: 20, color: lime ? '#ffffff' : 'var(--ink-60)' }}
-                  />
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-60)' }}>{label}</span>
+          ) : sorted.length === 0 ? (
+            <div className="px-4 pb-6 text-center">
+              <p className="text-sm py-4" style={{ color: '#9CA3AF' }}>Aucun compte devise. Ajoutez-en un.</p>
+              <button onClick={() => navigate('/wallet')} className="btn-lime px-4 py-2 rounded-xl text-sm cursor-pointer">
+                Ajouter
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Income / Expense summary ── */}
-        <div className="grid grid-cols-2 gap-3 animate-fade-in-up stagger-2">
-          <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)' }}>
-            <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20" style={{ background: '#34d399' }} />
-            <div className="relative">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                <ArrowDownLeft className="w-4 h-4 text-white" />
-              </div>
-              <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Revenus</p>
-              <p className="font-extrabold text-white tabular-nums" style={{ fontSize: 18, letterSpacing: '-0.02em', marginTop: 2 }}>
-                {loading ? '—' : `$${transactions.filter(t => t.type === 'receive' || t.type === 'deposit').reduce((s, t) => s + t.amount * getRate(t.currency, 'USD'), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-              </p>
             </div>
-          </div>
-          <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #7c1d1d 0%, #dc2626 100%)' }}>
-            <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20" style={{ background: '#f87171' }} />
-            <div className="relative">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                <ArrowUpRight className="w-4 h-4 text-white" />
-              </div>
-              <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Dépenses</p>
-              <p className="font-extrabold text-white tabular-nums" style={{ fontSize: 18, letterSpacing: '-0.02em', marginTop: 2 }}>
-                {loading ? '—' : `$${transactions.filter(t => t.type === 'send' || t.type === 'withdraw' || t.type === 'bill_payment').reduce((s, t) => s + t.amount * getRate(t.currency, 'USD'), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-              </p>
+          ) : (
+            <div className="divide-y" style={{ borderColor: '#F9FAFB' }}>
+              {sorted.map(acc => {
+                const curr = getCurrency(acc.currency)
+                const usdVal = acc.balance * getRate(acc.currency, 'USD')
+                return (
+                  <button
+                    key={acc.id}
+                    onClick={() => navigate('/wallet')}
+                    className="w-full flex items-center gap-4 px-4 py-3.5 tr hover:bg-gray-50 cursor-pointer text-left"
+                  >
+                    <MiniCardIcon currency={acc.currency} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{curr?.name ?? acc.currency}</p>
+                        <p className="text-xs font-mono ml-2 shrink-0" style={{ color: '#9CA3AF' }}>
+                          ****{acc.id.slice(-4).toUpperCase()}
+                        </p>
+                      </div>
+                      <p className="text-sm font-bold tabular-nums" style={{ color: '#374151' }}>
+                        {visible
+                          ? formatCurrency(acc.balance, acc.currency)
+                          : `${curr?.symbol ?? ''} ••••••`}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-xs tabular-nums" style={{ color: '#9CA3AF' }}>
+                        {visible ? `≈ $${usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '≈ $••••'}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
-          </div>
-        </div>
-
-        {/* ── Quick Transfer ── */}
-        <section className="animate-fade-in-up stagger-2">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="section-title">Transfert rapide</h2>
-            <button onClick={() => navigate('/transfer')} className="tr hover:opacity-70" style={{ fontSize: 12, fontWeight: 700, color: 'var(--lime)' }}>
-              Envoyer →
+          )}
+          {/* View all link */}
+          <div className="px-4 py-3 border-t" style={{ borderColor: '#F9FAFB' }}>
+            <button onClick={() => navigate('/wallet')} className="w-full text-center text-sm font-semibold cursor-pointer tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
+              Voir toutes les devises →
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide">
-            {[
-              { name: 'Jean P.', color: '#451BED', initials: 'JP' },
-              { name: 'Marie D.', color: '#059669', initials: 'MD' },
-              { name: 'Pierre L.', color: '#ea580c', initials: 'PL' },
-              { name: 'Sophie M.', color: '#e11d48', initials: 'SM' },
-              { name: 'Ajouter', color: 'var(--surface-2)', initials: '+', isAdd: true },
-            ].map(contact => (
-              <button
-                key={contact.name}
-                onClick={() => navigate('/transfer')}
-                className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group"
-              >
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm tr group-hover:scale-105"
-                  style={{
-                    background: contact.isAdd ? 'var(--surface-2)' : contact.color,
-                    color: contact.isAdd ? 'var(--ink-60)' : '#fff',
-                    border: contact.isAdd ? '2px dashed var(--border)' : '2px solid transparent',
-                    boxShadow: contact.isAdd ? 'none' : `0 4px 16px ${contact.color}44`,
-                  }}
-                >
-                  {contact.initials}
-                </div>
-                <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink-60)', whiteSpace: 'nowrap' }}>{contact.name}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        </div>
 
-        {/* Bill payment quick access */}
-        <section className="animate-fade-in-up stagger-3">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="section-title">Payer une facture</h2>
-            <Link to="/bills" className="tr hover:opacity-70" style={{ fontSize: 12, fontWeight: 700, color: 'var(--lime)' }}>
-              Tout voir →
-            </Link>
+        {/* ── Exchange Rate ── */}
+        <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+          <div className="flex items-center justify-between px-4 pt-4 pb-3">
+            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Taux de Change</h2>
+            <button className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer tr hover:bg-gray-50">
+              <MoreHorizontal className="w-4 h-4" style={{ color: '#9CA3AF' }} />
+            </button>
           </div>
-          <div className="grid grid-cols-4 gap-2.5">
-            {BILL_CATEGORIES.slice(0, 8).map(cat => (
-              <Link key={cat.id} to={`/bills?category=${cat.id}`}>
-                <div
-                  className="flex flex-col items-center gap-2 py-3 px-2 rounded-2xl tr cursor-pointer group"
-                  style={{
-                    background: 'var(--card-bg)',
-                    border: '1.5px solid var(--border)',
-                    boxShadow: '0 2px 8px rgba(13,27,75,0.06)',
-                  }}
-                >
-                  <div
-                    className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center tr group-hover:scale-105"
-                    style={{ background: cat.bg ?? 'var(--lime-light)' }}
-                  >
-                    {cat.icon
-                      ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain" />
-                      : <span style={{ fontSize: 22 }}>{cat.emoji}</span>}
-                  </div>
-                  <span className="text-center leading-tight" style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink)' }}>{cat.label}</span>
-                </div>
-              </Link>
-            ))}
+          <div className="px-4 pb-4 flex gap-2.5 overflow-x-auto scrollbar-hide">
+            {RATE_PAIRS.map(p => <RateTile key={p.to} from={p.from} to={p.to} base={p.base} />)}
           </div>
-        </section>
+        </div>
 
-        {/* Recent transactions */}
-        <section className="pb-4 animate-fade-in-up stagger-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="section-title">Activité récente</h2>
-            <Link to="/history" className="tr hover:opacity-70" style={{ fontSize: 12, fontWeight: 700, color: 'var(--lime)' }}>
+        {/* ── Recent transactions ── */}
+        <div className="mx-4 mt-4 mb-4 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+          <div className="flex items-center justify-between px-4 pt-4 pb-3">
+            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Activité récente</h2>
+            <Link to="/history" className="text-sm font-semibold tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
               Tout voir →
             </Link>
           </div>
 
           {loading ? (
-            <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}</div>
+            <div className="px-4 pb-4 space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 bg-gray-100 rounded animate-pulse w-36" />
+                    <div className="h-3 bg-gray-100 rounded animate-pulse w-20" />
+                  </div>
+                  <div className="h-4 w-16 bg-gray-100 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
           ) : transactions.length === 0 ? (
-            <div className="card-flat p-8 text-center">
-              <div className="w-10 h-10 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'var(--lime-light)' }}>
-                <TrendingUp className="w-5 h-5" style={{ color: 'var(--ink)' }} />
-              </div>
-              <p className="text-sm font-medium text-[var(--ink)]">Aucune transaction</p>
-              <p className="text-xs text-[var(--ink-60)] mt-1 mb-4">Envoyez ou ajoutez des fonds pour commencer.</p>
-              <Link to="/transfer">
-                <button className="btn-lime px-4 py-2 rounded-xl text-sm cursor-pointer">Envoyer</button>
-              </Link>
+            <div className="px-4 pb-6 text-center">
+              <p className="text-sm py-4" style={{ color: '#9CA3AF' }}>Aucune transaction pour l'instant.</p>
+              <button onClick={() => navigate('/transfer')} className="btn-lime px-4 py-2 rounded-xl text-sm cursor-pointer">
+                Envoyer des fonds
+              </button>
             </div>
           ) : (
-            <div className="space-y-1.5">
-              {transactions.map(tx => {
-                const isSend    = tx.type === 'send' || tx.type === 'withdraw'
+            <div className="px-4 pb-4 divide-y" style={{ borderColor: '#F9FAFB' }}>
+              {transactions.slice(0, 5).map(tx => {
+                const isSend = tx.type === 'send' || tx.type === 'withdraw' || tx.type === 'bill_payment'
                 const isReceive = tx.type === 'receive' || tx.type === 'deposit'
-                const curr      = getCurrency(tx.currency)
+                const curr = getCurrency(tx.currency)
+                const label = tx.type === 'convert'
+                  ? `${tx.currency} → ${tx.target_currency}`
+                  : (tx.recipient_name ?? (tx.type === 'bill_payment' ? 'Facture' : tx.type === 'deposit' ? 'Dépôt' : 'Transfert'))
+                const iconBg = isSend ? '#FEE2E2' : isReceive ? '#D1FAE5' : '#EDE9FE'
+                const iconColor = isSend ? '#EF4444' : isReceive ? '#059669' : '#7C3AED'
+                const amountColor = isSend ? '#EF4444' : isReceive ? '#059669' : '#374151'
                 return (
-                  <div key={tx.id} className="flex items-center gap-3 px-4 py-3.5 tr cursor-pointer rounded-2xl hover:bg-[var(--surface-2)]"
-                    style={{ background: 'var(--card-bg)', border: '1.5px solid var(--border)', boxShadow: '0 1px 4px rgba(13,27,75,0.04)' }}>
-                    <div className={cn(
-                      "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
-                      isSend ? "bg-red-50" : isReceive ? "bg-[var(--lime-light)]" : "bg-[var(--surface-2)]"
-                    )}>
+                  <div key={tx.id} className="flex items-center gap-3 py-3 first:pt-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: iconBg }}>
                       {isSend
-                        ? <ArrowUpRight className="w-5 h-5 text-red-500" />
+                        ? <ArrowUpRight className="w-4 h-4" style={{ color: iconColor }} />
                         : isReceive
-                          ? <ArrowDownLeft className="w-5 h-5" style={{ color: 'var(--ink)' }} />
-                          : <Repeat className="w-5 h-5 text-[var(--ink-60)]" />}
+                          ? <ArrowDownLeft className="w-4 h-4" style={{ color: iconColor }} />
+                          : <Repeat className="w-4 h-4" style={{ color: iconColor }} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[var(--ink)] truncate">
-                        {tx.type === 'convert'
-                          ? `${tx.currency} → ${tx.target_currency}`
-                          : (tx.recipient_name ?? (TX_LABEL[tx.type] ?? 'Transfert'))}
-                      </p>
-                      <p className="text-xs text-[var(--ink-60)]">
-                        {TX_LABEL[tx.type]} · {TX_STATUS[tx.status] ?? tx.status}
+                      <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{label}</p>
+                      <p className="text-xs" style={{ color: '#9CA3AF' }}>
+                        {new Date(tx.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        {' · '}{tx.currency}
                       </p>
                     </div>
-                    <p className={cn("text-sm font-semibold tabular-nums shrink-0",
-                      isSend ? "text-red-500" : isReceive ? "" : "text-[var(--ink-60)]"
-                    )}
-                      style={isReceive ? { color: 'var(--ink)' } : {}}>
+                    <p className="text-sm font-bold tabular-nums shrink-0" style={{ color: amountColor }}>
                       {isSend ? '−' : isReceive ? '+' : ''}{curr?.symbol}{tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
@@ -514,7 +498,7 @@ export function DashboardPage() {
               })}
             </div>
           )}
-        </section>
+        </div>
 
       </div>
     </div>
