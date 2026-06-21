@@ -31,13 +31,13 @@ function NavIconWallet({ className, style }: IconProps) {
     </svg>
   )
 }
-function NavIconFamily({ className, style }: IconProps) {
+function NavIconTransfer({ className, style }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-      <circle cx="8.5" cy="7" r="3"/>
-      <circle cx="15.5" cy="7" r="3"/>
-      <path d="M2 21v-1.5A5.5 5.5 0 017.5 14h2"/>
-      <path d="M14 14h2.5A5.5 5.5 0 0122 19.5V21"/>
+      <path d="M5 12h14"/>
+      <path d="M15 7l5 5-5 5"/>
+      <path d="M3 6l3-3 3 3"/>
+      <path d="M6 3v8"/>
     </svg>
   )
 }
@@ -60,7 +60,7 @@ const NAV_ITEMS = [
   { icon: NavIconHome,   label: 'Accueil',  href: '/dashboard' },
   { icon: NavIconPay,    label: 'Payer',    href: '/bills'     },
   { icon: NavIconWallet, label: 'Wallet',   href: '/wallet'    },
-  { icon: NavIconFamily, label: 'Famille',  href: '/family'    },
+  { icon: NavIconTransfer, label: 'Transfert', href: '/transfer' },
   { icon: NavIconStats,  label: 'Stats',    href: '/history'   },
 ]
 
