@@ -42,9 +42,9 @@ export function ForgotPasswordPage() {
           <div className="text-center space-y-5 animate-scale-in">
             <div
               className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center"
-              style={{ background: 'var(--lime)', boxShadow: '0 12px 40px rgba(228,34,34,0.4)' }}
+              style={{ background: 'var(--lime)', boxShadow: '0 12px 40px rgba(26,86,219,0.4)' }}
             >
-              <Check className="w-10 h-10" style={{ color: 'var(--ink)' }} />
+              <Check className="w-10 h-10" style={{ color: '#ffffff' }} />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[var(--ink)] mb-2">Email envoyé</h1>

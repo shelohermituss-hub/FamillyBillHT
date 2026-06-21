@@ -1,4 +1,5 @@
 -- Fix infinite recursion in RLS policies for family_wallets / family_wallet_members
+-- This script is IDEMPOTENT — safe to run multiple times regardless of current state.
 --
 -- Root cause: the old SELECT policy on family_wallets queried family_wallet_members,
 -- and the old SELECT policy on family_wallet_members queried family_wallets.
@@ -22,21 +23,33 @@ RETURNS UUID LANGUAGE SQL SECURITY DEFINER SET search_path = public AS $$
   SELECT creator_id FROM public.family_wallets WHERE id = p_wallet_id;
 $$;
 
--- ── 2. Drop old recursive policies on family_wallets ─────────────────────────
+-- ── 2. Drop ALL policies — both old names AND new names (idempotent) ──────────
 
+-- family_wallets old names
 DROP POLICY IF EXISTS "read own or member wallets" ON public.family_wallets;
 DROP POLICY IF EXISTS "creator insert wallet"       ON public.family_wallets;
 DROP POLICY IF EXISTS "creator update wallet"       ON public.family_wallets;
 DROP POLICY IF EXISTS "creator delete wallet"       ON public.family_wallets;
+-- family_wallets new names (in case this script was partially applied before)
+DROP POLICY IF EXISTS "fw_select_as_creator"        ON public.family_wallets;
+DROP POLICY IF EXISTS "fw_select_as_member"         ON public.family_wallets;
+DROP POLICY IF EXISTS "fw_insert"                   ON public.family_wallets;
+DROP POLICY IF EXISTS "fw_update"                   ON public.family_wallets;
+DROP POLICY IF EXISTS "fw_delete"                   ON public.family_wallets;
 
--- ── 3. Drop old recursive policies on family_wallet_members ──────────────────
-
+-- family_wallet_members old names
 DROP POLICY IF EXISTS "read members"               ON public.family_wallet_members;
 DROP POLICY IF EXISTS "creator manage members"     ON public.family_wallet_members;
 DROP POLICY IF EXISTS "creator update members"     ON public.family_wallet_members;
 DROP POLICY IF EXISTS "creator delete members"     ON public.family_wallet_members;
+-- family_wallet_members new names
+DROP POLICY IF EXISTS "fwm_select_own"             ON public.family_wallet_members;
+DROP POLICY IF EXISTS "fwm_select_as_creator"      ON public.family_wallet_members;
+DROP POLICY IF EXISTS "fwm_insert_as_creator"      ON public.family_wallet_members;
+DROP POLICY IF EXISTS "fwm_update_as_creator"      ON public.family_wallet_members;
+DROP POLICY IF EXISTS "fwm_delete_as_creator"      ON public.family_wallet_members;
 
--- ── 4. New non-recursive policies for family_wallets ─────────────────────────
+-- ── 3. New non-recursive policies for family_wallets ─────────────────────────
 
 CREATE POLICY "fw_select_as_creator" ON public.family_wallets
   FOR SELECT USING (creator_id = auth.uid());
@@ -55,7 +68,7 @@ CREATE POLICY "fw_update" ON public.family_wallets
 CREATE POLICY "fw_delete" ON public.family_wallets
   FOR DELETE USING (creator_id = auth.uid());
 
--- ── 5. New non-recursive policies for family_wallet_members ──────────────────
+-- ── 4. New non-recursive policies for family_wallet_members ──────────────────
 
 -- A member can see their own row
 CREATE POLICY "fwm_select_own" ON public.family_wallet_members

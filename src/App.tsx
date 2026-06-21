@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { PwaPrompt } from '@/components/pwa-prompt'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme-context'
 import { NotificationsProvider } from '@/lib/notifications-context'
@@ -25,7 +26,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center animate-pulse-lime"
           style={{ background: 'var(--lime)' }}>
-          <img src="/logo.png" alt="" className="w-7 h-7 object-contain" />
+          <img src="/logo.png" alt="" className="w-full h-full object-cover" />
         </div>
         <p className="text-sm font-medium text-[var(--ink-60)]">Chargement...</p>
       </div>
@@ -147,6 +148,7 @@ export function App() {
       <NotificationsProvider>
         <AuthProvider>
           <AppRoutes />
+          <PwaPrompt />
         </AuthProvider>
       </NotificationsProvider>
     </ThemeProvider>

@@ -91,7 +91,7 @@ function DepositModal({
         {done ? (
           <div className="text-center py-6 space-y-3">
             <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center" style={{ background: 'var(--lime)' }}>
-              <Check className="w-8 h-8" style={{ color: 'var(--ink)' }} />
+              <Check className="w-8 h-8" style={{ color: '#ffffff' }} />
             </div>
             <p className="font-semibold text-[var(--ink)]">Fonds ajoutés !</p>
             <p className="text-sm text-[var(--ink-60)]">{formatCurrency(parseFloat(amount), currency)} crédité sur votre compte</p>
@@ -134,7 +134,7 @@ function DepositModal({
                   className={cn(
                     "flex-1 py-2 rounded-xl text-xs font-semibold border tr cursor-pointer",
                     amount === v.toString()
-                      ? "text-[var(--ink)]"
+                      ? "text-white"
                       : "border-[var(--border)] text-[var(--ink-60)] hover:bg-[var(--surface)]"
                   )}
                   style={amount === v.toString() ? { background: 'var(--lime)', borderColor: 'var(--lime)' } : {}}
@@ -260,7 +260,7 @@ function PinPad({
     <div className="flex flex-col items-center gap-8 py-4 animate-fade-in-up">
       <div className="text-center">
         <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--lime)' }}>
-          <Key className="w-8 h-8" style={{ color: 'var(--ink)' }} />
+          <Key className="w-8 h-8" style={{ color: '#ffffff' }} />
         </div>
         <h2 className="text-xl font-semibold text-[var(--ink)]">{title}</h2>
         <p className="text-sm text-[var(--ink-60)] mt-1">{subtitle}</p>
@@ -305,6 +305,22 @@ function PinPad({
   )
 }
 
+const WALLET_CARD_STYLES: Record<string, { gradient: string; glowColor: string }> = {
+  HTG: { gradient: 'linear-gradient(135deg, #0a1428 0%, #0d2260 50%, #1A56DB 100%)', glowColor: '#1A56DB' },
+  USD: { gradient: 'linear-gradient(135deg, #021a12 0%, #04422e 50%, #047857 100%)', glowColor: '#10b981' },
+  EUR: { gradient: 'linear-gradient(135deg, #0e0c2a 0%, #1c1862 50%, #4338ca 100%)', glowColor: '#818cf8' },
+  CAD: { gradient: 'linear-gradient(135deg, #1e0404 0%, #5a0e0e 50%, #991b1b 100%)', glowColor: '#f87171' },
+  BRL: { gradient: 'linear-gradient(135deg, #1c0a00 0%, #5c2d06 50%, #92400e 100%)', glowColor: '#fbbf24' },
+}
+const WALLET_DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #0a1428 0%, #151a3a 50%, #2d3460 100%)', glowColor: '#60a5fa' }
+const WALLET_FLAG_ICONS: Record<string, string> = {
+  HTG: '/icons/currencies/htg.png',
+  USD: '/icons/currencies/usd.png',
+  EUR: '/icons/currencies/eur-new.png',
+  CAD: '/icons/currencies/cad.png',
+  BRL: '/icons/currencies/brl.jpg',
+}
+
 // ── Currency card ──────────────────────────────────────────────────────────────
 function CurrencyCard({
   account,
@@ -320,55 +336,75 @@ function CurrencyCard({
   onReceive: () => void
 }) {
   const curr = getCurrency(account.currency)
+  const cs = WALLET_CARD_STYLES[account.currency] ?? WALLET_DEFAULT_CARD_STYLE
 
   return (
     <div
-      className="relative rounded-3xl p-6 overflow-hidden shrink-0 w-full"
-      style={{ background: 'var(--ink)', boxShadow: '0 8px 40px rgba(14,15,12,0.22), 0 2px 8px rgba(14,15,12,0.14)' }}
+      className="relative rounded-[2rem] overflow-hidden shrink-0 w-full select-none"
+      style={{
+        background: cs.gradient,
+        boxShadow: `0 4px 20px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.06)`,
+        border: '1px solid rgba(255,255,255,0.08)',
+        height: 200,
+      }}
     >
-      <div className="absolute -top-10 -right-10 w-52 h-52 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
-      <div className="absolute -bottom-14 -left-8 w-52 h-52 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
-      <div className="absolute top-1/2 right-8 w-24 h-24 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
+      {/* Shimmer */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 55%)' }} />
 
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
-              <CurrencyIcon code={account.currency} className="w-11 h-11" />
-            </div>
-            <div>
-              <span className="text-white font-semibold text-sm">{account.currency}</span>
-              <p className="text-white/50 text-xs">{curr?.name}</p>
-            </div>
+      <div className="relative h-full p-6 flex flex-col justify-between">
+        {/* Top */}
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="font-bold tracking-[0.18em] uppercase" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9 }}>{account.currency}</p>
+            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, marginTop: 2 }}>{curr?.name}</p>
           </div>
-          {isPrimary && (
-            <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
-              Principal
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {isPrimary && (
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.9)' }}>
+                Principal
+              </span>
+            )}
+            <img
+              src={WALLET_FLAG_ICONS[account.currency] ?? ''}
+              alt={account.currency}
+              className="w-8 h-8 rounded-full object-cover"
+              style={{ border: '1.5px solid rgba(255,255,255,0.2)' }}
+              onError={e => (e.currentTarget.style.display = 'none')}
+            />
+          </div>
         </div>
 
-        <p className="text-[11px] font-medium uppercase tracking-widest text-white/40 mb-1">Solde disponible</p>
-        <p className="text-4xl font-bold text-white tabular-nums mb-6 leading-none">
-          {visible
-            ? `${curr?.symbol} ${account.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : `${curr?.symbol} ••• •••`}
-        </p>
+        {/* Balance */}
+        <div>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500, marginBottom: 4 }}>Solde disponible</p>
+          <p className="font-bold text-white" style={{ fontSize: 30, letterSpacing: '-0.02em', lineHeight: 1 }}>
+            {visible
+              ? `${curr?.symbol} ${account.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : `${curr?.symbol} ••••••`}
+          </p>
+        </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onDeposit}
-            className="flex-1 h-11 rounded-2xl font-semibold text-sm cursor-pointer tr"
-            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
-          >
-            + Ajouter des fonds
-          </button>
-          <button
-            onClick={onReceive}
-            className="flex-1 h-11 rounded-2xl font-semibold text-sm border border-white/25 text-white hover:bg-white/10 tr cursor-pointer"
-          >
-            Recevoir
-          </button>
+        {/* Bottom */}
+        <div className="flex items-end justify-between">
+          <p className="font-mono" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, letterSpacing: '0.12em' }}>
+            •••• •••• •••• {account.id.slice(-4).toUpperCase()}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onDeposit}
+              className="px-3 h-8 rounded-xl text-xs font-semibold cursor-pointer tr"
+              style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}
+            >
+              + Fonds
+            </button>
+            <button
+              onClick={onReceive}
+              className="px-3 h-8 rounded-xl text-xs font-semibold cursor-pointer tr"
+              style={{ border: '1px solid rgba(255,255,255,0.25)', color: 'white' }}
+            >
+              Recevoir
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -433,17 +469,24 @@ function WalletMain({
         />
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[var(--ink)]">Mon Portefeuille</h1>
-          <p className="text-sm text-[var(--ink-60)]">
-            {visible
-              ? `Total : $${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : 'Total : $••• •••'}
+      {/* Header with prominent total */}
+      <div>
+        <div className="text-center mb-4">
+          <p className="text-[11px] font-medium text-[var(--ink-60)] mb-1">Total disponible</p>
+          {loading ? (
+            <div className="h-10 w-40 rounded-xl animate-pulse mx-auto" style={{ background: 'var(--border)' }} />
+          ) : (
+            <p className="text-4xl font-bold text-[var(--ink)] tabular-nums leading-none">
+              {visible
+                ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : '$•••'}
+            </p>
+          )}
+          <p className="text-xs text-[var(--ink-60)] mt-1.5">
+            {accounts.length} devise{accounts.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2 mb-2">
           <button
             onClick={() => setVisible(v => !v)}
             className="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--border)] tr cursor-pointer"
@@ -538,7 +581,7 @@ function WalletMain({
           <button
             onClick={() => setShowDeposit(true)}
             className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl tr cursor-pointer"
-            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+            style={{ background: 'var(--lime)', color: '#ffffff' }}
           >
             <Plus className="w-3 h-3" /> Ajouter
           </button>
@@ -569,7 +612,7 @@ function WalletMain({
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-[var(--ink)]">{acc.currency}</p>
                         {(acc.currency === 'USD' || acc.is_main) && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>
                             Principal
                           </span>
                         )}
@@ -677,8 +720,8 @@ function WalletSetup({ userId, onCreated }: { userId: string; onCreated: () => v
 
   if (view === 'intro') return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center gap-6 animate-fade-in-up">
-      <div className="w-24 h-24 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(228,34,34,0.4)' }}>
-        <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--ink)' }}>
+      <div className="w-24 h-24 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(26,86,219,0.4)' }}>
+        <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: '#ffffff' }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2M16 12h5m0 0-2-2m2 2-2 2" />
         </svg>
       </div>
@@ -709,8 +752,8 @@ function WalletSetup({ userId, onCreated }: { userId: string; onCreated: () => v
 
   if (view === 'done') return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center gap-4 animate-scale-in">
-      <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(228,34,34,0.4)' }}>
-        <Check className="w-10 h-10" style={{ color: 'var(--ink)' }} />
+      <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ background: 'var(--lime)', boxShadow: '0 8px 32px rgba(26,86,219,0.4)' }}>
+        <Check className="w-10 h-10" style={{ color: '#ffffff' }} />
       </div>
       <h2 className="text-xl font-semibold text-[var(--ink)]">Portefeuille créé !</h2>
       <p className="text-sm text-[var(--ink-60)]">Votre portefeuille est prêt à utiliser.</p>

@@ -122,7 +122,7 @@ export function AccountPage() {
                       <p className="text-xs text-[var(--ink-60)]">{formatCurrency(acc.balance, acc.currency)}</p>
                     </div>
                     {acc.is_main && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>
                         Principal
                       </span>
                     )}
@@ -168,7 +168,7 @@ export function AccountPage() {
                     <CurrencyIcon code={selected.currency} className="w-8 h-8" />
                     <p className="text-white/60 text-sm">{getCurrency(selected.currency)?.name}</p>
                     {selected.is_main && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded ml-auto" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded ml-auto" style={{ background: 'var(--lime)', color: '#ffffff' }}>
                         Principal
                       </span>
                     )}
@@ -194,7 +194,7 @@ export function AccountPage() {
                 <div className="card-flat p-5 space-y-4">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h3 className="font-semibold text-[var(--ink)]">Coordonnées bancaires</h3>
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'var(--lime)', color: '#ffffff' }}>
                       <Check className="w-3 h-3" />
                       Réception gratuite
                     </div>

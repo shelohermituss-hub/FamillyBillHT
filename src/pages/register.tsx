@@ -56,7 +56,7 @@ export function RegisterPage() {
         <Link to="/" className="flex items-center gap-2.5 relative z-10">
           <img src="/logo.png" alt="FamillyBill HT" className="w-7 h-7 object-contain" />
           <span className="font-semibold text-white tracking-tight">
-            FamillyBill <span className="px-1 py-0.5 rounded text-xs font-bold" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>HT</span>
+            FamillyBill <span className="px-1 py-0.5 rounded text-xs font-bold" style={{ background: 'var(--lime)', color: '#ffffff' }}>HT</span>
           </span>
         </Link>
 
@@ -68,7 +68,7 @@ export function RegisterPage() {
             {BENEFITS.map((item, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--lime)' }}>
-                  <Check className="w-3 h-3" style={{ color: 'var(--ink)' }} />
+                  <Check className="w-3 h-3" style={{ color: '#ffffff' }} />
                 </div>
                 <span className="text-white/70 text-sm">{item}</span>
               </div>
@@ -87,7 +87,7 @@ export function RegisterPage() {
           <Link to="/" className="flex items-center gap-2 lg:hidden mb-8 justify-center">
             <img src="/logo.png" alt="FamillyBill HT" className="w-7 h-7 object-contain" />
             <span className="font-semibold text-[var(--ink)]">
-              FamillyBill <span className="px-1 py-0.5 rounded text-xs font-bold" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>HT</span>
+              FamillyBill <span className="px-1 py-0.5 rounded text-xs font-bold" style={{ background: 'var(--lime)', color: '#ffffff' }}>HT</span>
             </span>
           </Link>
 

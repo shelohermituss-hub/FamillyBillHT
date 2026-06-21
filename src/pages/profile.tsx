@@ -298,7 +298,7 @@ function ShareProfileModal({ name, userCode, onClose }: { name: string; userCode
           <div className="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
           <div className="relative z-10 flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(228,34,34,0.15)', border: '1.5px solid rgba(228,34,34,0.3)' }}>
+              style={{ background: 'rgba(26,86,219,0.15)', border: '1.5px solid rgba(26,86,219,0.3)' }}>
               <QrCode className="w-7 h-7" style={{ color: 'var(--lime)' }} />
             </div>
             <div className="flex-1 min-w-0">
@@ -460,7 +460,7 @@ export function ProfilePage() {
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-semibold text-[var(--ink)] truncate">{profile?.full_name ?? 'Utilisateur'}</h1>
               <p className="text-sm text-[var(--ink-60)] truncate">{profile?.email ?? ''}</p>
-              <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--lime)', color: 'var(--ink)' }}>
+              <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--lime)', color: '#ffffff' }}>
                 <Check className="w-2.5 h-2.5" /> Compte vérifié
               </span>
             </div>
@@ -505,7 +505,7 @@ export function ProfilePage() {
           <button
             onClick={() => setShowShareModal(true)}
             className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold tr cursor-pointer"
-            style={{ background: 'var(--lime)', color: 'var(--ink)' }}
+            style={{ background: 'var(--lime)', color: '#ffffff' }}
           >
             <Share2 className="w-4 h-4" />
             Partager mon profil pour recevoir des paiements

@@ -616,7 +616,7 @@ export function TransferPage() {
         {step === 'success' && (
           <div className="card-flat p-8 text-center space-y-6">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto" style={{ background: 'var(--lime)' }}>
-              <CheckCircle2 className="w-8 h-8" style={{ color: 'var(--ink)' }} />
+              <CheckCircle2 className="w-8 h-8" style={{ color: '#ffffff' }} />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-[var(--ink)] mb-2">
