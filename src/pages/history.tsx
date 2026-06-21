@@ -154,43 +154,44 @@ export function HistoryPage() {
       <div className="max-w-3xl mx-auto px-4 pt-6 space-y-5">
 
         <div className="animate-fade-in-up">
-          <h1 className="text-xl font-semibold text-[var(--ink)]">Statistiques</h1>
-          <p className="text-sm text-[var(--ink-60)]">Vue d'ensemble de vos finances</p>
+          <h1 className="font-extrabold text-[var(--ink)]" style={{ fontSize: 22, letterSpacing: '-0.03em' }}>Statistiques</h1>
+          <p style={{ fontSize: 13, color: 'var(--ink-60)', marginTop: 2 }}>Vue d'ensemble de vos finances</p>
         </div>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-2 gap-2 animate-fade-in-up stagger-1">
-          <div className="card-flat p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-50">
-                <TrendingDown className="w-3.5 h-3.5 text-red-500" />
+        <div className="grid grid-cols-2 gap-3 animate-fade-in-up stagger-1">
+          <div className="rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1.5px solid var(--border)', boxShadow: '0 2px 8px rgba(13,27,75,0.06)' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#FEE2E2' }}>
+                <TrendingDown className="w-4 h-4 text-red-500" />
               </div>
-              <p className="text-xs text-[var(--ink-60)]">Total dépensé</p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-60)' }}>Total dépensé</p>
             </div>
-            <p className="text-lg font-bold text-red-500 tabular-nums">
+            <p className="tabular-nums font-extrabold text-red-500" style={{ fontSize: 20, letterSpacing: '-0.02em' }}>
               ${(sendTotal + billTotal).toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-[var(--ink-60)] mt-0.5">en USD</p>
+            <p style={{ fontSize: 10, color: 'var(--ink-30)', marginTop: 2 }}>approx. en USD</p>
           </div>
-          <div className="card-flat p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--lime-light)' }}>
-                <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--ink)' }} />
+          <div className="rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1.5px solid var(--border)', boxShadow: '0 2px 8px rgba(13,27,75,0.06)' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--lime-light)' }}>
+                <TrendingUp className="w-4 h-4" style={{ color: 'var(--lime)' }} />
               </div>
-              <p className="text-xs text-[var(--ink-60)]">Total reçu</p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-60)' }}>Total reçu</p>
             </div>
-            <p className="text-lg font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
+            <p className="tabular-nums font-extrabold" style={{ fontSize: 20, letterSpacing: '-0.02em', color: 'var(--lime)' }}>
               ${receiveTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-[var(--ink-60)] mt-0.5">en USD</p>
+            <p style={{ fontSize: 10, color: 'var(--ink-30)', marginTop: 2 }}>approx. en USD</p>
           </div>
         </div>
 
         {/* Donut chart */}
-        <div className="card-flat p-5 animate-fade-in-up stagger-2">
+        <div className="rounded-2xl p-5 animate-fade-in-up stagger-2"
+          style={{ background: 'var(--card-bg)', border: '1.5px solid var(--border)', boxShadow: '0 2px 8px rgba(13,27,75,0.06)' }}>
           <div className="flex items-center gap-2 mb-4">
-            <BarChart2 className="w-4 h-4 text-[var(--ink-60)]" />
-            <h2 className="text-sm font-semibold text-[var(--ink)]">Répartition des transactions</h2>
+            <BarChart2 className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+            <h2 className="section-title">Répartition des transactions</h2>
           </div>
 
           {loading ? (
@@ -243,8 +244,9 @@ export function HistoryPage() {
         </div>
 
         {/* Monthly bar chart */}
-        <div className="card-flat p-5 animate-fade-in-up stagger-3">
-          <h2 className="text-sm font-semibold text-[var(--ink)] mb-4">Activité mensuelle (USD)</h2>
+        <div className="rounded-2xl p-5 animate-fade-in-up stagger-3"
+          style={{ background: 'var(--card-bg)', border: '1.5px solid var(--border)', boxShadow: '0 2px 8px rgba(13,27,75,0.06)' }}>
+          <h2 className="section-title mb-4">Activité mensuelle (USD)</h2>
           {loading ? (
             <Skeleton className="h-36 rounded-xl" />
           ) : (
@@ -318,8 +320,9 @@ export function HistoryPage() {
               const toCurr = tx.target_currency ? getCurrency(tx.target_currency) : null
 
               return (
-                <div key={tx.id} className="card-flat flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer">
-                  <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", bg)}>
+                <div key={tx.id} className="flex items-center gap-3 px-4 py-3.5 tr cursor-pointer rounded-2xl hover:bg-[var(--surface-2)]"
+                  style={{ background: 'var(--card-bg)', border: '1.5px solid var(--border)', boxShadow: '0 1px 4px rgba(13,27,75,0.04)' }}>
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bg)}>
                     <Icon className={cn("w-4 h-4", color)} />
                   </div>
                   <div className="flex-1 min-w-0">

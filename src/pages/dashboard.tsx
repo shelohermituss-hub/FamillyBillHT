@@ -181,8 +181,8 @@ export function DashboardPage() {
         {/* Greeting row with prominent total balance */}
         <div className="flex items-center justify-between animate-fade-in-up">
           <div>
-            <p className="text-sm text-[var(--ink-60)]">{greeting()},</p>
-            <h1 className="text-xl font-semibold text-[var(--ink)] mt-0.5">{firstName}</h1>
+            <p className="font-medium" style={{ fontSize: 13, color: 'var(--ink-60)' }}>{greeting()},</p>
+            <h1 className="font-extrabold text-[var(--ink)]" style={{ fontSize: 22, letterSpacing: '-0.03em', marginTop: 2 }}>{firstName}</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
@@ -190,7 +190,7 @@ export function DashboardPage() {
               {loading ? (
                 <div className="h-7 w-28 rounded-lg animate-pulse" style={{ background: 'var(--border)' }} />
               ) : (
-                <p className="text-2xl font-bold text-[var(--ink)] leading-none tabular-nums">
+                <p className="font-extrabold text-[var(--ink)] leading-none tabular-nums" style={{ fontSize: 24, letterSpacing: '-0.03em' }}>
                   {visible
                     ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                     : '$•••'}
@@ -200,8 +200,8 @@ export function DashboardPage() {
             <button
               onClick={() => setVisible(v => !v)}
               aria-label={visible ? 'Masquer' : 'Afficher'}
-              className="w-9 h-9 flex items-center justify-center rounded-full tr cursor-pointer border border-[var(--border)] shrink-0"
-              style={{ background: 'var(--card-bg)' }}
+              className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer shrink-0"
+              style={{ background: 'var(--surface-2)', border: '1.5px solid var(--border)' }}
             >
               {visible
                 ? <Eye className="w-4 h-4 text-[var(--ink-60)]" />
@@ -321,7 +321,7 @@ export function DashboardPage() {
           )}
 
           {/* Quick actions */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-2.5">
             {[
               { icon: ArrowUpRight,  label: 'Envoyer',   action: () => navigate('/transfer'),              lime: true  },
               { icon: ArrowDownLeft, label: 'Recevoir',  action: () => setShowReceive(true),               lime: false },
@@ -330,16 +330,22 @@ export function DashboardPage() {
             ].map(({ icon: Icon, label, action, lime }) => (
               <button key={label} onClick={action} className="flex flex-col items-center gap-2 cursor-pointer group">
                 <div
-                  className="rounded-2xl flex items-center justify-center tr group-hover:opacity-85"
+                  className="rounded-2xl flex items-center justify-center tr"
                   style={{
-                    width: 52, height: 52,
+                    width: 56, height: 56,
                     background: lime ? 'var(--lime)' : 'var(--card-bg)',
+                    boxShadow: lime
+                      ? '0 6px 20px rgba(26,86,219,0.35), 0 2px 6px rgba(26,86,219,0.2)'
+                      : '0 2px 8px rgba(13,27,75,0.08), 0 1px 3px rgba(13,27,75,0.05)',
                     border: lime ? 'none' : '1px solid var(--border)',
                   }}
                 >
-                  <Icon className="w-5 h-5" style={{ color: lime ? '#ffffff' : 'var(--ink-60)' }} />
+                  <Icon
+                    className="tr group-hover:scale-110"
+                    style={{ width: 20, height: 20, color: lime ? '#ffffff' : 'var(--ink-60)' }}
+                  />
                 </div>
-                <span className="text-xs font-medium text-[var(--ink-60)]">{label}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-60)' }}>{label}</span>
               </button>
             ))}
           </div>
@@ -348,21 +354,31 @@ export function DashboardPage() {
         {/* Bill payment quick access */}
         <section className="animate-fade-in-up stagger-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-[var(--ink)]">Payer une facture</h2>
-            <Link to="/bills" className="text-xs font-medium tr hover:opacity-70" style={{ color: 'var(--ink-60)' }}>
+            <h2 className="section-title">Payer une facture</h2>
+            <Link to="/bills" className="tr hover:opacity-70" style={{ fontSize: 12, fontWeight: 700, color: 'var(--lime)' }}>
               Tout voir →
             </Link>
           </div>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-2.5">
             {BILL_CATEGORIES.slice(0, 8).map(cat => (
               <Link key={cat.id} to={`/bills?category=${cat.id}`}>
-                <div className="flex flex-col items-center gap-2 p-3 rounded-2xl tr cursor-pointer group card-flat card-hover">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center text-xl tr group-hover:scale-110 bg-white">
+                <div
+                  className="flex flex-col items-center gap-2 py-3 px-2 rounded-2xl tr cursor-pointer group"
+                  style={{
+                    background: 'var(--card-bg)',
+                    border: '1.5px solid var(--border)',
+                    boxShadow: '0 2px 8px rgba(13,27,75,0.06)',
+                  }}
+                >
+                  <div
+                    className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center tr group-hover:scale-105"
+                    style={{ background: cat.bg ?? 'var(--lime-light)' }}
+                  >
                     {cat.icon
                       ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain" />
-                      : <span style={{ color: cat.color }}>{cat.emoji}</span>}
+                      : <span style={{ fontSize: 22 }}>{cat.emoji}</span>}
                   </div>
-                  <span className="text-[10px] font-semibold text-[var(--ink)] text-center leading-tight">{cat.label}</span>
+                  <span className="text-center leading-tight" style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink)' }}>{cat.label}</span>
                 </div>
               </Link>
             ))}
@@ -372,8 +388,8 @@ export function DashboardPage() {
         {/* Recent transactions */}
         <section className="pb-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-[var(--ink)]">Activité récente</h2>
-            <Link to="/history" className="text-xs font-medium text-[var(--ink-60)] hover:opacity-70 tr">
+            <h2 className="section-title">Activité récente</h2>
+            <Link to="/history" className="tr hover:opacity-70" style={{ fontSize: 12, fontWeight: 700, color: 'var(--lime)' }}>
               Tout voir →
             </Link>
           </div>
@@ -398,9 +414,10 @@ export function DashboardPage() {
                 const isReceive = tx.type === 'receive' || tx.type === 'deposit'
                 const curr      = getCurrency(tx.currency)
                 return (
-                  <div key={tx.id} className="card-flat flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer">
+                  <div key={tx.id} className="flex items-center gap-3 px-4 py-3.5 tr cursor-pointer rounded-2xl hover:bg-[var(--surface-2)]"
+                    style={{ background: 'var(--card-bg)', border: '1.5px solid var(--border)', boxShadow: '0 1px 4px rgba(13,27,75,0.04)' }}>
                     <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                      "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
                       isSend ? "bg-red-50" : isReceive ? "bg-[var(--lime-light)]" : "bg-[var(--surface-2)]"
                     )}>
                       {isSend
