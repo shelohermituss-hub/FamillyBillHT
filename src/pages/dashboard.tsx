@@ -206,7 +206,7 @@ export function DashboardPage() {
   const greetWord = greetHour < 12 ? 'Bonjour' : greetHour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8" style={{ background: '#F3F4F6' }}>
+    <div className="min-h-screen pb-28 md:pb-8 overflow-x-hidden" style={{ background: '#F3F4F6', maxWidth: '100vw' }}>
       {showReceive && <ReceiveModal profile={profile} onClose={() => setShowReceive(false)} />}
 
       {/* ── Balance section (white card) ── */}
@@ -313,7 +313,7 @@ export function DashboardPage() {
               Tout voir →
             </Link>
           </div>
-          <div className="px-4 pb-4 pt-3 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))' }}>
+          <div className="px-4 pb-4 pt-3 grid gap-y-3 gap-x-1" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
             {BILL_CATEGORIES.map(cat => (
               <BillCategoryCard key={cat.id} cat={cat} />
             ))}
