@@ -244,7 +244,7 @@ function ScreenOverlay({ children, onBack, title, noHeader = false }: {
   noHeader?: boolean
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex flex-col animate-slide-right" style={{ background: '#F3F3F6' }}>
+    <div className="fixed inset-0 flex flex-col animate-slide-right" style={{ background: '#F3F3F6', zIndex: 60 }}>
       {!noHeader && (
         <div className="flex items-center gap-3 px-4 pt-14 pb-4 shrink-0"
           style={{ background: '#fff', borderBottom: '1px solid #F3F3F6' }}>
@@ -256,7 +256,7 @@ function ScreenOverlay({ children, onBack, title, noHeader = false }: {
           <h1 className="font-bold text-base flex-1 truncate" style={{ color: '#0D1B4B', letterSpacing: '-0.02em' }}>{title}</h1>
         </div>
       )}
-      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' as const }}>
         {children}
       </div>
     </div>
@@ -284,7 +284,7 @@ function WalletPinModal({ acc, user, onSuccess, onCancel }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-end">
+    <div className="fixed inset-0 flex flex-col items-center justify-end" style={{ zIndex: 70 }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative w-full max-w-lg rounded-t-3xl animate-fade-in-up overflow-hidden"
         style={{ background: '#fff' }}>
@@ -450,7 +450,7 @@ function BlockConfirmModal({ acc, onCancel, onConfirm }: {
   acc: CurrencyAccount; onCancel: () => void; onConfirm: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 flex items-end justify-center" style={{ zIndex: 70 }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative w-full max-w-lg rounded-t-3xl p-6 space-y-5 animate-fade-in-up" style={{ background: '#fff' }}>
         <div className="flex flex-col items-center text-center gap-3">
@@ -1079,7 +1079,7 @@ export function WalletPage() {
 
       {/* Saving overlay */}
       {saving && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(13,27,75,0.4)' }}>
+        <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'rgba(13,27,75,0.4)', zIndex: 80 }}>
           <div className="rounded-2xl p-6 flex flex-col items-center gap-4" style={{ background: '#fff' }}>
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1A56DB' }} />
             <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Création en cours…</p>
