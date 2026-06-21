@@ -186,4 +186,8 @@
     color: var(--ink);
     letter-spacing: -0.02em;
   }
+
+  /* Hide scrollbar */
+  .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 }

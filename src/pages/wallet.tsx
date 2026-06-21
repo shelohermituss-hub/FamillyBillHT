@@ -305,14 +305,14 @@ function PinPad({
   )
 }
 
-const WALLET_CARD_STYLES: Record<string, { gradient: string; glowColor: string }> = {
-  HTG: { gradient: 'linear-gradient(135deg, #0a1428 0%, #0d2260 50%, #1A56DB 100%)', glowColor: '#1A56DB' },
-  USD: { gradient: 'linear-gradient(135deg, #021a12 0%, #04422e 50%, #047857 100%)', glowColor: '#10b981' },
-  EUR: { gradient: 'linear-gradient(135deg, #0e0c2a 0%, #1c1862 50%, #4338ca 100%)', glowColor: '#818cf8' },
-  CAD: { gradient: 'linear-gradient(135deg, #1e0404 0%, #5a0e0e 50%, #991b1b 100%)', glowColor: '#f87171' },
-  BRL: { gradient: 'linear-gradient(135deg, #1c0a00 0%, #5c2d06 50%, #92400e 100%)', glowColor: '#fbbf24' },
+const WALLET_CARD_STYLES: Record<string, { gradient: string; glowColor: string; accent: string }> = {
+  HTG: { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed', accent: 'rgba(167,139,250,0.3)' },
+  USD: { gradient: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)', glowColor: '#10b981', accent: 'rgba(52,211,153,0.3)' },
+  EUR: { gradient: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #60a5fa 100%)', glowColor: '#3b82f6', accent: 'rgba(96,165,250,0.3)' },
+  CAD: { gradient: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 45%, #fb923c 100%)', glowColor: '#f97316', accent: 'rgba(251,146,60,0.3)' },
+  BRL: { gradient: 'linear-gradient(135deg, #831843 0%, #e11d48 45%, #fb7185 100%)', glowColor: '#f43f5e', accent: 'rgba(251,113,133,0.3)' },
 }
-const WALLET_DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #0a1428 0%, #151a3a 50%, #2d3460 100%)', glowColor: '#60a5fa' }
+const WALLET_DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed', accent: 'rgba(167,139,250,0.3)' }
 const WALLET_FLAG_ICONS: Record<string, string> = {
   HTG: '/icons/currencies/htg.png',
   USD: '/icons/currencies/usd.png',
@@ -343,13 +343,14 @@ function CurrencyCard({
       className="relative rounded-[2rem] overflow-hidden shrink-0 w-full select-none"
       style={{
         background: cs.gradient,
-        boxShadow: `0 4px 20px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.06)`,
+        boxShadow: `0 8px 32px ${cs.glowColor}55, 0 0 0 1px rgba(255,255,255,0.1)`,
         border: '1px solid rgba(255,255,255,0.08)',
         height: 200,
       }}
     >
       {/* Shimmer */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 55%)' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 50%)' }} />
+      <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl" style={{ background: cs.accent }} />
 
       <div className="relative h-full p-6 flex flex-col justify-between">
         {/* Top */}

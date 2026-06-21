@@ -35,14 +35,14 @@ const FLAG_ICONS: Record<string, string> = {
   CAD: '/icons/currencies/cad.png',
 }
 
-const ACCOUNT_CARD_STYLES: Record<string, { gradient: string; glowColor: string }> = {
-  HTG: { gradient: 'linear-gradient(135deg, #0a1428 0%, #0d2260 50%, #1A56DB 100%)', glowColor: '#1A56DB' },
-  USD: { gradient: 'linear-gradient(135deg, #021a12 0%, #04422e 50%, #047857 100%)', glowColor: '#10b981' },
-  EUR: { gradient: 'linear-gradient(135deg, #0e0c2a 0%, #1c1862 50%, #4338ca 100%)', glowColor: '#818cf8' },
-  CAD: { gradient: 'linear-gradient(135deg, #1e0404 0%, #5a0e0e 50%, #991b1b 100%)', glowColor: '#f87171' },
-  BRL: { gradient: 'linear-gradient(135deg, #1c0a00 0%, #5c2d06 50%, #92400e 100%)', glowColor: '#fbbf24' },
+const ACCOUNT_CARD_STYLES: Record<string, { gradient: string; glowColor: string; accent: string }> = {
+  HTG: { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed', accent: 'rgba(167,139,250,0.25)' },
+  USD: { gradient: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)', glowColor: '#10b981', accent: 'rgba(52,211,153,0.25)' },
+  EUR: { gradient: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #60a5fa 100%)', glowColor: '#3b82f6', accent: 'rgba(96,165,250,0.25)' },
+  CAD: { gradient: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 45%, #fb923c 100%)', glowColor: '#f97316', accent: 'rgba(251,146,60,0.25)' },
+  BRL: { gradient: 'linear-gradient(135deg, #831843 0%, #e11d48 45%, #fb7185 100%)', glowColor: '#f43f5e', accent: 'rgba(251,113,133,0.25)' },
 }
-const DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #0a1428 0%, #151a3a 50%, #2d3460 100%)', glowColor: '#60a5fa' }
+const DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed', accent: 'rgba(167,139,250,0.25)' }
 
 // ── Receive Modal ────────────────────────────────────────────────────────────
 function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; user_code?: string } | null; onClose: () => void }) {
@@ -247,14 +247,15 @@ export function DashboardPage() {
                     zIndex: sorted.length - Math.abs(offset),
                     opacity,
                     boxShadow: offset === 0
-                      ? `0 4px 20px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.07)`
-                      : '0 2px 8px rgba(0,0,0,0.1)',
+                      ? `0 8px 32px ${cs.glowColor}55, 0 0 0 1px rgba(255,255,255,0.1)`
+                      : '0 2px 8px rgba(0,0,0,0.15)',
                     border: '1px solid rgba(255,255,255,0.08)',
                     transition: 'all 320ms cubic-bezier(0.32,0.72,0,1)',
                   }}
                   onClick={() => { if (offset !== 0) setActiveCardIdx(i) }}
                 >
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 55%)' }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 50%)' }} />
+                  <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl" style={{ background: cs.accent }} />
                   {offset === 0 && (
                     <div className="relative h-full p-5 flex flex-col justify-between">
                       <div className="flex items-start justify-between">
@@ -351,8 +352,74 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Bill payment quick access */}
+        {/* ── Income / Expense summary ── */}
+        <div className="grid grid-cols-2 gap-3 animate-fade-in-up stagger-2">
+          <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)' }}>
+            <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20" style={{ background: '#34d399' }} />
+            <div className="relative">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                <ArrowDownLeft className="w-4 h-4 text-white" />
+              </div>
+              <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Revenus</p>
+              <p className="font-extrabold text-white tabular-nums" style={{ fontSize: 18, letterSpacing: '-0.02em', marginTop: 2 }}>
+                {loading ? '—' : `$${transactions.filter(t => t.type === 'receive' || t.type === 'deposit').reduce((s, t) => s + t.amount * getRate(t.currency, 'USD'), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+              </p>
+            </div>
+          </div>
+          <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #7c1d1d 0%, #dc2626 100%)' }}>
+            <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20" style={{ background: '#f87171' }} />
+            <div className="relative">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                <ArrowUpRight className="w-4 h-4 text-white" />
+              </div>
+              <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Dépenses</p>
+              <p className="font-extrabold text-white tabular-nums" style={{ fontSize: 18, letterSpacing: '-0.02em', marginTop: 2 }}>
+                {loading ? '—' : `$${transactions.filter(t => t.type === 'send' || t.type === 'withdraw' || t.type === 'bill_payment').reduce((s, t) => s + t.amount * getRate(t.currency, 'USD'), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Quick Transfer ── */}
         <section className="animate-fade-in-up stagger-2">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-title">Transfert rapide</h2>
+            <button onClick={() => navigate('/transfer')} className="tr hover:opacity-70" style={{ fontSize: 12, fontWeight: 700, color: 'var(--lime)' }}>
+              Envoyer →
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide">
+            {[
+              { name: 'Jean P.', color: '#451BED', initials: 'JP' },
+              { name: 'Marie D.', color: '#059669', initials: 'MD' },
+              { name: 'Pierre L.', color: '#ea580c', initials: 'PL' },
+              { name: 'Sophie M.', color: '#e11d48', initials: 'SM' },
+              { name: 'Ajouter', color: 'var(--surface-2)', initials: '+', isAdd: true },
+            ].map(contact => (
+              <button
+                key={contact.name}
+                onClick={() => navigate('/transfer')}
+                className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group"
+              >
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm tr group-hover:scale-105"
+                  style={{
+                    background: contact.isAdd ? 'var(--surface-2)' : contact.color,
+                    color: contact.isAdd ? 'var(--ink-60)' : '#fff',
+                    border: contact.isAdd ? '2px dashed var(--border)' : '2px solid transparent',
+                    boxShadow: contact.isAdd ? 'none' : `0 4px 16px ${contact.color}44`,
+                  }}
+                >
+                  {contact.initials}
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink-60)', whiteSpace: 'nowrap' }}>{contact.name}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Bill payment quick access */}
+        <section className="animate-fade-in-up stagger-3">
           <div className="flex items-center justify-between mb-3">
             <h2 className="section-title">Payer une facture</h2>
             <Link to="/bills" className="tr hover:opacity-70" style={{ fontSize: 12, fontWeight: 700, color: 'var(--lime)' }}>
@@ -386,7 +453,7 @@ export function DashboardPage() {
         </section>
 
         {/* Recent transactions */}
-        <section className="pb-4">
+        <section className="pb-4 animate-fade-in-up stagger-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="section-title">Activité récente</h2>
             <Link to="/history" className="tr hover:opacity-70" style={{ fontSize: 12, fontWeight: 700, color: 'var(--lime)' }}>
