@@ -10,10 +10,11 @@ const CURRENCY_CARDS = [
     name: 'Gourde haïtienne',
     symbol: 'G',
     amount: 45820.0,
-    gradient: 'linear-gradient(135deg, #0a1428 0%, #0d2260 50%, #1A56DB 100%)',
+    gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)',
     last4: '4521',
     flag: '/icons/currencies/htg.png',
-    glowColor: '#1A56DB',
+    glowColor: '#7c3aed',
+    accent: 'rgba(167,139,250,0.3)',
   },
   {
     id: 'usd',
@@ -21,10 +22,11 @@ const CURRENCY_CARDS = [
     name: 'Dollar américain',
     symbol: '$',
     amount: 2450.0,
-    gradient: 'linear-gradient(135deg, #021a12 0%, #04422e 50%, #047857 100%)',
+    gradient: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)',
     last4: '8832',
     flag: '/icons/currencies/usd.png',
     glowColor: '#10b981',
+    accent: 'rgba(52,211,153,0.3)',
   },
   {
     id: 'eur',
@@ -32,10 +34,11 @@ const CURRENCY_CARDS = [
     name: 'Euro',
     symbol: '€',
     amount: 1820.5,
-    gradient: 'linear-gradient(135deg, #0e0c2a 0%, #1c1862 50%, #4338ca 100%)',
+    gradient: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #60a5fa 100%)',
     last4: '2267',
     flag: '/icons/currencies/eur-new.png',
-    glowColor: '#818cf8',
+    glowColor: '#3b82f6',
+    accent: 'rgba(96,165,250,0.3)',
   },
   {
     id: 'cad',
@@ -43,10 +46,11 @@ const CURRENCY_CARDS = [
     name: 'Dollar canadien',
     symbol: 'C$',
     amount: 890.0,
-    gradient: 'linear-gradient(135deg, #1e0404 0%, #5a0e0e 50%, #991b1b 100%)',
+    gradient: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 45%, #fb923c 100%)',
     last4: '5519',
     flag: '/icons/currencies/cad.png',
-    glowColor: '#f87171',
+    glowColor: '#f97316',
+    accent: 'rgba(251,146,60,0.3)',
   },
   {
     id: 'brl',
@@ -54,10 +58,11 @@ const CURRENCY_CARDS = [
     name: 'Real brésilien',
     symbol: 'R$',
     amount: 3200.0,
-    gradient: 'linear-gradient(135deg, #1c0a00 0%, #5c2d06 50%, #92400e 100%)',
+    gradient: 'linear-gradient(135deg, #831843 0%, #e11d48 45%, #fb7185 100%)',
     last4: '7743',
     flag: '/icons/currencies/brl.jpg',
-    glowColor: '#fbbf24',
+    glowColor: '#f43f5e',
+    accent: 'rgba(251,113,133,0.3)',
   },
 ]
 
@@ -89,10 +94,12 @@ export function CardPage() {
 
   return (
     <>
-      {/* Full-screen dark backdrop (covers nav area) */}
-      <div className="fixed inset-0 -z-10" style={{ background: '#080e1c' }} />
+      {/* Full-screen dark backdrop */}
+      <div className="fixed inset-0 -z-10" style={{ background: '#0a0a14' }} />
+      <div className="fixed top-0 left-1/4 w-96 h-96 rounded-full -z-10 blur-[120px]" style={{ background: 'rgba(109,40,217,0.12)' }} />
+      <div className="fixed bottom-20 right-0 w-72 h-72 rounded-full -z-10 blur-[100px]" style={{ background: 'rgba(5,150,105,0.1)' }} />
 
-      <div className="min-h-screen pb-36" style={{ background: '#080e1c' }}>
+      <div className="min-h-screen pb-36" style={{ background: 'transparent' }}>
 
         {/* ── Header ── */}
         <div className="px-5 pt-7 pb-4 flex items-center justify-between">
@@ -102,11 +109,14 @@ export function CardPage() {
           </div>
           <button
             onClick={() => navigate('/wallet')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer tr hover:opacity-80"
-            style={{ background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.1)' }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl cursor-pointer tr hover:opacity-85"
+            style={{
+              background: `${CURRENCY_CARDS[activeCard].glowColor}22`,
+              border: `1px solid ${CURRENCY_CARDS[activeCard].glowColor}44`,
+            }}
           >
-            <Plus className="w-4 h-4 text-white/70" />
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Ajouter</span>
+            <Plus className="w-4 h-4" style={{ color: CURRENCY_CARDS[activeCard].glowColor }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: CURRENCY_CARDS[activeCard].glowColor }}>Ajouter</span>
           </button>
         </div>
 
@@ -140,8 +150,8 @@ export function CardPage() {
                   zIndex: CURRENCY_CARDS.length - Math.abs(offset),
                   opacity,
                   boxShadow: offset === 0
-                    ? `0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.08), 0 0 60px ${c.glowColor}22`
-                    : '0 4px 16px rgba(0,0,0,0.3)',
+                    ? `0 12px 40px ${c.glowColor}55, 0 0 0 1px rgba(255,255,255,0.1)`
+                    : '0 4px 16px rgba(0,0,0,0.25)',
                   border: '1px solid rgba(255,255,255,0.08)',
                   transition: 'all 320ms cubic-bezier(0.32,0.72,0,1)',
                 }}
@@ -149,7 +159,9 @@ export function CardPage() {
               >
                 {/* Shimmer */}
                 <div className="absolute inset-0"
-                  style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 55%)' }} />
+                  style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 50%)' }} />
+                <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl"
+                  style={{ background: c.accent }} />
 
                 {/* Card content — only fully rendered on active */}
                 {offset === 0 && (
@@ -219,15 +231,16 @@ export function CardPage() {
 
         {/* ── Dots ── */}
         <div className="flex items-center justify-center gap-1.5 mt-5">
-          {CURRENCY_CARDS.map((_, i) => (
+          {CURRENCY_CARDS.map((c, i) => (
             <button
               key={i}
               onClick={() => setActiveCard(i)}
-              className="h-1 rounded-full tr cursor-pointer"
+              className="h-1.5 rounded-full tr cursor-pointer"
               style={{
-                width: i === activeCard ? 22 : 5,
-                background: i === activeCard ? 'white' : 'rgba(255,255,255,0.2)',
+                width: i === activeCard ? 24 : 6,
+                background: i === activeCard ? CURRENCY_CARDS[activeCard].glowColor : 'rgba(255,255,255,0.15)',
                 transition: 'all 250ms ease',
+                boxShadow: i === activeCard ? `0 0 8px ${c.glowColor}88` : 'none',
               }}
             />
           ))}
@@ -235,50 +248,52 @@ export function CardPage() {
 
         {/* ── Quick actions ── */}
         <div className="mx-5 mt-6 grid grid-cols-4 gap-2">
-          {ACTIONS.map(({ label, Icon, onClick }) => (
+          {ACTIONS.map(({ label, Icon, onClick }, idx) => (
             <button
               key={label}
               onClick={onClick}
-              className="flex flex-col items-center gap-2 cursor-pointer"
+              className="flex flex-col items-center gap-2 cursor-pointer group"
             >
               <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center tr hover:opacity-75"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center tr group-hover:opacity-80"
                 style={{
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.07)',
+                  background: idx === 0 ? CURRENCY_CARDS[activeCard].glowColor : 'rgba(255,255,255,0.08)',
+                  border: idx === 0 ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                  boxShadow: idx === 0 ? `0 4px 16px ${CURRENCY_CARDS[activeCard].glowColor}55` : 'none',
                 }}
               >
-                <Icon className="w-5 h-5 text-white/65" />
+                <Icon className="w-5 h-5" style={{ color: idx === 0 ? '#fff' : 'rgba(255,255,255,0.65)' }} />
               </div>
-              <span className="font-medium" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>{label}</span>
+              <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>{label}</span>
             </button>
           ))}
         </div>
 
         {/* ── Card settings ── */}
         <div className="mx-5 mt-5 space-y-2">
-          <p className="font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>
+          <p className="font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, letterSpacing: '0.12em' }}>
             Contrôles de la carte
           </p>
           {[
-            { label: 'Paiements en ligne',    Icon: Zap,           value: 'Activé' },
-            { label: 'Paiement sans contact', Icon: MoreHorizontal, value: 'Activé' },
+            { label: 'Paiements en ligne',    Icon: Zap,           value: 'Activé', active: true },
+            { label: 'Paiement sans contact', Icon: MoreHorizontal, value: 'Activé', active: true },
           ].map((item) => (
             <div
               key={item.label}
-              className="flex items-center justify-between px-4 py-4 rounded-2xl cursor-pointer tr hover:opacity-80"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+              className="flex items-center justify-between px-4 py-3.5 rounded-2xl cursor-pointer tr hover:bg-white/5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                  <item.Icon className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${CURRENCY_CARDS[activeCard].glowColor}22` }}>
+                  <item.Icon className="w-4 h-4" style={{ color: CURRENCY_CARDS[activeCard].glowColor }} />
                 </div>
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600 }}>
+                <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: 600 }}>
                   {item.label}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-lg text-[11px] font-semibold" style={{ background: 'rgba(74,222,128,0.15)', color: '#4ade80' }}>{item.value}</span>
+              <div className="flex items-center gap-2.5">
+                <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold"
+                  style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>{item.value}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                   stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"/>
@@ -290,39 +305,44 @@ export function CardPage() {
 
         {/* ── Recent transactions ── */}
         <div className="mx-5 mt-5">
-          <p className="font-bold uppercase tracking-widest mb-3"
-            style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>
-            Transactions récentes
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-bold uppercase tracking-widest"
+              style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, letterSpacing: '0.12em' }}>
+              Transactions récentes
+            </p>
+            <button onClick={() => navigate('/history')} style={{ fontSize: 11, fontWeight: 700, color: CURRENCY_CARDS[activeCard].glowColor }}>
+              Tout voir →
+            </button>
+          </div>
           <div className="space-y-2">
             {RECENT_TX.map(tx => (
               <div
                 key={tx.name}
-                className="flex items-center justify-between p-4 rounded-2xl cursor-pointer tr hover:opacity-80"
+                className="flex items-center justify-between px-4 py-3.5 rounded-2xl cursor-pointer tr hover:bg-white/5"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.05)',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
                 }}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold"
                     style={{
-                      background: tx.positive ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)',
-                      color: tx.positive ? '#4ade80' : '#f87171',
+                      background: tx.positive ? 'rgba(52,211,153,0.15)' : 'rgba(251,113,133,0.15)',
+                      color: tx.positive ? '#34d399' : '#fb7185',
                     }}
                   >
                     {tx.name[0]}
                   </div>
                   <div>
-                    <p className="font-medium" style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14 }}>
+                    <p className="font-semibold" style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>
                       {tx.name}
                     </p>
-                    <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>{tx.date}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 1 }}>{tx.date}</p>
                   </div>
                 </div>
-                <p className="font-bold" style={{
-                  color: tx.positive ? '#4ade80' : '#f87171',
+                <p className="font-bold tabular-nums" style={{
+                  color: tx.positive ? '#34d399' : '#fb7185',
                   fontSize: 14,
                 }}>
                   {tx.amount}
