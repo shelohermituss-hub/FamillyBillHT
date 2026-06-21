@@ -7,6 +7,7 @@ import {
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
 import { formatCurrency, getCurrency, getRate } from '@/lib/currencies'
+import { BILL_CATEGORIES } from '@/lib/haiti-providers'
 
 const ACCOUNT_CARD_STYLES: Record<string, { gradient: string; glowColor: string }> = {
   HTG: { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed' },
@@ -109,28 +110,25 @@ function MiniCardIcon({ currency }: { currency: string }) {
   )
 }
 
-// ── Contact avatar circle ─────────────────────────────────────────────────────
+// ── Bill category card ────────────────────────────────────────────────────────
 
-function ContactCircle({ name, color, isAdd }: { name: string; color?: string; isAdd?: boolean }) {
-  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+function BillCategoryCard({ cat }: { cat: typeof BILL_CATEGORIES[0] }) {
+  const navigate = useNavigate()
   return (
-    <div className="flex flex-col items-center gap-1.5 shrink-0">
+    <button
+      onClick={() => navigate(`/bills?category=${cat.id}`)}
+      className="flex flex-col items-center gap-2 cursor-pointer group"
+    >
       <div
-        className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm tr hover:scale-105 cursor-pointer"
-        style={{
-          background: isAdd ? 'transparent' : (color ?? '#E5E7EB'),
-          color: isAdd ? 'var(--lime)' : '#fff',
-          border: isAdd ? '2px dashed var(--lime)' : '2.5px solid white',
-          boxShadow: isAdd ? 'none' : `0 4px 14px ${color ?? '#E5E7EB'}55`,
-          fontSize: isAdd ? 22 : 14,
-        }}
+        className="w-14 h-14 rounded-2xl flex items-center justify-center tr group-hover:scale-105 overflow-hidden shrink-0"
+        style={{ background: cat.bg ?? '#F3F4F6', border: '1.5px solid #F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
       >
-        {isAdd ? '+' : initials}
+        {cat.icon
+          ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain" onError={e => { (e.currentTarget as HTMLElement).style.display = 'none' }} />
+          : <span style={{ fontSize: 24 }}>{cat.emoji}</span>}
       </div>
-      <span className="text-[10px] font-semibold text-center whitespace-nowrap" style={{ color: '#6B7280', maxWidth: 56 }}>
-        {name}
-      </span>
-    </div>
+      <span className="text-center leading-tight font-semibold" style={{ fontSize: 10, color: '#374151', maxWidth: 56 }}>{cat.label}</span>
+    </button>
   )
 }
 
@@ -196,21 +194,6 @@ export function DashboardPage() {
   const avatarUrl = (profile as any)?.avatar_url as string | undefined
   const initials = (profile?.full_name ?? 'U').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
 
-  // Recent contacts from transactions
-  const recentContacts = (() => {
-    const seen = new Set<string>()
-    const contacts: { name: string; color: string }[] = []
-    const palette = ['#7c3aed', '#059669', '#f97316', '#e11d48', '#2563eb', '#0d9488']
-    for (const tx of transactions) {
-      if (tx.recipient_name && !seen.has(tx.recipient_name)) {
-        seen.add(tx.recipient_name)
-        contacts.push({ name: tx.recipient_name, color: palette[contacts.length % palette.length] })
-      }
-      if (contacts.length >= 4) break
-    }
-    return contacts
-  })()
-
   // Exchange rate pairs to show
   const RATE_PAIRS = [
     { from: 'USD', to: 'EUR', base: 'USD' },
@@ -269,12 +252,12 @@ export function DashboardPage() {
         </div>
 
         {/* Balance */}
-        <p className="text-sm font-medium mb-1" style={{ color: '#9CA3AF' }}>Total Account Balance</p>
-        <div className="flex items-center gap-3 mb-5">
+        <p className="text-xs font-medium mb-1.5" style={{ color: '#9CA3AF' }}>Total Account Balance</p>
+        <div className="flex items-center gap-2 mb-5">
           {loading ? (
-            <div className="h-12 w-56 rounded-xl animate-pulse bg-gray-100" />
+            <div className="h-10 w-44 rounded-xl animate-pulse bg-gray-100" />
           ) : (
-            <p className="font-extrabold tabular-nums" style={{ fontSize: 40, color: '#111', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <p className="font-extrabold tabular-nums" style={{ fontSize: 'clamp(26px, 8vw, 40px)', color: '#111', letterSpacing: '-0.03em', lineHeight: 1 }}>
               {visible
                 ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : '$•••••'}
@@ -292,10 +275,10 @@ export function DashboardPage() {
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => navigate('/transfer')}
-            className="flex items-center gap-2 px-5 h-11 rounded-full text-sm font-semibold text-white cursor-pointer tr hover:opacity-90 active:scale-97"
+            className="flex items-center gap-1.5 px-4 h-11 rounded-full text-sm font-semibold text-white cursor-pointer tr hover:opacity-90 active:scale-97 shrink-0"
             style={{ background: 'var(--lime)', boxShadow: '0 4px 16px rgba(26,86,219,0.3)' }}
           >
             <ArrowUpRight className="w-4 h-4" />
@@ -303,7 +286,7 @@ export function DashboardPage() {
           </button>
           <button
             onClick={() => setShowReceive(true)}
-            className="flex items-center gap-2 px-5 h-11 rounded-full text-sm font-semibold cursor-pointer tr hover:bg-gray-50 active:scale-97"
+            className="flex items-center gap-1.5 px-4 h-11 rounded-full text-sm font-semibold cursor-pointer tr hover:bg-gray-50 active:scale-97 shrink-0"
             style={{ border: '1.5px solid #E5E7EB', color: '#374151' }}
           >
             <ArrowDownLeft className="w-4 h-4" />
@@ -322,26 +305,18 @@ export function DashboardPage() {
       {/* ── Content area ── */}
       <div className="max-w-2xl mx-auto">
 
-        {/* ── Send Money ── */}
-        <div className="px-4 pt-5 pb-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Envoyer de l'argent</h2>
+        {/* ── Payer vos factures ── */}
+        <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+          <div className="flex items-center justify-between px-4 pt-4 pb-1">
+            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Payer vos factures</h2>
+            <Link to="/bills" className="text-xs font-bold tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
+              Tout voir →
+            </Link>
           </div>
-          <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-hide">
-            {/* Add new */}
-            <ContactCircle name="Ajouter" isAdd />
-            {/* Recent contacts */}
-            {recentContacts.length > 0
-              ? recentContacts.map(c => <ContactCircle key={c.name} name={c.name.split(' ')[0]} color={c.color} />)
-              : (
-                <>
-                  <ContactCircle name="Jean P." color="#7c3aed" />
-                  <ContactCircle name="Marie D." color="#059669" />
-                  <ContactCircle name="Pierre L." color="#f97316" />
-                  <ContactCircle name="Sophie M." color="#e11d48" />
-                </>
-              )
-            }
+          <div className="px-4 pb-4 pt-3 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))' }}>
+            {BILL_CATEGORIES.map(cat => (
+              <BillCategoryCard key={cat.id} cat={cat} />
+            ))}
           </div>
         </div>
 
