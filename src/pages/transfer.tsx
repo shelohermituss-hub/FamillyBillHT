@@ -2,1233 +2,1130 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, ChevronLeft, X, Check, Loader2,
-  Building2, Phone, QrCode, Copy, Share2,
-  ArrowRight, Send, Repeat2, Users, Wallet,
+  Building2, Phone, QrCode, Share2, Copy,
+  ArrowRight, Send, Repeat2, Users, MoreHorizontal,
+  Download, Percent,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount } from '@/lib/supabase'
-import { getCurrency, formatCurrency, calculateTransfer } from '@/lib/currencies'
+import { getCurrency, formatCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 type Screen =
-  | 'hub'
-  | 'wallet-to-wallet'
-  | 'bank-transfer'
-  | 'contacts-list'
-  | 'contact-send'
-  | 'phone-send'
-  | 'wallet-id'
-  | 'pin'
-  | 'processing'
-  | 'success'
-  | 'receipt'
+  | 'hub' | 'send-money' | 'send-confirm' | 'send-success'
+  | 'bank-form' | 'bank-confirm' | 'bank-success' | 'bank-receipt'
+  | 'contacts' | 'contact-form' | 'contact-confirm' | 'contact-success'
+  | 'phone-send' | 'wallet-id' | 'between-wallets'
 
-type Contact = {
-  id: string
-  name: string
-  initials: string
-  phone?: string
-  color: string
-  isFav?: boolean
-}
+type Contact = { id: string; name: string; initials: string; phone: string; isFav: boolean }
 
-// ── Mock contacts ──────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
+const ACCENT = '#4F46E5'
 const CONTACTS: Contact[] = [
-  { id: 'c1', name: 'James Martin',   initials: 'JM', phone: '+1 305 555 0101', color: '#4F46E5', isFav: true },
-  { id: 'c2', name: 'Olivia Chen',    initials: 'OC', phone: '+1 305 555 0202', color: '#E11D48', isFav: true },
-  { id: 'c3', name: 'Thomas Dupont',  initials: 'TD', phone: '+1 305 555 0303', color: '#059669', isFav: false },
-  { id: 'c4', name: 'Sophia Laurent', initials: 'SL', phone: '+1 305 555 0404', color: '#D97706', isFav: false },
-  { id: 'c5', name: 'Marcus Rivera',  initials: 'MR', phone: '+1 305 555 0505', color: '#7C3AED', isFav: false },
-  { id: 'c6', name: 'Amara Diallo',   initials: 'AD', phone: '+1 305 555 0606', color: '#0891B2', isFav: false },
-  { id: 'c7', name: 'Kevin Blanc',    initials: 'KB', phone: '+1 305 555 0707', color: '#BE185D', isFav: false },
-  { id: 'c8', name: 'Léa Fontaine',   initials: 'LF', phone: '+1 305 555 0808', color: '#15803D', isFav: false },
+  { id:'c1', name:'James Martin',   initials:'JM', phone:'+1-212-456-7890', isFav:true  },
+  { id:'c2', name:'Richard Dupont', initials:'RI', phone:'+1-212-336-9898', isFav:true  },
+  { id:'c3', name:'Thomas Bernard', initials:'TA', phone:'+1-212-777-1478', isFav:false },
+  { id:'c4', name:'Jennifer Lopez', initials:'JE', phone:'+1-212-456-7891', isFav:false },
+  { id:'c5', name:'Linda Carter',   initials:'LI', phone:'+1-111-225-7890', isFav:false },
+  { id:'c6', name:'Daniel Craig',   initials:'DA', phone:'+1-212-002-2221', isFav:false },
+  { id:'c7', name:'Austin Brown',   initials:'AU', phone:'+1-212-456-7892', isFav:false },
+  { id:'c8', name:'Ann Blair',      initials:'AN', phone:'+1-212-666-6569', isFav:false },
+  { id:'c9', name:'Anna Kate',      initials:'AK', phone:'+1-111-225-7891', isFav:false },
+  { id:'c10',name:'Brian Johnson',  initials:'BR', phone:'+1-212-336-9899', isFav:false },
+  { id:'c11',name:'Brooke Shields', initials:'BS', phone:'+1-212-777-1479', isFav:false },
+  { id:'c12',name:'Brody Stevens',  initials:'BD', phone:'+1-212-777-6598', isFav:false },
 ]
-const RECENT_CONTACTS = CONTACTS.slice(0, 5)
+const RECENT = CONTACTS.slice(0, 6)
 
-// ── Card styles (same as wallet.tsx) ──────────────────────────────────────────
 const CARD_STYLES = [
-  { id: 'purple', gradient: 'linear-gradient(135deg,#1a0070 0%,#3b12cc 45%,#6d28d9 100%)' },
-  { id: 'green',  gradient: 'linear-gradient(135deg,#064e3b 0%,#059669 45%,#34d399 100%)' },
-  { id: 'blue',   gradient: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 45%,#60a5fa 100%)' },
-  { id: 'orange', gradient: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 45%,#fb923c 100%)' },
-  { id: 'rose',   gradient: 'linear-gradient(135deg,#831843 0%,#e11d48 45%,#fb7185 100%)' },
+  { id:'purple', g:'linear-gradient(135deg,#1a0070,#3b12cc,#6d28d9)' },
+  { id:'green',  g:'linear-gradient(135deg,#064e3b,#059669,#34d399)' },
+  { id:'blue',   g:'linear-gradient(135deg,#1e3a8a,#2563eb,#60a5fa)' },
+  { id:'orange', g:'linear-gradient(135deg,#7c2d12,#ea580c,#fb923c)' },
+  { id:'rose',   g:'linear-gradient(135deg,#831843,#e11d48,#fb7185)'  },
 ]
-const CURRENCY_DEFAULT_STYLE: Record<string, string> = { HTG: 'purple', USD: 'green', EUR: 'blue', CAD: 'orange', BRL: 'rose' }
-function getCardGradient(acc: CurrencyAccount) {
-  const id = localStorage.getItem(`fb-card-style-${acc.id}`) ?? CURRENCY_DEFAULT_STYLE[acc.currency] ?? 'purple'
-  return CARD_STYLES.find(s => s.id === id)?.gradient ?? CARD_STYLES[0].gradient
+const CUR_STYLE: Record<string,string> = { HTG:'purple', USD:'green', EUR:'blue', CAD:'orange', BRL:'rose' }
+const walletPin = (id: string) => `fb-w-pin-${id}`
+function maskId(id: string) { return '•••• ' + id.replace(/-/g,'').slice(-4).toUpperCase() }
+function genRef() {
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  return Array.from({length:10},()=>c[Math.floor(Math.random()*c.length)]).join('')
 }
-const walletPinKey = (id: string) => `fb-w-pin-${id}`
+function getGradient(acc: CurrencyAccount) {
+  const id = localStorage.getItem(`fb-card-style-${acc.id}`) ?? CUR_STYLE[acc.currency] ?? 'purple'
+  return CARD_STYLES.find(s=>s.id===id)?.g ?? CARD_STYLES[0].g
+}
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
-function BackBtn({ onBack }: { onBack: () => void }) {
+// ── SVG Illustrations ─────────────────────────────────────────────────────────
+function WalletSuccessIllustration() {
   return (
-    <button
-      onClick={onBack}
-      className="w-9 h-9 rounded-full flex items-center justify-center tr cursor-pointer shrink-0"
-      style={{ background: 'var(--surface-2)' }}
-    >
-      <ChevronLeft className="w-5 h-5" style={{ color: 'var(--ink)' }} />
+    <svg viewBox="0 0 240 180" className="w-52 h-40 mx-auto">
+      <circle cx="120" cy="88" r="70" fill="#EEF2FF" opacity="0.6"/>
+      <circle cx="120" cy="88" r="52" stroke="#C7D2FE" strokeWidth="1.5" strokeDasharray="5 4" fill="none" opacity="0.5"/>
+      <polygon points="24,36 30,22 36,36" fill="none" stroke="#C7D2FE" strokeWidth="2"/>
+      <polygon points="196,30 202,18 208,30" fill="none" stroke="#C7D2FE" strokeWidth="2"/>
+      <polygon points="190,65 194,57 198,65" fill="none" stroke="#E0E7FF" strokeWidth="1.5"/>
+      <rect x="22" y="48" width="48" height="32" rx="4" fill="#C7D2FE" transform="rotate(-18,46,64)"/>
+      <rect x="16" y="54" width="48" height="32" rx="4" fill="#DDE5FF" transform="rotate(-18,40,70)"/>
+      <rect x="158" y="42" width="48" height="32" rx="4" fill="#C7D2FE" transform="rotate(15,182,58)"/>
+      <rect x="164" y="50" width="48" height="32" rx="4" fill="#DDE5FF" transform="rotate(15,188,66)"/>
+      <rect x="70" y="82" width="100" height="66" rx="12" fill="#1C1C2E"/>
+      <rect x="80" y="93" width="24" height="14" rx="5" fill={ACCENT}/>
+      <rect x="80" y="112" width="55" height="5" rx="2.5" fill="#2D2D45"/>
+      <rect x="80" y="122" width="38" height="5" rx="2.5" fill="#2D2D45"/>
+      <rect x="118" y="74" width="52" height="32" rx="8" fill="#252535"/>
+      <circle cx="164" cy="118" r="26" fill={ACCENT}/>
+      <polyline points="153,118 160,125 175,110" stroke="white" strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function ProcessingIllustration() {
+  return (
+    <svg viewBox="0 0 200 140" className="w-44 h-32 mx-auto">
+      <rect x="25" y="25" width="130" height="82" rx="8" fill="#1C1C2E" stroke="#374151" strokeWidth="1.5"/>
+      <rect x="30" y="30" width="120" height="72" rx="6" fill="#111827"/>
+      <rect x="35" y="88" width="65" height="8" rx="4" fill="#F59E0B"/>
+      <rect x="35" y="88" width="110" height="8" rx="4" fill="#374151" opacity="0.4"/>
+      <circle cx="72" cy="58" r="17" fill="none" stroke="#6B7280" strokeWidth="3"/>
+      <circle cx="72" cy="58" r="8" fill="#374151"/>
+      <circle cx="104" cy="50" r="11" fill="none" stroke="#6B7280" strokeWidth="2.5"/>
+      <circle cx="104" cy="50" r="5" fill="#374151"/>
+      <circle cx="155" cy="52" r="12" fill="#4ADE80"/>
+      <rect x="147" y="64" width="16" height="20" rx="5" fill="#22C55E"/>
+      <rect x="138" y="72" width="10" height="22" rx="4" fill="#16A34A" transform="rotate(-15,143,83)"/>
+      <rect x="156" y="70" width="10" height="24" rx="4" fill="#16A34A" transform="rotate(20,161,82)"/>
+      <rect x="160" y="42" width="26" height="18" rx="3" fill={ACCENT} transform="rotate(-20,173,51)"/>
+      <polyline points="164,52 168,56 177,48" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" transform="rotate(-20,170.5,52)"/>
+    </svg>
+  )
+}
+
+// ── Shared UI ─────────────────────────────────────────────────────────────────
+function QRIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.8" className="w-5 h-5">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <path d="M14 14h2M14 18h2M18 14v2M18 18v2" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function BackBtn({ onBack, light=false }: { onBack:()=>void; light?:boolean }) {
+  return (
+    <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
+      style={{ background: light ? 'rgba(255,255,255,0.18)' : '#F2F2F7' }}>
+      <ChevronLeft className="w-5 h-5" style={{ color: light ? 'white' : '#1C1C1E' }}/>
     </button>
   )
 }
 
-function ContactAvatar({ c, size = 44 }: { c: Contact; size?: number }) {
+function Hdr({ title, onBack, right, light=false }: { title:string; onBack:()=>void; right?:React.ReactNode; light?:boolean }) {
   return (
-    <div
-      className="rounded-2xl flex items-center justify-center font-bold text-white shrink-0"
-      style={{ width: size, height: size, background: c.color, fontSize: size * 0.3 }}
-    >
-      {c.initials}
+    <div className="flex items-center gap-2 px-4 pt-4 pb-3">
+      <BackBtn onBack={onBack} light={light}/>
+      <p className="flex-1 text-center text-[15px] font-bold" style={{ color: light?'white':'#1C1C1E' }}>{title}</p>
+      <div className="w-9 h-9 flex items-center justify-center">{right}</div>
     </div>
   )
 }
 
-function WalletChip({ acc, selected, onClick }: { acc: CurrencyAccount; selected: boolean; onClick: () => void }) {
-  const curr = getCurrency(acc.currency)
+function Row({ label, value, green, blue, pill }: { label:string; value:string; green?:boolean; blue?:boolean; pill?:boolean }) {
   return (
-    <button
-      onClick={onClick}
-      className={cn('flex items-center gap-2 px-3 py-2 rounded-xl border tr cursor-pointer', selected ? 'border-[var(--lime)]' : 'border-[var(--border)]')}
-      style={{ background: selected ? 'var(--lime-light)' : 'var(--surface)' }}
-    >
-      <span className="text-base leading-none">{curr?.flag}</span>
-      <div className="text-left">
-        <p className="text-xs font-bold text-[var(--ink)] leading-tight">{acc.currency}</p>
-        <p className="text-[10px] text-[var(--ink-60)]">{formatCurrency(acc.balance, acc.currency)}</p>
-      </div>
-      {selected && <Check className="w-3.5 h-3.5 ml-0.5 shrink-0" style={{ color: 'var(--lime)' }} />}
-    </button>
-  )
-}
-
-function NumPad({ onDigit, onBack, onDot }: { onDigit: (d: string) => void; onBack: () => void; onDot?: () => void }) {
-  const keys = ['1','2','3','4','5','6','7','8','9', onDot ? '.' : '', '0', '⌫']
-  return (
-    <div className="grid grid-cols-3 gap-3 px-4 pt-2 pb-4">
-      {keys.map((k, i) => {
-        if (!k) return <div key={i} />
-        return (
-          <button
-            key={k + i}
-            onClick={() => k === '⌫' ? onBack() : k === '.' ? onDot?.() : onDigit(k)}
-            className="h-14 rounded-2xl text-xl font-semibold tr cursor-pointer flex items-center justify-center"
-            style={{ background: 'var(--surface-2)', color: 'var(--ink)' }}
-          >
-            {k}
-          </button>
-        )
-      })}
+    <div className="flex items-center justify-between py-3.5 border-b border-gray-100 last:border-0">
+      <span className="text-sm" style={{ color:'#8E8E93' }}>{label}</span>
+      {pill
+        ? <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background:'#DCFCE7', color:'#16A34A' }}>{value}</span>
+        : <span className="text-sm font-semibold" style={{ color: green?'#16A34A':blue?'#3B82F6':'#1C1C1E' }}>{value}</span>
+      }
     </div>
   )
 }
 
-function PinDots({ value, length = 4 }: { value: string; length?: number }) {
+function NumPad({ onDigit, onBack, dot=false }: { onDigit:(d:string)=>void; onBack:()=>void; dot?:boolean }) {
+  const rows=[['1','',''],['2','ABC',''],['3','DEF',''],['4','GHI',''],['5','JKL',''],['6','MNO',''],['7','PQRS',''],['8','TUV',''],['9','WXYZ','']]
   return (
-    <div className="flex items-center gap-4 justify-center py-4">
-      {Array.from({ length }).map((_, i) => (
-        <div
-          key={i}
-          className="w-4 h-4 rounded-full border-2 tr"
-          style={{
-            borderColor: i < value.length ? 'var(--lime)' : 'var(--border)',
-            background: i < value.length ? 'var(--lime)' : 'transparent',
-          }}
-        />
+    <div className="grid grid-cols-3">
+      {[0,1,2].map(col=>(
+        <div key={col} className="flex flex-col">
+          {[0,1,2].map(row=>{
+            const item=rows[row*3+col]; if(!item) return null
+            return (
+              <button key={item[0]} onClick={()=>onDigit(item[0])}
+                className="h-[60px] flex flex-col items-center justify-center cursor-pointer active:bg-gray-100 tr select-none">
+                <span className="text-[22px] font-light" style={{color:'#1C1C1E'}}>{item[0]}</span>
+                {item[1]&&<span className="text-[9px] tracking-widest mt-px" style={{color:'#8E8E93'}}>{item[1]}</span>}
+              </button>
+            )
+          })}
+        </div>
+      ))}
+      {/* Last row */}
+      <button onClick={()=>dot&&onDigit('.')} className="h-[60px] flex items-center justify-center cursor-pointer active:bg-gray-100 tr select-none">
+        {dot&&<span className="text-[26px] font-light" style={{color:'#1C1C1E'}}>.</span>}
+      </button>
+      <button onClick={()=>onDigit('0')} className="h-[60px] flex items-center justify-center cursor-pointer active:bg-gray-100 tr select-none">
+        <span className="text-[22px] font-light" style={{color:'#1C1C1E'}}>0</span>
+      </button>
+      <button onClick={onBack} className="h-[60px] flex items-center justify-center cursor-pointer active:bg-gray-100 tr select-none">
+        <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="#1C1C1E" strokeWidth="1.6" strokeLinecap="round">
+          <path d="M20 5H8.5a2 2 0 00-1.6.8L2 12l4.9 6.2a2 2 0 001.6.8H20a2 2 0 002-2V7a2 2 0 00-2-2z"/>
+          <path d="M15 9l-4 4M11 9l4 4"/>
+        </svg>
+      </button>
+    </div>
+  )
+}
+
+function PinBoxes({ value }: { value: string }) {
+  return (
+    <div className="flex gap-4 justify-center py-2">
+      {[0,1,2,3].map(i=>(
+        <div key={i} className="w-14 h-14 rounded-xl border-2 flex items-center justify-center text-2xl"
+          style={{ borderColor: i<value.length ? '#22C55E':'#E5E7EB' }}>
+          {i<value.length && <span style={{color:'#1C1C1E'}}>●</span>}
+        </div>
       ))}
     </div>
   )
 }
 
-function ProcessingModal() {
+function ContactCircle({ c, size=44 }: { c:Contact; size?:number }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(14,15,12,0.65)', backdropFilter: 'blur(6px)' }}>
-      <div className="bg-white rounded-3xl px-8 py-10 flex flex-col items-center gap-5 mx-6 text-center" style={{ maxWidth: 320 }}>
-        <div className="relative w-20 h-20">
-          <div className="w-20 h-20 rounded-full border-4 border-[var(--lime-light)]" />
-          <div
-            className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-t-[var(--lime)] animate-spin"
-            style={{ borderTopColor: 'var(--lime)' }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Send className="w-7 h-7" style={{ color: 'var(--lime)' }} />
-          </div>
-        </div>
-        <div>
-          <p className="text-lg font-bold text-[var(--ink)]">Traitement en cours</p>
-          <p className="text-sm text-[var(--ink-60)] mt-1">Votre transfert est en cours de traitement…</p>
-        </div>
-      </div>
+    <div className="rounded-full flex items-center justify-center font-bold text-white shrink-0"
+      style={{ width:size, height:size, background:ACCENT, fontSize:size*0.28 }}>
+      {c.initials}
     </div>
   )
 }
 
-// ── Main Page ──────────────────────────────────────────────────────────────────
+function WalletPill({ acc, onTap }: { acc:CurrencyAccount; onTap:()=>void }) {
+  const curr = getCurrency(acc.currency)
+  return (
+    <button onClick={onTap} className="flex items-center gap-2 px-3.5 py-2.5 rounded-full cursor-pointer tr"
+      style={{ background:'#F2F2F7', border:'1px solid #E5E7EB' }}>
+      <span className="text-base leading-none">{curr?.flag}</span>
+      <span className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{maskId(acc.id)}</span>
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6"/>
+      </svg>
+    </button>
+  )
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 export function TransferPage() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
 
   const [screens, setScreens] = useState<Screen[]>(['hub'])
-  const screen = screens[screens.length - 1]
-  const push = (s: Screen) => setScreens(prev => [...prev, s])
-  const back = () => {
-    if (screens.length <= 1) navigate(-1)
-    else setScreens(prev => prev.slice(0, -1))
-  }
+  const screen = screens[screens.length-1]
+  const push = (s: Screen) => setScreens(p=>[...p, s])
+  const back = () => { if (screens.length<=1) navigate(-1); else setScreens(p=>p.slice(0,-1)) }
 
+  // Overlays
+  const [walletPickerOpen, setWalletPickerOpen] = useState(false)
+  const [pinSheetOpen, setPinSheetOpen] = useState(false)
+  const [processing, setProcessing] = useState(false)
+
+  // Data
   const [accounts, setAccounts] = useState<CurrencyAccount[]>([])
-  const [, setLoadingAccounts] = useState(true)
-
-  // Shared state across flows
-  const [fromWallet, setFromWallet] = useState<CurrencyAccount | null>(null)
-  const [toWallet, setToWallet] = useState<CurrencyAccount | null>(null)
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
+  const [fromWallet, setFromWallet] = useState<CurrencyAccount|null>(null)
+  const [toWallet, setToWallet] = useState<CurrencyAccount|null>(null)
+  const [selectedContact, setSelectedContact] = useState<Contact|null>(null)
+  const [contactIdx, setContactIdx] = useState(0)
   const [amountStr, setAmountStr] = useState('0')
   const [note, setNote] = useState('')
   const [pin, setPin] = useState('')
   const [pinError, setPinError] = useState('')
-  const [, setProcessing] = useState(false)
   const [txRef, setTxRef] = useState('')
   const [copied, setCopied] = useState(false)
-  const [contactsTab, setContactsTab] = useState<'recent' | 'all' | 'favorites'>('recent')
-  const [contactSearch, setContactSearch] = useState('')
 
-  // Bank transfer specific
-  const [bankName, setBankName] = useState('')
+  // Bank transfer
+  const [bankName, setBankName] = useState('Citibank')
   const [recipientName, setRecipientName] = useState('')
   const [recipientAccount, setRecipientAccount] = useState('')
   const [purpose, setPurpose] = useState('')
-  const [bankCurrency] = useState('USD')
 
-  // Wallet ID flow specific
+  // Wallet ID
   const [walletIdInput, setWalletIdInput] = useState('')
-  const [walletIdFound, setWalletIdFound] = useState<{ id: string; name: string; code: string } | null>(null)
+  const [walletIdFound, setWalletIdFound] = useState<{id:string;name:string;code:string}|null>(null)
   const [walletIdSearching, setWalletIdSearching] = useState(false)
   const [walletIdError, setWalletIdError] = useState('')
-  const walletIdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const walletIdTimer = useRef<ReturnType<typeof setTimeout>>()
 
-  // Phone transfer
+  // Contacts
+  const [cTab, setCTab] = useState<'recent'|'contact'|'favorites'>('recent')
+  const [cSearch, setCSearch] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [phoneFound, setPhoneFound] = useState<{ id: string; name: string } | null>(null)
 
-  useEffect(() => {
+  // Between wallets (same user)
+  const [betweenFrom, setBetweenFrom] = useState<CurrencyAccount|null>(null)
+  const [betweenTo, setBetweenTo] = useState<CurrencyAccount|null>(null)
+
+  useEffect(()=>{
     if (!user) return
-    supabase.from('currency_accounts').select('*')
-      .eq('user_id', user.id)
-      .then(({ data }) => {
-        if (data) {
-          setAccounts(data)
-          const main = data.find(a => a.is_main) ?? data[0]
-          if (main) setFromWallet(main)
-        }
-        setLoadingAccounts(false)
-      })
-  }, [user])
+    supabase.from('currency_accounts').select('*').eq('user_id', user.id)
+      .then(({data})=>{ if (data?.length) { setAccounts(data); setFromWallet(data.find(a=>a.is_main)??data[0]) }})
+  },[user])
 
-  const sendAmount = parseFloat(amountStr) || 0
+  const sendAmount = parseFloat(amountStr)||0
+  const fee = sendAmount>0 ? Math.max(1.2, sendAmount*0.005) : 0
+  const now = new Date()
+  const dateLabel = now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+  const timeLabel = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
 
-  function resetFlow() {
-    setAmountStr('0')
-    setNote('')
-    setPin('')
+  function amtDigit(d:string){ setAmountStr(p=>{ if(p==='0') return d; if(p.includes('.')&&p.split('.')[1].length>=2) return p; return p+d }) }
+  function amtBack(){ setAmountStr(p=>p.length<=1?'0':p.slice(0,-1)) }
+  function amtDot(){ setAmountStr(p=>p.includes('.')?p:p+'.') }
+
+  function openPin(){ setPin(''); setPinError(''); setPinSheetOpen(true) }
+
+  function pinDigit(d:string){
     setPinError('')
-    setFromWallet(accounts.find(a => a.is_main) ?? accounts[0] ?? null)
-    setToWallet(null)
-    setSelectedContact(null)
-    setBankName('')
-    setRecipientName('')
-    setRecipientAccount('')
-    setPurpose('')
-    setWalletIdInput('')
-    setWalletIdFound(null)
-    setWalletIdError('')
-    setPhoneNumber('')
-    setPhoneFound(null)
-    setTxRef('')
-    setScreens(['hub'])
+    if (pin.length>=4) return
+    const next = pin+d
+    setPin(next)
+    if (next.length===4) setTimeout(()=>checkPin(next),120)
+  }
+  function pinBack(){ setPin(p=>p.slice(0,-1)) }
+
+  function checkPin(p:string){
+    if (!fromWallet) return
+    const stored = localStorage.getItem(walletPin(fromWallet.id))
+    if (!stored){ localStorage.setItem(walletPin(fromWallet.id), p); proceed() }
+    else if (p===stored){ proceed() }
+    else { setPinError('PIN incorrect. Réessayez.'); setPin('') }
   }
 
-  // ── Amount keypad helpers ──────────────────────────────────────────────────
-  function handleAmountDigit(d: string) {
-    setAmountStr(prev => {
-      if (prev === '0') return d
-      if (prev.includes('.') && prev.split('.')[1].length >= 2) return prev
-      return prev + d
-    })
-  }
-  function handleAmountBack() {
-    setAmountStr(prev => (prev.length <= 1 ? '0' : prev.slice(0, -1)))
-  }
-  function handleAmountDot() {
-    setAmountStr(prev => prev.includes('.') ? prev : prev + '.')
+  function proceed(){
+    setPinSheetOpen(false)
+    const ref = genRef(); setTxRef(ref)
+    if (screen==='send-money') push('send-confirm')
+    else if (screen==='between-wallets'||screen==='wallet-id'||screen==='phone-send') push('send-confirm')
+    else if (screen==='bank-form') push('bank-confirm')
+    else if (screen==='contact-form') push('contact-confirm')
   }
 
-  // ── PIN logic ──────────────────────────────────────────────────────────────
-  function handlePinDigit(d: string) {
-    setPinError('')
-    setPin(prev => prev.length < 4 ? prev + d : prev)
-  }
-  function handlePinBack() { setPin(prev => prev.slice(0, -1)) }
-
-  useEffect(() => {
-    if (pin.length === 4 && screen === 'pin') {
-      const stored = fromWallet ? localStorage.getItem(walletPinKey(fromWallet.id)) : null
-      if (!stored) {
-        // No PIN set — accept any 4-digit pin and set it
-        if (fromWallet) localStorage.setItem(walletPinKey(fromWallet.id), pin)
-        submitTransfer()
-      } else if (pin === stored) {
-        submitTransfer()
-      } else {
-        setPinError('PIN incorrect. Réessayez.')
-        setPin('')
-      }
-    }
-  }, [pin, screen])
-
-  // ── Submit transfer ────────────────────────────────────────────────────────
-  async function submitTransfer() {
-    if (!user || !fromWallet) return
+  async function doTransfer(nextScreen: Screen){
+    if (!user||!fromWallet) return
     setProcessing(true)
-    push('processing')
-
-    const ref = `TRF-${Date.now()}`
-    const fee = sendAmount * 0.005
-    const net = sendAmount - fee
-
     await supabase.from('transactions').insert({
-      user_id: user.id,
-      type: 'send',
-      status: 'completed',
-      amount: sendAmount,
-      currency: fromWallet.currency,
-      target_amount: net,
-      target_currency: toWallet?.currency ?? fromWallet.currency,
-      fee,
-      recipient_name: selectedContact?.name ?? recipientName ?? walletIdFound?.name ?? phoneFound?.name ?? null,
-      note: note || null,
-      reference: ref,
+      user_id:user.id, type:'send', status:'completed',
+      amount:sendAmount, currency:fromWallet.currency, fee,
+      recipient_name: selectedContact?.name??recipientName??null,
+      note:note||null, reference:txRef,
     })
-
-    // Deduct from wallet
     await supabase.from('currency_accounts')
-      .update({ balance: Math.max(0, fromWallet.balance - sendAmount) })
+      .update({ balance:Math.max(0, fromWallet.balance-sendAmount-fee) })
       .eq('id', fromWallet.id)
-
-    // Credit toWallet if same user (wallet-to-wallet flow)
-    if (toWallet && toWallet.user_id === user.id) {
+    if (betweenTo&&betweenTo.user_id===user.id){
       await supabase.from('currency_accounts')
-        .update({ balance: toWallet.balance + net })
-        .eq('id', toWallet.id)
+        .update({ balance:betweenTo.balance+(sendAmount-fee) })
+        .eq('id', betweenTo.id)
     }
-
-    setTxRef(ref)
+    const {data} = await supabase.from('currency_accounts').select('*').eq('user_id',user.id)
+    if (data){ setAccounts(data); const f=data.find(a=>a.id===fromWallet.id); if(f) setFromWallet(f) }
     setProcessing(false)
-
-    // Reload accounts
-    const { data } = await supabase.from('currency_accounts').select('*').eq('user_id', user.id)
-    if (data) setAccounts(data)
-
-    // Replace 'processing' with 'success'
-    setScreens(prev => [...prev.slice(0, -1), 'success'])
+    push(nextScreen)
   }
 
-  // ── Wallet ID search ───────────────────────────────────────────────────────
-  function handleWalletIdChange(v: string) {
-    const val = v.toUpperCase().slice(0, 8)
-    setWalletIdInput(val)
-    setWalletIdFound(null)
-    setWalletIdError('')
+  function reset(){
+    setScreens(['hub']); setAmountStr('0'); setNote(''); setPin(''); setTxRef('')
+    setSelectedContact(null); setRecipientName(''); setRecipientAccount(''); setPurpose('')
+    setWalletIdInput(''); setWalletIdFound(null); setPhoneNumber('')
+    setBetweenFrom(null); setBetweenTo(null)
+    setWalletPickerOpen(false); setPinSheetOpen(false); setProcessing(false)
+  }
+
+  function handleWalletIdChange(v:string){
+    const val=v.toUpperCase().slice(0,8); setWalletIdInput(val); setWalletIdFound(null); setWalletIdError('')
     clearTimeout(walletIdTimer.current)
-    if (val.length === 8) {
+    if (val.length===8){
       setWalletIdSearching(true)
-      walletIdTimer.current = setTimeout(async () => {
-        const { data } = await supabase
-          .from('wise_users')
-          .select('id, full_name, user_code')
-          .eq('user_code', val)
-          .maybeSingle()
+      walletIdTimer.current=setTimeout(async()=>{
+        const {data}=await supabase.from('wise_users').select('id,full_name,user_code').eq('user_code',val).maybeSingle()
         setWalletIdSearching(false)
-        if (data) {
-          setWalletIdFound({ id: data.id, name: data.full_name, code: data.user_code })
-          setRecipientName(data.full_name)
-        } else {
-          setWalletIdError('Aucun portefeuille trouvé avec cet ID.')
-        }
-      }, 350)
+        if (data) setWalletIdFound({id:data.id,name:data.full_name,code:data.user_code})
+        else setWalletIdError('Aucun portefeuille trouvé.')
+      },350)
     }
   }
 
-  // ── Filtered contacts ──────────────────────────────────────────────────────
-  const filteredContacts = CONTACTS.filter(c => {
-    if (contactSearch) return c.name.toLowerCase().includes(contactSearch.toLowerCase())
-    if (contactsTab === 'recent') return RECENT_CONTACTS.some(r => r.id === c.id)
-    if (contactsTab === 'favorites') return c.isFav
+  const filteredC = CONTACTS.filter(c=>{
+    if (cSearch) return c.name.toLowerCase().includes(cSearch.toLowerCase())||c.phone.includes(cSearch)
+    if (cTab==='recent') return RECENT.some(r=>r.id===c.id)
+    if (cTab==='favorites') return c.isFav
     return true
   })
+  const grouped = filteredC.reduce<Record<string,Contact[]>>((acc,c)=>{
+    const l=c.name[0].toUpperCase(); acc[l]=[...(acc[l]??[]),c]; return acc
+  },{})
 
-  const grouped = filteredContacts.reduce<Record<string, Contact[]>>((acc, c) => {
-    const letter = c.name[0].toUpperCase()
-    if (!acc[letter]) acc[letter] = []
-    acc[letter].push(c)
-    return acc
-  }, {})
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // RENDER SCREENS
-  // ──────────────────────────────────────────────────────────────────────────
-
-  // ── HUB ───────────────────────────────────────────────────────────────────
-  if (screen === 'hub') {
-    return (
-      <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--surface)', maxWidth: '100vw' }}>
-        <div className="px-4 pt-3 pb-28">
-
-          {/* Balance card */}
-          <div
-            className="rounded-3xl p-5 mb-5"
-            style={{ background: fromWallet ? getCardGradient(fromWallet) : 'linear-gradient(135deg,#1a0070,#6d28d9)' }}
-          >
-            <p className="text-white/70 text-xs font-medium mb-1">Solde total</p>
-            <p className="text-white text-3xl font-bold mb-3">
-              {fromWallet ? formatCurrency(fromWallet.balance, fromWallet.currency) : '—'}
-            </p>
-            <div className="flex items-center gap-2">
-              {accounts.slice(0, 4).map(a => {
-                const curr = getCurrency(a.currency)
-                return (
-                  <button
-                    key={a.id}
-                    onClick={() => setFromWallet(a)}
-                    className="px-2.5 py-1 rounded-lg text-xs font-semibold tr cursor-pointer"
-                    style={{
-                      background: fromWallet?.id === a.id ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
-                      color: 'white',
-                      border: fromWallet?.id === a.id ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent',
-                    }}
-                  >
-                    {curr?.flag} {a.currency}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Search */}
-          <div
-            className="flex items-center gap-2 px-3 h-11 rounded-2xl mb-5"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-          >
-            <Search className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-30)' }} />
-            <input
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--ink-30)]"
-              style={{ color: 'var(--ink)' }}
-              placeholder="Rechercher un contact ou un ID..."
-              readOnly
-              onClick={() => push('contacts-list')}
-            />
-          </div>
-
-          {/* Recent contacts */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-bold text-[var(--ink)]">Récents</p>
-              <button
-                onClick={() => push('contacts-list')}
-                className="text-xs font-semibold cursor-pointer"
-                style={{ color: 'var(--lime)' }}
-              >
-                Voir tous
-              </button>
-            </div>
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
-              {RECENT_CONTACTS.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => { setSelectedContact(c); push('contact-send') }}
-                  className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer"
-                >
-                  <ContactAvatar c={c} size={48} />
-                  <p className="text-[11px] font-medium text-[var(--ink-60)] text-center w-12 truncate">{c.name.split(' ')[0]}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Transfer by Wallet ID */}
-          <div
-            className="rounded-2xl p-4 mb-5"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-          >
-            <p className="text-xs font-bold text-[var(--ink-60)] uppercase tracking-widest mb-2">Transfert par ID portefeuille</p>
-            <div
-              className="flex items-center gap-2 px-3 h-11 rounded-xl"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-            >
-              <Wallet className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-30)' }} />
-              <input
-                className="flex-1 bg-transparent font-mono text-sm outline-none placeholder:text-[var(--ink-30)] uppercase tracking-widest"
-                style={{ color: 'var(--ink)' }}
-                placeholder="FB2F4A1B"
-                maxLength={8}
-                readOnly
-                onClick={() => push('wallet-id')}
-              />
-              <button
-                onClick={() => push('wallet-id')}
-                className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
-                style={{ background: 'var(--lime)' }}
-              >
-                <ArrowRight className="w-3.5 h-3.5 text-white" />
-              </button>
-            </div>
-          </div>
-
-          {/* Transfer type buttons */}
-          <p className="text-xs font-bold text-[var(--ink-60)] uppercase tracking-widest mb-3">Options de transfert</p>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { icon: Building2, label: 'Virement bancaire', screen: 'bank-transfer' as Screen, color: '#4F46E5' },
-              { icon: Repeat2,   label: 'Portefeuille à portefeuille', screen: 'wallet-to-wallet' as Screen, color: '#059669' },
-              { icon: Wallet,    label: 'Entre portefeuilles', screen: 'wallet-to-wallet' as Screen, color: '#D97706' },
-              { icon: Phone,     label: 'Par numéro de téléphone', screen: 'phone-send' as Screen, color: '#DB2777' },
-              { icon: Users,     label: 'Par contact', screen: 'contacts-list' as Screen, color: '#7C3AED' },
-              { icon: QrCode,    label: 'Scanner QR', screen: 'wallet-id' as Screen, color: '#0891B2' },
-            ].map(({ icon: Icon, label, screen: s, color }) => (
-              <button
-                key={label}
-                onClick={() => push(s)}
-                className="flex flex-col items-center gap-2 rounded-2xl p-3 tr cursor-pointer"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-              >
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: color + '15' }}>
-                  <Icon className="w-5 h-5" style={{ color }} />
+  // ── Wallet Picker Sheet ────────────────────────────────────────────────────
+  const WalletSheet = ({ onSelect, current }: { onSelect:(a:CurrencyAccount)=>void; current:CurrencyAccount|null }) => (
+    <div className="fixed inset-0 z-[75] flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/40" onClick={()=>setWalletPickerOpen(false)}/>
+      <div className="relative bg-white rounded-t-3xl pb-8" style={{boxShadow:'0 -8px 30px rgba(0,0,0,0.12)'}}>
+        <div className="flex justify-center pt-3 pb-4"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
+        <p className="text-base font-bold text-center mb-2 px-4" style={{color:'#1C1C1E'}}>Choisir le portefeuille</p>
+        <div className="max-h-72 overflow-y-auto divide-y divide-gray-100">
+          {accounts.map(a=>{
+            const curr=getCurrency(a.currency); const isSel=current?.id===a.id
+            return (
+              <button key={a.id} onClick={()=>{onSelect(a);setWalletPickerOpen(false)}}
+                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 cursor-pointer tr">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{background:'#F2F2F7'}}>{curr?.flag}</div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{curr?.name??a.currency}</p>
+                  <p className="text-xs" style={{color:'#8E8E93'}}>Account {maskId(a.id)}</p>
                 </div>
-                <p className="text-[11px] font-semibold text-[var(--ink)] text-center leading-tight">{label}</p>
+                <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
+                  style={{borderColor:isSel?ACCENT:'#D1D5DB'}}>
+                  {isSel&&<div className="w-2.5 h-2.5 rounded-full" style={{background:ACCENT}}/>}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+
+  // ── PIN Sheet ──────────────────────────────────────────────────────────────
+  const PinSheet = () => (
+    <div className="fixed inset-0 z-[80] flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={()=>{setPinSheetOpen(false);setPin('')}}/>
+      <div className="relative bg-white rounded-t-3xl" style={{boxShadow:'0 -8px 30px rgba(0,0,0,0.18)'}}>
+        <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+          {selectedContact
+            ? <div className="flex items-center gap-2"><ContactCircle c={selectedContact} size={32}/><p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{selectedContact.name}</p></div>
+            : <p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{fromWallet?.currency} Portefeuille</p>
+          }
+          <p className="text-sm font-bold" style={{color:'#1C1C1E'}}>
+            {fromWallet?`${getCurrency(fromWallet.currency)?.symbol}${parseFloat(amountStr).toFixed(2)}`:''}
+          </p>
+        </div>
+        <div className="px-5 pt-5 pb-3 text-center">
+          <h2 className="text-xl font-bold mb-1" style={{color:'#1C1C1E'}}>Entrer le code PIN</h2>
+          <p className="text-[13px] mb-4" style={{color:'#8E8E93'}}>Confirmez avec le PIN de votre portefeuille</p>
+          <PinBoxes value={pin}/>
+          {pinError&&<p className="text-sm text-red-500 mt-2 mb-1">{pinError}</p>}
+          <div className="flex items-center justify-center gap-1 text-sm mt-3 mb-4">
+            <span style={{color:'#8E8E93'}}>Vous n'avez pas de code ?</span>
+            <button className="font-semibold cursor-pointer" style={{color:ACCENT}}>Renvoyer</button>
+          </div>
+          <button onClick={()=>pin.length===4&&checkPin(pin)} disabled={pin.length<4}
+            className="w-full h-12 rounded-2xl text-sm font-bold cursor-pointer disabled:opacity-40 mb-3"
+            style={{background:ACCENT,color:'white'}}>
+            Continuer
+          </button>
+        </div>
+        <div className="border-t border-gray-100">
+          <NumPad onDigit={pinDigit} onBack={pinBack}/>
+        </div>
+        <div className="h-6"/>
+      </div>
+    </div>
+  )
+
+  // Processing modal
+  const ProcModal = () => (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center" style={{background:'rgba(0,0,0,0.45)',backdropFilter:'blur(4px)'}}>
+      <div className="bg-white rounded-3xl mx-6 px-6 pt-4 pb-8 text-center" style={{maxWidth:320}}>
+        <ProcessingIllustration/>
+        <p className="text-xl font-bold mt-2" style={{color:'#1C1C1E'}}>Processing..</p>
+        <p className="text-sm mt-1" style={{color:'#8E8E93'}}>Just hold a second, we are processing your transfer.</p>
+      </div>
+    </div>
+  )
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // HUB
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='hub') return (
+    <div className="min-h-screen bg-white pb-28 overflow-x-hidden" style={{maxWidth:'100vw'}}>
+      <div className="px-4 pt-2">
+        {/* Header */}
+        <div className="flex items-center justify-between pt-2 pb-4">
+          <button onClick={()=>navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer" style={{background:'#F2F2F7'}}>
+            <ChevronLeft className="w-5 h-5" style={{color:'#1C1C1E'}}/>
+          </button>
+          <p className="text-[15px] font-bold" style={{color:'#1C1C1E'}}>Transferts</p>
+          <button className="w-9 h-9 flex items-center justify-center cursor-pointer"><QRIcon/></button>
+        </div>
+
+        {/* Main account balance */}
+        <div className="mb-4">
+          <p className="text-sm mb-0.5" style={{color:'#8E8E93'}}>Main Account</p>
+          <div className="flex items-center justify-between">
+            <p className="text-3xl font-bold" style={{color:'#1C1C1E'}}>
+              {fromWallet
+                ? <>{getCurrency(fromWallet.currency)?.symbol}{Math.floor(fromWallet.balance).toLocaleString()}<span style={{color:ACCENT}}>.{String(fromWallet.balance.toFixed(2).split('.')[1])}</span></>
+                : '—'}
+            </p>
+            {fromWallet&&(
+              <button onClick={()=>setWalletPickerOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer" style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+                <span className="text-sm">{getCurrency(fromWallet.currency)?.flag}</span>
+                <span className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{fromWallet.currency}</span>
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Search */}
+        <button onClick={()=>push('contacts')} className="w-full flex items-center gap-2 px-4 h-11 rounded-2xl mb-5 cursor-pointer"
+          style={{background:'#F2F2F7'}}>
+          <Search className="w-4 h-4 shrink-0" style={{color:'#8E8E93'}}/>
+          <span className="text-sm" style={{color:'#C7C7CC'}}>Search</span>
+        </button>
+
+        {/* Recent */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-base font-bold" style={{color:'#1C1C1E'}}>Recent</p>
+            <button className="cursor-pointer"><MoreHorizontal className="w-5 h-5" style={{color:'#8E8E93'}}/></button>
+          </div>
+          <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-1">
+            {RECENT.map(c=>(
+              <button key={c.id} onClick={()=>{setSelectedContact(c);setContactIdx(RECENT.indexOf(c));push('send-money')}}
+                className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
+                <ContactCircle c={c} size={50}/>
+                <p className="text-xs font-medium" style={{color:'#8E8E93'}}>{c.name.split(' ')[0]}</p>
               </button>
             ))}
           </div>
         </div>
-      </div>
-    )
-  }
 
-  // ── WALLET TO WALLET ───────────────────────────────────────────────────────
-  if (screen === 'wallet-to-wallet') {
-    const canContinue = fromWallet && toWallet && fromWallet.id !== toWallet.id && sendAmount > 0 && sendAmount <= fromWallet.balance
-    return (
-      <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--surface)', maxWidth: '100vw' }}>
-        <div className="px-4 pt-4 pb-28">
-          <div className="flex items-center gap-3 mb-6">
-            <BackBtn onBack={back} />
-            <div>
-              <h1 className="text-lg font-bold text-[var(--ink)]">Portefeuille à portefeuille</h1>
-              <p className="text-xs text-[var(--ink-60)]">Transférer entre vos portefeuilles</p>
-            </div>
-          </div>
+        {/* Transfer by Wallet ID */}
+        <p className="text-sm font-semibold mb-2" style={{color:'#1C1C1E'}}>Transfer By Wallet ID</p>
+        <button onClick={()=>push('wallet-id')} className="w-full flex items-center gap-3 px-4 h-13 rounded-2xl mb-6 cursor-pointer"
+          style={{background:'#F2F2F7',height:52}}>
+          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.8">
+            <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="6" cy="15" r="1" fill="#C7C7CC"/>
+          </svg>
+          <span className="flex-1 text-left text-sm" style={{color:'#C7C7CC'}}>Enter wallet ID</span>
+          <svg className="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.8">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </button>
 
-          {/* From wallet */}
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-[var(--ink-60)] mb-2 uppercase tracking-wider">De</p>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {accounts.map(a => (
-                <WalletChip key={a.id} acc={a} selected={fromWallet?.id === a.id} onClick={() => setFromWallet(a)} />
-              ))}
-            </div>
-          </div>
-
-          {/* To wallet */}
-          <div className="mb-5">
-            <p className="text-xs font-semibold text-[var(--ink-60)] mb-2 uppercase tracking-wider">Vers</p>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {accounts.filter(a => a.id !== fromWallet?.id).map(a => (
-                <WalletChip key={a.id} acc={a} selected={toWallet?.id === a.id} onClick={() => setToWallet(a)} />
-              ))}
-            </div>
-            {accounts.length <= 1 && (
-              <p className="text-xs text-[var(--ink-60)] mt-2">Vous n'avez qu'un seul portefeuille. Créez-en un autre pour transférer.</p>
-            )}
-          </div>
-
-          {/* Amount display */}
-          <div
-            className="rounded-3xl p-6 mb-4 text-center"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-          >
-            <p className="text-xs text-[var(--ink-60)] mb-2">Montant</p>
-            <p className="text-5xl font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
-              {fromWallet ? getCurrency(fromWallet.currency)?.symbol : '$'}{amountStr === '0' ? '0' : amountStr}
-            </p>
-            {fromWallet && (
-              <p className="text-xs mt-2" style={{ color: 'var(--ink-60)' }}>
-                Disponible: {formatCurrency(fromWallet.balance, fromWallet.currency)}
-              </p>
-            )}
-            {toWallet && toWallet.currency !== fromWallet?.currency && sendAmount > 0 && fromWallet && (
-              <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--lime)' }}>
-                ≈ {formatCurrency(calculateTransfer(sendAmount, fromWallet.currency, toWallet.currency).received, toWallet.currency)}
-              </p>
-            )}
-          </div>
-
-          {/* Note */}
-          <div
-            className="flex items-center gap-2 px-4 h-11 rounded-2xl mb-4"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-          >
-            <input
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--ink-30)]"
-              style={{ color: 'var(--ink)' }}
-              placeholder="Ajouter une note (optionnel)"
-              value={note}
-              onChange={e => setNote(e.target.value)}
-            />
-          </div>
-
-          <NumPad onDigit={handleAmountDigit} onBack={handleAmountBack} onDot={handleAmountDot} />
-
-          <button
-            onClick={() => { setPin(''); setPinError(''); push('pin') }}
-            disabled={!canContinue}
-            className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 mt-2"
-            style={{ background: 'var(--lime)', color: 'white', height: 52 }}
-          >
-            Continuer <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ── BANK TRANSFER ──────────────────────────────────────────────────────────
-  if (screen === 'bank-transfer') {
-    const bankCanContinue = fromWallet && bankName.trim() && recipientName.trim() && recipientAccount.trim() && sendAmount >= 50
-    return (
-      <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--surface)', maxWidth: '100vw' }}>
-        <div className="px-4 pt-4 pb-28">
-          <div className="flex items-center gap-3 mb-6">
-            <BackBtn onBack={back} />
-            <div>
-              <h1 className="text-lg font-bold text-[var(--ink)]">Virement bancaire</h1>
-              <p className="text-xs text-[var(--ink-60)]">Transférer vers un compte bancaire</p>
-            </div>
-          </div>
-
-          {/* From wallet */}
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-[var(--ink-60)] mb-2 uppercase tracking-wider">Depuis le portefeuille</p>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {accounts.map(a => (
-                <WalletChip key={a.id} acc={a} selected={fromWallet?.id === a.id} onClick={() => setFromWallet(a)} />
-              ))}
-            </div>
-          </div>
-
-          {/* Form */}
-          <div className="space-y-3 mb-5">
-            <div>
-              <p className="text-xs font-semibold text-[var(--ink-60)] mb-1.5 uppercase tracking-wider">Banque destinataire</p>
-              <input
-                className="w-full h-11 px-4 rounded-xl text-sm outline-none"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--ink)' }}
-                placeholder="ex. BNC, Unibank, Sogebank..."
-                value={bankName}
-                onChange={e => setBankName(e.target.value)}
-              />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-[var(--ink-60)] mb-1.5 uppercase tracking-wider">Nom du bénéficiaire</p>
-              <input
-                className="w-full h-11 px-4 rounded-xl text-sm outline-none"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--ink)' }}
-                placeholder="Nom complet"
-                value={recipientName}
-                onChange={e => setRecipientName(e.target.value)}
-              />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-[var(--ink-60)] mb-1.5 uppercase tracking-wider">Numéro de compte</p>
-              <input
-                className="w-full h-11 px-4 rounded-xl text-sm font-mono outline-none"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--ink)' }}
-                placeholder="IBAN ou numéro de compte"
-                value={recipientAccount}
-                onChange={e => setRecipientAccount(e.target.value)}
-              />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-[var(--ink-60)] mb-1.5 uppercase tracking-wider">Motif du virement</p>
-              <input
-                className="w-full h-11 px-4 rounded-xl text-sm outline-none"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--ink)' }}
-                placeholder="ex. Loyer, Facture, Personnel..."
-                value={purpose}
-                onChange={e => setPurpose(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Amount */}
-          <div
-            className="rounded-3xl p-5 mb-4 text-center"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-          >
-            <p className="text-xs text-[var(--ink-60)] mb-2">Montant (min. $50)</p>
-            <p className="text-5xl font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
-              {getCurrency(bankCurrency)?.symbol}{amountStr === '0' ? '0' : amountStr}
-            </p>
-            {fromWallet && (
-              <p className="text-xs mt-2" style={{ color: 'var(--ink-60)' }}>
-                Disponible: {formatCurrency(fromWallet.balance, fromWallet.currency)}
-              </p>
-            )}
-            {sendAmount > 0 && sendAmount < 50 && (
-              <p className="text-xs mt-1 text-red-500">Minimum $50 requis</p>
-            )}
-          </div>
-
-          <NumPad onDigit={handleAmountDigit} onBack={handleAmountBack} onDot={handleAmountDot} />
-
-          <button
-            onClick={() => { setPin(''); setPinError(''); push('pin') }}
-            disabled={!bankCanContinue}
-            className="w-full rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 mt-2"
-            style={{ background: 'var(--lime)', color: 'white', height: 52 }}
-          >
-            Continuer <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ── CONTACTS LIST ──────────────────────────────────────────────────────────
-  if (screen === 'contacts-list') {
-    return (
-      <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--surface)', maxWidth: '100vw' }}>
-        <div className="px-4 pt-4 pb-28">
-          <div className="flex items-center gap-3 mb-4">
-            <BackBtn onBack={back} />
-            <h1 className="text-lg font-bold text-[var(--ink)]">Contacts</h1>
-          </div>
-
-          {/* Search */}
-          <div
-            className="flex items-center gap-2 px-3 h-11 rounded-2xl mb-4"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-          >
-            <Search className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-30)' }} />
-            <input
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--ink-30)]"
-              style={{ color: 'var(--ink)' }}
-              placeholder="Rechercher un contact..."
-              value={contactSearch}
-              onChange={e => setContactSearch(e.target.value)}
-            />
-            {contactSearch && (
-              <button onClick={() => setContactSearch('')} className="cursor-pointer">
-                <X className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
-              </button>
-            )}
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 p-1 rounded-xl mb-4" style={{ background: 'var(--surface-2)' }}>
-            {(['recent', 'all', 'favorites'] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => setContactsTab(t)}
-                className={cn('flex-1 h-9 rounded-lg text-xs font-semibold tr cursor-pointer', contactsTab === t ? 'text-[var(--ink)]' : 'text-[var(--ink-60)]')}
-                style={contactsTab === t ? { background: 'var(--card-bg)', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' } : {}}
-              >
-                {t === 'recent' ? 'Récents' : t === 'all' ? 'Tous' : 'Favoris'}
-              </button>
-            ))}
-          </div>
-
-          {/* Recent avatars row */}
-          {contactsTab === 'recent' && !contactSearch && (
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-3 mb-3">
-              {RECENT_CONTACTS.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => { setSelectedContact(c); push('contact-send') }}
-                  className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer"
-                >
-                  <ContactAvatar c={c} size={48} />
-                  <p className="text-[11px] font-medium text-[var(--ink-60)] w-12 text-center truncate">{c.name.split(' ')[0]}</p>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Alphabetical list */}
-          {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([letter, contacts]) => (
-            <div key={letter}>
-              <p className="text-xs font-bold text-[var(--ink-60)] px-1 py-2">{letter}</p>
-              {contacts.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => { setSelectedContact(c); push('contact-send') }}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl mb-1 tr cursor-pointer hover:bg-[var(--card-bg)]"
-                >
-                  <ContactAvatar c={c} size={42} />
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-semibold text-[var(--ink)] truncate">{c.name}</p>
-                    <p className="text-xs text-[var(--ink-60)]">{c.phone}</p>
-                  </div>
-                  <ChevronLeft className="w-4 h-4 rotate-180 shrink-0" style={{ color: 'var(--ink-30)' }} />
-                </button>
-              ))}
-            </div>
+        {/* Transfer options */}
+        <p className="text-base font-bold mb-3" style={{color:'#1C1C1E'}}>Transfers</p>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { icon:Building2, label:'Bank transfer',               action:()=>push('bank-form')      },
+            { icon:Repeat2,   label:'Wallet to wallet',            action:()=>push('contacts')       },
+            { icon:ArrowRight,label:'Between wallets',             action:()=>push('between-wallets')},
+            { icon:Phone,     label:'Phone number',                action:()=>push('phone-send')     },
+            { icon:Users,     label:'Contact transfer',            action:()=>push('contacts')       },
+            { icon:QrCode,    label:'Scan QR',                     action:()=>push('wallet-id')      },
+          ].map(({icon:Icon,label,action})=>(
+            <button key={label} onClick={action}
+              className="flex items-center gap-3 px-4 h-14 rounded-2xl cursor-pointer hover:bg-gray-50 tr"
+              style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{background:'white',boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
+                <Icon className="w-4 h-4" style={{color:'#1C1C1E'}}/>
+              </div>
+              <span className="text-sm font-medium text-left leading-tight" style={{color:'#1C1C1E'}}>{label}</span>
+            </button>
           ))}
         </div>
       </div>
+      {walletPickerOpen&&<WalletSheet onSelect={a=>setFromWallet(a)} current={fromWallet}/>}
+    </div>
+  )
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEND MONEY (contact carousel)
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='send-money') {
+    const displayList = selectedContact ? [
+      ...RECENT.filter(c=>c.id!==selectedContact.id).slice(0,2),
+      selectedContact,
+      ...RECENT.filter(c=>c.id!==selectedContact.id).slice(2,4),
+    ] : RECENT
+    const selIdx = displayList.findIndex(c=>c.id===selectedContact?.id)
+    const canContinue = fromWallet && sendAmount>0 && sendAmount<=fromWallet.balance
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Send Money" onBack={back}/>
+
+        {/* Contact carousel */}
+        <div className="flex items-end justify-center gap-3 px-4 py-4">
+          {displayList.map((c,i)=>{
+            const isSel=i===selIdx
+            return (
+              <button key={c.id} onClick={()=>setSelectedContact(c)}
+                className={cn('flex flex-col items-center gap-1.5 cursor-pointer tr shrink-0', isSel?'':'opacity-50')}>
+                <div className={cn('rounded-full flex items-center justify-center font-bold text-white transition-all',isSel?'border-2':'border-0')}
+                  style={{width:isSel?62:44,height:isSel?62:44,background:ACCENT,fontSize:isSel?18:14,borderColor:ACCENT,boxShadow:isSel?`0 0 0 3px ${ACCENT}33`:undefined}}>
+                  {c.initials}
+                </div>
+                {isSel&&<p className="text-[13px] font-semibold" style={{color:'#1C1C1E'}}>{c.name}</p>}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Wallet pill */}
+        <div className="flex justify-center mb-5">
+          {fromWallet&&<WalletPill acc={fromWallet} onTap={()=>setWalletPickerOpen(true)}/>}
+        </div>
+
+        {/* Amount display */}
+        <div className="text-center px-8 mb-1">
+          <p className="text-5xl font-light tabular-nums" style={{color:'#1C1C1E'}}>
+            {fromWallet?getCurrency(fromWallet.currency)?.symbol:'$'}{amountStr==='0'?'0.00':amountStr}
+          </p>
+          <div className="w-40 h-px mx-auto mt-2 mb-1" style={{background:'#E5E7EB'}}/>
+          {fromWallet&&sendAmount>fromWallet.balance&&<p className="text-xs text-red-500">Solde insuffisant</p>}
+        </div>
+
+        {/* What's this for */}
+        <div className="px-6 mb-0.5">
+          <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <span className="text-sm" style={{color:'#C7C7CC'}}>What's this for?</span>
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <div className="py-3">
+            <input value={note} onChange={e=>setNote(e.target.value)} placeholder="Add A Note  (Optional)"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-[#C7C7CC]" style={{color:'#1C1C1E'}}/>
+          </div>
+        </div>
+
+        {/* Numpad */}
+        <div className="border-t border-gray-100 mt-1">
+          <NumPad onDigit={amtDigit} onBack={amtBack} dot/>
+        </div>
+        <div className="px-4 pb-8 pt-2">
+          <button onClick={openPin} disabled={!canContinue}
+            className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
+            style={{background:ACCENT,color:'white',height:52}}>
+            Continuer
+          </button>
+        </div>
+
+        {walletPickerOpen&&<WalletSheet onSelect={a=>setFromWallet(a)} current={fromWallet}/>}
+        {pinSheetOpen&&<PinSheet/>}
+      </div>
     )
   }
 
-  // ── CONTACT SEND ───────────────────────────────────────────────────────────
-  if (screen === 'contact-send' && selectedContact) {
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEND CONFIRM
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='send-confirm') {
     const c = selectedContact
-    const canSend = fromWallet && sendAmount > 0 && sendAmount <= fromWallet.balance
     return (
-      <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--surface)', maxWidth: '100vw' }}>
-        <div className="pt-4 pb-28">
-          <div className="flex items-center gap-3 px-4 mb-5">
-            <BackBtn onBack={back} />
-            <div className="flex items-center gap-2.5 flex-1">
-              <ContactAvatar c={c} size={36} />
-              <div>
-                <p className="text-sm font-bold text-[var(--ink)]">{c.name}</p>
-                <p className="text-xs text-[var(--ink-60)]">{c.phone}</p>
-              </div>
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Send Money" onBack={back}/>
+        {/* Contact + amount row */}
+        {c&&(
+          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <ContactCircle c={c} size={36}/>
+              <p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{c.name}</p>
+            </div>
+            <p className="text-sm font-bold" style={{color:'#1C1C1E'}}>${parseFloat(amountStr).toFixed(2)}</p>
+          </div>
+        )}
+        <div className="px-5 pt-4">
+          {/* From wallet */}
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>From</p>
+          {fromWallet&&(
+            <button onClick={()=>setWalletPickerOpen(true)}
+              className="w-full flex items-center gap-3 px-4 h-14 rounded-2xl mb-3 cursor-pointer"
+              style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg shrink-0" style={{background:ACCENT}}>{getCurrency(fromWallet.currency)?.flag}</div>
+              <span className="flex-1 text-left text-sm font-semibold" style={{color:'#1C1C1E'}}>{maskId(fromWallet.id)}</span>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
+            </button>
+          )}
+          {/* Swap icon */}
+          <div className="flex justify-center mb-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:'#F2F2F7'}}>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2">
+                <path strokeLinecap="round" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+              </svg>
+            </div>
+          </div>
+          {/* To */}
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>To</p>
+          {c&&(
+            <div className="flex items-center gap-3 px-4 h-14 rounded-2xl mb-5" style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+              <ContactCircle c={c} size={32}/>
+              <span className="flex-1 text-sm font-semibold" style={{color:'#1C1C1E'}}>{c.name}</span>
+            </div>
+          )}
+          {/* Details */}
+          <div className="border-t border-gray-100">
+            <Row label="Amount will send" value={`$${parseFloat(amountStr).toFixed(2)}`}/>
+            <Row label="Reference number" value={txRef}/>
+            <Row label="Date" value={new Date().toLocaleDateString('en-GB')}/>
+            <Row label="Fees" value={`$${fee.toFixed(1)}`}/>
+          </div>
+        </div>
+        <div className="px-5 pt-4 pb-10">
+          <button onClick={()=>doTransfer('send-success')} disabled={processing}
+            className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            style={{background:ACCENT,color:'white',height:52}}>
+            {processing?<Loader2 className="w-4 h-4 animate-spin"/>:<><Send className="w-4 h-4"/>Transfer</>}
+          </button>
+        </div>
+        {walletPickerOpen&&<WalletSheet onSelect={a=>setFromWallet(a)} current={fromWallet}/>}
+        {processing&&<ProcModal/>}
+      </div>
+    )
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEND SUCCESS
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='send-success') {
+    const c = selectedContact
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Send Money" onBack={reset}/>
+        <div className="px-5 pt-2 pb-10">
+          <WalletSuccessIllustration/>
+          <p className="text-xl font-bold text-center mt-1 mb-5" style={{color:ACCENT}}>
+            Congratulations Payment Success!!
+          </p>
+          <div className="border-t border-gray-100">
+            <Row label="Amount will send" value={`$${parseFloat(amountStr).toFixed(2)}`}/>
+            <Row label="Transaction status" value="Success" pill/>
+            <Row label="Reference number" value={txRef}/>
+            <Row label="Date" value={new Date().toLocaleDateString('en-GB')}/>
+            <Row label="Time" value={timeLabel} blue/>
+            <Row label="Fees" value={`$${fee.toFixed(1)}`}/>
+          </div>
+          <div className="mt-6">
+            <button onClick={reset} className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer" style={{background:ACCENT,color:'white',height:52}}>Back</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BANK FORM
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='bank-form') {
+    const canContinue = bankName&&recipientName.trim()&&recipientAccount.trim()&&sendAmount>0&&fromWallet
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Bank transfer" onBack={back} right={<QRIcon/>}/>
+        <div className="px-5 pb-10">
+          {/* Beneficiaries */}
+          <p className="text-lg font-bold mb-0.5" style={{color:'#1C1C1E'}}>Beneficiaries</p>
+          <p className="text-sm mb-3" style={{color:'#8E8E93'}}>Recently saved Beneficiaries</p>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 mb-5">
+            {RECENT.map(c=>(
+              <button key={c.id} onClick={()=>{setRecipientName(c.name)}}
+                className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-[13px] text-white"
+                  style={{background:ACCENT}}>{c.initials}</div>
+                <p className="text-[11px]" style={{color:'#8E8E93'}}>{c.name.split(' ')[0]}</p>
+              </button>
+            ))}
+          </div>
+
+          {/* Form */}
+          {[
+            { label:'Bank name', value:bankName, onChange:setBankName, placeholder:'ex. BNC, Unibank...', isSelect:true },
+            { label:"Recipient's Name", value:recipientName, onChange:setRecipientName, placeholder:'Full name' },
+            { label:'Account number', value:recipientAccount, onChange:setRecipientAccount, placeholder:'9000 0112 3456 78', mono:true },
+            { label:'Purpose of Transfer', value:purpose, onChange:setPurpose, placeholder:'Reason for transfer' },
+          ].map(({label,value,onChange,placeholder,mono,isSelect})=>(
+            <div key={label} className="mb-3">
+              <p className="text-sm font-medium mb-1.5" style={{color:'#1C1C1E'}}>{label}</p>
+              {isSelect?(
+                <select value={value} onChange={e=>onChange(e.target.value)}
+                  className="w-full h-12 px-4 rounded-xl text-sm outline-none cursor-pointer appearance-none"
+                  style={{background:'#F2F2F7',border:'1px solid #F0F0F5',color:'#1C1C1E'}}>
+                  {['Citibank','Chase','BNC','Unibank','Sogebank','BH','Capital One'].map(b=><option key={b}>{b}</option>)}
+                </select>
+              ):(
+                <input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
+                  className={cn('w-full h-12 px-4 rounded-xl text-sm outline-none',mono&&'font-mono')}
+                  style={{background:'#F2F2F7',border:'1px solid #F0F0F5',color:'#1C1C1E'}}/>
+              )}
+            </div>
+          ))}
+
+          {/* Amount row */}
+          <div className="mb-5">
+            <p className="text-sm font-medium mb-1.5" style={{color:'#1C1C1E'}}>Amount</p>
+            <div className="flex items-center gap-2 px-4 h-12 rounded-xl" style={{background:'#F2F2F7',border:'1px solid #F0F0F5'}}>
+              <button onClick={()=>setWalletPickerOpen(true)} className="flex items-center gap-1 cursor-pointer shrink-0">
+                <span className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{fromWallet?.currency??'USD'}</span>
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <input type="number" value={amountStr==='0'?'':amountStr} onChange={e=>setAmountStr(e.target.value||'0')}
+                placeholder="0.00" className="flex-1 bg-transparent text-sm font-semibold outline-none"
+                style={{color:'#1C1C1E'}} min="0"/>
             </div>
           </div>
 
-          {/* From wallet selector */}
-          <div className="px-4 mb-4">
-            <p className="text-xs font-semibold text-[var(--ink-60)] mb-2 uppercase tracking-wider">Depuis</p>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {accounts.map(a => (
-                <WalletChip key={a.id} acc={a} selected={fromWallet?.id === a.id} onClick={() => setFromWallet(a)} />
+          <button onClick={()=>{ const ref=genRef();setTxRef(ref);setWalletPickerOpen(true) }} disabled={!canContinue}
+            className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
+            style={{background:ACCENT,color:'white',height:52}}>
+            Continue
+          </button>
+        </div>
+        {walletPickerOpen&&<WalletSheet onSelect={a=>{setFromWallet(a);setWalletPickerOpen(false);push('bank-confirm')}} current={fromWallet}/>}
+      </div>
+    )
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BANK CONFIRM
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='bank-confirm') return (
+    <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+      <Hdr title="Bank transfer" onBack={back}/>
+      <div className="px-5 pt-2 pb-10">
+        <div className="border-t border-gray-100">
+          <Row label="Amount will send" value={`${parseFloat(amountStr).toFixed(2)} ${fromWallet?.currency??'USD'}`}/>
+          <Row label="From" value={`Account number ${fromWallet?maskId(fromWallet.id):'****'}`}/>
+          <Row label="Transaction ID" value={txRef}/>
+          <Row label="Account number" value={recipientAccount}/>
+          <Row label="Send to" value={recipientName}/>
+          <Row label="Fees" value={`$${fee.toFixed(1)}`} green/>
+        </div>
+        <div className="mt-6">
+          <button onClick={()=>doTransfer('bank-success')} disabled={processing}
+            className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            style={{background:ACCENT,color:'white',height:52}}>
+            {processing?<Loader2 className="w-4 h-4 animate-spin"/>:<><Send className="w-4 h-4"/>Transfer</>}
+          </button>
+        </div>
+      </div>
+      {processing&&<ProcModal/>}
+    </div>
+  )
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BANK SUCCESS
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='bank-success') return (
+    <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+      <Hdr title="Confirm Transfer" onBack={reset}/>
+      <div className="px-5 pt-2 pb-10 text-center">
+        <WalletSuccessIllustration/>
+        <p className="text-xl font-bold mt-1" style={{color:'#1C1C1E'}}>Transfer Successful!</p>
+        <p className="text-sm mt-1 mb-5" style={{color:'#8E8E93'}}>Your money has been transferred</p>
+        {/* Bank account card */}
+        <div className="flex items-center gap-3 px-4 py-4 rounded-2xl mb-3 text-left" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{background:'#F2F2F7'}}>
+            <Building2 className="w-5 h-5" style={{color:'#1C1C1E'}}/>
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{color:'#1C1C1E'}}>Bank Account</p>
+            <p className="text-xs" style={{color:'#8E8E93'}}>Account number {recipientAccount.slice(0,16)}</p>
+          </div>
+        </div>
+        {/* Amount card */}
+        <div className="px-4 py-5 rounded-2xl" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+          <p className="text-sm mb-1" style={{color:'#8E8E93'}}>Transfer amount</p>
+          <p className="text-2xl font-bold" style={{color:'#1C1C1E'}}>${parseFloat(amountStr).toFixed(2)}</p>
+          <p className="text-xs mt-1" style={{color:'#8E8E93'}}>{dateLabel}-{timeLabel}</p>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button onClick={reset} className="flex-1 h-12 rounded-2xl text-sm font-bold cursor-pointer" style={{background:'#F2F2F7',color:'#1C1C1E'}}>Go Back</button>
+          <button onClick={()=>push('bank-receipt')} className="flex-1 h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer" style={{background:ACCENT,color:'white'}}>
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M9 12h6M9 16h6M14 3H6a1 1 0 00-1 1v16a1 1 0 001 1h12a1 1 0 001-1V8l-5-5z"/><path d="M14 3v5h5"/></svg>
+            View Receipt
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BANK RECEIPT
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='bank-receipt') return (
+    <div className="fixed inset-0 z-[60] overflow-y-auto" style={{background:'linear-gradient(160deg,#3730A3 0%,#4F46E5 45%,#7C3AED 100%)'}}>
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <BackBtn onBack={back} light/>
+        <p className="text-[15px] font-bold text-white">Transaction Receipt</p>
+        <button className="w-9 h-9 flex items-center justify-center cursor-pointer"><Download className="w-5 h-5 text-white"/></button>
+      </div>
+      <div className="px-4 pb-10">
+        <div className="bg-white rounded-3xl p-5">
+          <p className="text-xl font-bold mb-3" style={{color:'#1C1C1E'}}>Transfer receipt</p>
+          <div className="flex justify-between mb-3">
+            <span className="text-xs" style={{color:'#8E8E93'}}>{new Date().toLocaleDateString('en-GB')}</span>
+            <span className="text-xs" style={{color:'#8E8E93'}}>{timeLabel}</span>
+          </div>
+          <div className="border-t border-gray-100">
+            <Row label="Amount will send" value={`${parseFloat(amountStr).toFixed(2)} ${fromWallet?.currency??'USD'}`}/>
+            <Row label="Transaction status" value="Success" pill/>
+            <Row label="Transaction type" value="Bank Transfer"/>
+            <Row label="Transaction ID" value={txRef}/>
+            <Row label="Account number" value={recipientAccount}/>
+            <Row label="Send to" value={recipientName}/>
+            <Row label="Time" value={timeLabel} blue/>
+            <Row label="Issue Tracking" value={Date.now().toString().slice(-13)}/>
+            <Row label="Fees" value={`$${fee.toFixed(1)}`}/>
+          </div>
+          <button onClick={()=>{navigator.clipboard.writeText(txRef).catch(()=>{}); setCopied(true); setTimeout(()=>setCopied(false),2000)}}
+            className="w-full mt-4 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer tr"
+            style={{background:copied?'#F0FDF4':'#F2F2F7',color:copied?'#16A34A':'#1C1C1E',border:`1px solid ${copied?'#86EFAC':'#E5E7EB'}`}}>
+            {copied?<Check className="w-4 h-4"/>:<Copy className="w-4 h-4"/>}
+            {copied?'Copied!':'Copy reference'}
+          </button>
+        </div>
+        <div className="flex gap-3 mt-4">
+          <button className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shrink-0" style={{background:'rgba(255,255,255,0.18)',border:'1px solid rgba(255,255,255,0.3)'}}>
+            <Share2 className="w-5 h-5 text-white"/>
+          </button>
+          <button onClick={reset} className="flex-1 h-12 rounded-2xl text-sm font-bold cursor-pointer" style={{background:'rgba(255,255,255,0.15)',color:'white',border:'1px solid rgba(255,255,255,0.3)'}}>
+            Home
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // CONTACTS LIST
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='contacts') return (
+    <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+      <Hdr title="Contacts" onBack={back} right={<QRIcon/>}/>
+      <div className="px-4 pb-10">
+        {/* Search */}
+        <div className="flex items-center gap-2 px-4 h-11 rounded-2xl mb-4" style={{background:'#F2F2F7'}}>
+          <Search className="w-4 h-4 shrink-0" style={{color:'#C7C7CC'}}/>
+          <input value={cSearch} onChange={e=>setCSearch(e.target.value)} placeholder="Search"
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#C7C7CC]" style={{color:'#1C1C1E'}}/>
+          {cSearch&&<button onClick={()=>setCSearch('')} className="cursor-pointer"><X className="w-4 h-4" style={{color:'#C7C7CC'}}/></button>}
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 p-1 rounded-xl mb-4" style={{background:'#F2F2F7'}}>
+          {(['recent','contact','favorites'] as const).map(t=>(
+            <button key={t} onClick={()=>setCTab(t)}
+              className={cn('flex-1 h-8 rounded-lg text-xs font-semibold cursor-pointer tr capitalize',cTab===t?'text-[#1C1C1E]':'text-[#8E8E93]')}
+              style={cTab===t?{background:'white',boxShadow:'0 1px 3px rgba(0,0,0,0.08)'}:{}}>
+              {t==='recent'?'Recent':t==='contact'?'Contact':'Favorites'}
+            </button>
+          ))}
+        </div>
+
+        {/* Recent row when on recent tab */}
+        {cTab==='recent'&&!cSearch&&(
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-base font-bold" style={{color:'#1C1C1E'}}>Recent</p>
+              <button className="cursor-pointer"><MoreHorizontal className="w-5 h-5" style={{color:'#8E8E93'}}/></button>
+            </div>
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-3 mb-2">
+              {RECENT.map(c=>(
+                <button key={c.id} onClick={()=>{setSelectedContact(c);push('contact-form')}}
+                  className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
+                  <ContactCircle c={c} size={48}/>
+                  <p className="text-[11px]" style={{color:'#8E8E93'}}>{c.name.split(' ')[0]}</p>
+                </button>
               ))}
             </div>
-          </div>
+          </>
+        )}
 
-          {/* Amount display */}
-          <div className="px-4 mb-4 text-center">
-            <p className="text-6xl font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
-              {fromWallet ? getCurrency(fromWallet.currency)?.symbol : '$'}{amountStr === '0' ? '0' : amountStr}
-            </p>
-            {fromWallet && (
-              <p className="text-xs mt-2" style={{ color: 'var(--ink-60)' }}>
-                Disponible: {formatCurrency(fromWallet.balance, fromWallet.currency)}
-              </p>
-            )}
+        {/* Alphabetical */}
+        {Object.entries(grouped).sort(([a],[b])=>a.localeCompare(b)).map(([letter,cs])=>(
+          <div key={letter}>
+            <p className="text-sm font-bold px-1 py-2.5" style={{color:'#8E8E93'}}>{letter}</p>
+            {cs.map(c=>(
+              <button key={c.id} onClick={()=>{setSelectedContact(c);push('contact-form')}}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl mb-1 hover:bg-gray-50 cursor-pointer tr"
+                style={cSearch&&filteredC[0]?.id===c.id?{border:`2px solid ${ACCENT}`,background:`${ACCENT}08`}:{}}>
+                <ContactCircle c={c} size={44}/>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{c.name}</p>
+                  <p className="text-xs" style={{color:'#8E8E93'}}>{c.phone}</p>
+                </div>
+                <ChevronLeft className="w-4 h-4 rotate-180 shrink-0" style={{color:'#C7C7CC'}}/>
+              </button>
+            ))}
           </div>
+        ))}
+      </div>
+    </div>
+  )
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // CONTACT FORM
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='contact-form'&&selectedContact) {
+    const c = selectedContact
+    const canSend = fromWallet && sendAmount>0 && sendAmount<=fromWallet.balance
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Transfer" onBack={back} right={<QRIcon/>}/>
+        <div className="px-4 pb-10">
+          {/* From */}
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>From</p>
+          {fromWallet&&(
+            <button onClick={()=>setWalletPickerOpen(true)}
+              className="w-full flex items-center gap-3 px-4 h-14 rounded-2xl mb-4 cursor-pointer"
+              style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg shrink-0" style={{background:ACCENT}}>{getCurrency(fromWallet.currency)?.flag}</div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{getCurrency(fromWallet.currency)?.name}</p>
+                <p className="text-xs font-mono" style={{color:'#8E8E93'}}>{maskId(fromWallet.id)}</p>
+              </div>
+              <span className="text-xs font-semibold cursor-pointer" style={{color:ACCENT}}>Change</span>
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
+            </button>
+          )}
+          {/* To */}
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>To</p>
+          <button onClick={()=>push('contacts')}
+            className="w-full flex items-center gap-3 px-4 h-14 rounded-2xl mb-4 cursor-pointer"
+            style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+            <ContactCircle c={c} size={36}/>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{c.name}</p>
+              <p className="text-xs" style={{color:'#8E8E93'}}>{c.phone}</p>
+            </div>
+            <span className="text-xs font-semibold cursor-pointer shrink-0" style={{color:ACCENT}}>Change</span>
+            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
+          </button>
+          {/* Amount */}
+          <div className="flex items-center border-b border-gray-200 mb-1 pb-1">
+            <span className="text-xl font-light mr-2" style={{color:'#1C1C1E'}}>$</span>
+            <input type="number" value={amountStr==='0'?'':amountStr} onChange={e=>setAmountStr(e.target.value||'0')}
+              placeholder="0.00" className="flex-1 bg-transparent text-xl font-light outline-none"
+              style={{color:'#1C1C1E'}} min="0"/>
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5">
+              <path d="M7 16L17 8M17 16L7 8" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <p className="text-xs mb-4" style={{color:'#C7C7CC'}}>From $0 to $50,000</p>
           {/* Quick amounts */}
-          <div className="flex gap-2 px-4 overflow-x-auto scrollbar-hide pb-1 mb-4">
-            {[5, 10, 50, 100, 500, 1000, 2000].map(v => (
-              <button
-                key={v}
-                onClick={() => setAmountStr(String(v))}
-                className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer tr"
-                style={{ background: Number(amountStr) === v ? 'var(--lime)' : 'var(--card-bg)', color: Number(amountStr) === v ? 'white' : 'var(--ink)', border: '1px solid var(--border)' }}
-              >
+          <div className="flex flex-wrap gap-2 mb-4">
+            {[5,10,50,100,150,200,500,1000,2000].map(v=>(
+              <button key={v} onClick={()=>setAmountStr(String(v))}
+                className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer tr"
+                style={{ background:Number(amountStr)===v?`${ACCENT}15`:'white', color:ACCENT, border:`1.5px solid ${ACCENT}30` }}>
                 ${v}
               </button>
             ))}
           </div>
-
-          {/* Note */}
-          <div className="px-4 mb-4">
-            <div
-              className="flex items-center gap-2 px-4 h-11 rounded-2xl"
-              style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-            >
-              <input
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--ink-30)]"
-                style={{ color: 'var(--ink)' }}
-                placeholder="Pour quoi ? (optionnel)"
-                value={note}
-                onChange={e => setNote(e.target.value)}
-              />
-            </div>
+          {/* Notes */}
+          <div className="flex items-center h-12 px-0 border-b border-gray-100 mb-6">
+            <input value={note} onChange={e=>setNote(e.target.value)} placeholder="Add notes"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#C7C7CC]" style={{color:'#1C1C1E'}}/>
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           </div>
-
-          <NumPad onDigit={handleAmountDigit} onBack={handleAmountBack} onDot={handleAmountDot} />
-
-          <div className="px-4 mt-2">
-            <button
-              onClick={() => { setPin(''); setPinError(''); push('pin') }}
-              disabled={!canSend}
-              className="w-full rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
-              style={{ background: 'var(--lime)', color: 'white', height: 52 }}
-            >
-              Envoyer {fromWallet && sendAmount > 0 ? formatCurrency(sendAmount, fromWallet.currency) : ''} <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── PHONE SEND ─────────────────────────────────────────────────────────────
-  if (screen === 'phone-send') {
-    const canContinue = fromWallet && sendAmount > 0 && sendAmount <= fromWallet.balance && (phoneFound || phoneNumber.length >= 8)
-    return (
-      <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--surface)', maxWidth: '100vw' }}>
-        <div className="px-4 pt-4 pb-28">
-          <div className="flex items-center gap-3 mb-6">
-            <BackBtn onBack={back} />
-            <div>
-              <h1 className="text-lg font-bold text-[var(--ink)]">Par numéro de téléphone</h1>
-              <p className="text-xs text-[var(--ink-60)]">Le destinataire doit avoir un compte FamillyBill</p>
-            </div>
-          </div>
-
-          {/* Phone input */}
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-[var(--ink-60)] mb-1.5 uppercase tracking-wider">Numéro de téléphone</p>
-            <input
-              className="w-full h-12 px-4 rounded-xl text-base font-semibold outline-none"
-              style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--ink)' }}
-              type="tel"
-              placeholder="+1 305 555 0000"
-              value={phoneNumber}
-              onChange={e => {
-                setPhoneNumber(e.target.value)
-                const found = CONTACTS.find(c => c.phone === e.target.value.trim())
-                setPhoneFound(found ? { id: found.id, name: found.name } : null)
-              }}
-            />
-            {phoneFound && (
-              <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-xl" style={{ background: 'var(--lime-light)' }}>
-                <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--lime)' }} />
-                <p className="text-sm font-semibold text-[var(--ink)]">{phoneFound.name}</p>
-              </div>
-            )}
-          </div>
-
-          {/* From wallet */}
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-[var(--ink-60)] mb-2 uppercase tracking-wider">Depuis</p>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {accounts.map(a => (
-                <WalletChip key={a.id} acc={a} selected={fromWallet?.id === a.id} onClick={() => setFromWallet(a)} />
-              ))}
-            </div>
-          </div>
-
-          {/* Amount */}
-          <div className="rounded-3xl p-5 mb-4 text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
-            <p className="text-xs text-[var(--ink-60)] mb-2">Montant</p>
-            <p className="text-5xl font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
-              {fromWallet ? getCurrency(fromWallet.currency)?.symbol : '$'}{amountStr === '0' ? '0' : amountStr}
-            </p>
-          </div>
-
-          <NumPad onDigit={handleAmountDigit} onBack={handleAmountBack} onDot={handleAmountDot} />
-
-          <button
-            onClick={() => { setPin(''); setPinError(''); push('pin') }}
-            disabled={!canContinue}
-            className="w-full rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 mt-2"
-            style={{ background: 'var(--lime)', color: 'white', height: 52 }}
-          >
-            Continuer <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ── WALLET ID ──────────────────────────────────────────────────────────────
-  if (screen === 'wallet-id') {
-    const canContinue = fromWallet && sendAmount > 0 && sendAmount <= fromWallet.balance && walletIdFound
-    return (
-      <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--surface)', maxWidth: '100vw' }}>
-        <div className="px-4 pt-4 pb-28">
-          <div className="flex items-center gap-3 mb-6">
-            <BackBtn onBack={back} />
-            <div>
-              <h1 className="text-lg font-bold text-[var(--ink)]">Transfert par ID</h1>
-              <p className="text-xs text-[var(--ink-60)]">Entrez l'ID du portefeuille destinataire</p>
-            </div>
-          </div>
-
-          {/* Wallet ID input */}
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-[var(--ink-60)] mb-1.5 uppercase tracking-wider">ID Portefeuille</p>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                {walletIdSearching
-                  ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--ink-30)' }} />
-                  : <Search className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />}
-              </div>
-              <input
-                className="w-full h-12 pl-10 pr-10 rounded-xl font-mono tracking-widest text-base uppercase outline-none"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--ink)' }}
-                placeholder="FB2F4A1B"
-                maxLength={8}
-                value={walletIdInput}
-                onChange={e => handleWalletIdChange(e.target.value)}
-              />
-              {walletIdInput && (
-                <button
-                  onClick={() => { setWalletIdInput(''); setWalletIdFound(null); setWalletIdError('') }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                >
-                  <X className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
-                </button>
-              )}
-            </div>
-            {walletIdError && <p className="text-xs text-red-500 mt-1">{walletIdError}</p>}
-            {walletIdFound && (
-              <div className="flex items-center gap-3 mt-2 px-3 py-3 rounded-xl" style={{ background: 'var(--lime-light)', border: '1.5px solid var(--lime)' }}>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white shrink-0" style={{ background: '#4F46E5' }}>
-                  {walletIdFound.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[var(--ink)]">{walletIdFound.name}</p>
-                  <p className="text-xs font-mono text-[var(--ink-60)]">{walletIdFound.code}</p>
-                </div>
-                <Check className="w-5 h-5 shrink-0" style={{ color: 'var(--lime)' }} />
-              </div>
-            )}
-          </div>
-
-          {/* From wallet */}
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-[var(--ink-60)] mb-2 uppercase tracking-wider">Depuis</p>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {accounts.map(a => (
-                <WalletChip key={a.id} acc={a} selected={fromWallet?.id === a.id} onClick={() => setFromWallet(a)} />
-              ))}
-            </div>
-          </div>
-
-          {/* Amount */}
-          <div className="rounded-3xl p-5 mb-4 text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
-            <p className="text-xs text-[var(--ink-60)] mb-2">Montant</p>
-            <p className="text-5xl font-bold tabular-nums" style={{ color: 'var(--ink)' }}>
-              {fromWallet ? getCurrency(fromWallet.currency)?.symbol : '$'}{amountStr === '0' ? '0' : amountStr}
-            </p>
-            {fromWallet && (
-              <p className="text-xs mt-2" style={{ color: 'var(--ink-60)' }}>
-                Disponible: {formatCurrency(fromWallet.balance, fromWallet.currency)}
-              </p>
-            )}
-          </div>
-
-          <NumPad onDigit={handleAmountDigit} onBack={handleAmountBack} onDot={handleAmountDot} />
-
-          <button
-            onClick={() => { setPin(''); setPinError(''); push('pin') }}
-            disabled={!canContinue}
-            className="w-full rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 mt-2"
-            style={{ background: 'var(--lime)', color: 'white', height: 52 }}
-          >
-            Continuer <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ── PIN ────────────────────────────────────────────────────────────────────
-  if (screen === 'pin') {
-    return (
-      <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--surface)', maxWidth: '100vw' }}>
-        <div className="pt-4 pb-28">
-          <div className="flex items-center gap-3 px-4 mb-8">
-            <BackBtn onBack={back} />
-            <div>
-              <h1 className="text-lg font-bold text-[var(--ink)]">Confirmer avec le PIN</h1>
-              <p className="text-xs text-[var(--ink-60)]">Entrez le PIN de votre portefeuille</p>
-            </div>
-          </div>
-
-          {fromWallet && (
-            <div className="px-4 mb-6 text-center">
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
-              >
-                <span className="text-base">{getCurrency(fromWallet.currency)?.flag}</span>
-                <span className="text-sm font-semibold text-[var(--ink)]">{fromWallet.currency} — {formatCurrency(sendAmount, fromWallet.currency)}</span>
-              </div>
-            </div>
-          )}
-
-          <PinDots value={pin} length={4} />
-
-          {pinError && (
-            <p className="text-center text-xs text-red-500 mb-2">{pinError}</p>
-          )}
-
-          {!localStorage.getItem(fromWallet ? walletPinKey(fromWallet.id) : '') && (
-            <p className="text-center text-xs text-[var(--ink-60)] mb-2 px-8">
-              Aucun PIN configuré — créez-en un en saisissant 4 chiffres.
-            </p>
-          )}
-
-          <NumPad onDigit={handlePinDigit} onBack={handlePinBack} />
-
-          <div className="px-4">
-            <button className="w-full text-xs text-center cursor-pointer" style={{ color: 'var(--lime)' }}>
-              PIN oublié ? Réinitialiser
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── PROCESSING ─────────────────────────────────────────────────────────────
-  if (screen === 'processing') {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface)' }}>
-        <ProcessingModal />
-      </div>
-    )
-  }
-
-  // ── SUCCESS ────────────────────────────────────────────────────────────────
-  if (screen === 'success') {
-    const recipient = selectedContact?.name ?? recipientName ?? walletIdFound?.name ?? phoneFound?.name ?? 'Destinataire'
-    return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(160deg,#1a0070 0%,#4F46E5 50%,#7C3AED 100%)' }}>
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">
-          {/* Check animation */}
-          <div
-            className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
-            style={{ background: 'rgba(255,255,255,0.15)', border: '3px solid rgba(255,255,255,0.3)' }}
-          >
-            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'var(--lime)' }}>
-              <Check className="w-8 h-8 text-white" strokeWidth={3} />
-            </div>
-          </div>
-
-          <h1 className="text-2xl font-bold text-white mb-2">Transfert réussi !</h1>
-          <p className="text-white/70 text-sm mb-6">
-            Vous avez envoyé {fromWallet ? formatCurrency(sendAmount, fromWallet.currency) : ''} à {recipient}
-          </p>
-
-          {/* Receipt card */}
-          <div className="w-full bg-white rounded-3xl p-5 text-left mb-6" style={{ maxWidth: 340 }}>
-            {[
-              { label: 'Montant envoyé', value: fromWallet ? formatCurrency(sendAmount, fromWallet.currency) : '—' },
-              { label: 'Destinataire', value: recipient },
-              { label: 'Référence', value: txRef ? txRef.slice(0, 12).toUpperCase() : '—', mono: true },
-              { label: 'Statut', value: 'Complété', green: true },
-              { label: 'Date', value: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) },
-            ].map((row, i) => (
-              <div key={i} className={cn('flex items-center justify-between py-3', i < 4 && 'border-b border-gray-100')}>
-                <span className="text-xs text-gray-500">{row.label}</span>
-                <span className={cn('text-sm font-semibold', row.mono && 'font-mono text-xs', row.green ? 'text-emerald-600' : 'text-gray-900')}>
-                  {row.value}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-3 w-full" style={{ maxWidth: 340 }}>
-            <button
-              onClick={() => push('receipt')}
-              className="flex-1 h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
-              style={{ background: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}
-            >
-              <Share2 className="w-4 h-4" />
-              Reçu
-            </button>
-            <button
-              onClick={resetFlow}
-              className="flex-1 h-12 rounded-2xl text-sm font-bold cursor-pointer"
-              style={{ background: 'var(--lime)', color: 'white' }}
-            >
-              Accueil
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── RECEIPT ────────────────────────────────────────────────────────────────
-  if (screen === 'receipt') {
-    const recipient = selectedContact?.name ?? recipientName ?? walletIdFound?.name ?? phoneFound?.name ?? 'Destinataire'
-    function copyRef() {
-      navigator.clipboard.writeText(txRef).catch(() => {})
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-    return (
-      <div className="min-h-screen" style={{ background: 'linear-gradient(160deg,#1a0070 0%,#4F46E5 50%,#7C3AED 100%)' }}>
-        <div className="px-4 pt-4 pb-28">
-          <div className="flex items-center gap-3 mb-6">
-            <button
-              onClick={back}
-              className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }}
-            >
-              <ChevronLeft className="w-5 h-5 text-white" />
-            </button>
-            <h1 className="text-lg font-bold text-white">Reçu de transfert</h1>
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 mb-4">
-            {/* Top */}
-            <div className="text-center mb-5 pb-5 border-b border-gray-100">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--lime)' }}>
-                <Send className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">
-                {fromWallet ? formatCurrency(sendAmount, fromWallet.currency) : '—'}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">Envoyé à {recipient}</p>
-            </div>
-
-            {/* Details */}
-            <div className="space-y-3">
-              {[
-                { label: 'Référence', value: txRef.slice(0, 12).toUpperCase(), mono: true },
-                { label: 'De', value: profile?.full_name ?? 'Moi' },
-                { label: 'À', value: recipient },
-                { label: 'Portefeuille source', value: fromWallet ? `${getCurrency(fromWallet.currency)?.flag} ${fromWallet.currency}` : '—' },
-                { label: 'Date & heure', value: new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
-                { label: 'Statut', value: 'Complété ✓', green: true },
-                ...(note ? [{ label: 'Note', value: note, italic: true }] : []),
-              ].map((row, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">{row.label}</span>
-                  <span className={cn('text-sm font-semibold text-gray-900', row.mono && 'font-mono text-xs', row.italic && 'italic text-gray-500', (row as any).green && 'text-emerald-600')}>
-                    {row.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Copy ref */}
-            <button
-              onClick={copyRef}
-              className="w-full mt-5 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer tr"
-              style={{ background: copied ? 'var(--lime-light)' : 'var(--surface)', color: copied ? 'var(--lime)' : 'var(--ink-60)', border: '1px solid var(--border)' }}
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copié !' : 'Copier la référence'}
-            </button>
-          </div>
-
           <div className="flex gap-3">
-            <button
-              onClick={resetFlow}
-              className="flex-1 h-12 rounded-2xl text-sm font-bold cursor-pointer"
-              style={{ background: 'var(--lime)', color: 'white' }}
-            >
-              Retour à l'accueil
+            <button onClick={back} className="flex-1 h-12 rounded-2xl text-sm font-bold cursor-pointer" style={{background:'#F2F2F7',color:'#1C1C1E'}}>Cancel</button>
+            <button onClick={()=>{const ref=genRef();setTxRef(ref);push('contact-confirm')}} disabled={!canSend}
+              className="flex-1 h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+              style={{background:ACCENT,color:'white'}}>
+              <Send className="w-4 h-4"/>Send
+            </button>
+          </div>
+        </div>
+        {walletPickerOpen&&<WalletSheet onSelect={a=>{setFromWallet(a);setWalletPickerOpen(false)}} current={fromWallet}/>}
+      </div>
+    )
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // CONTACT CONFIRM
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='contact-confirm'&&selectedContact) {
+    const c = selectedContact
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Confirmation" onBack={back} right={<QRIcon/>}/>
+        <div className="px-4 pb-10">
+          {/* From wallet card */}
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>From</p>
+          {fromWallet&&(
+            <div className="flex items-center gap-3 px-4 h-14 rounded-2xl mb-5" style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg shrink-0" style={{background:ACCENT}}>{getCurrency(fromWallet.currency)?.flag}</div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{getCurrency(fromWallet.currency)?.name}</p>
+                <p className="text-xs font-mono" style={{color:'#8E8E93'}}>{maskId(fromWallet.id)}</p>
+              </div>
+              <button onClick={()=>setWalletPickerOpen(true)} className="flex items-center gap-1 cursor-pointer">
+                <span className="text-xs font-semibold" style={{color:ACCENT}}>Change</span>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
+              </button>
+            </div>
+          )}
+          {/* Detail rows with icons */}
+          {[
+            { icon:<svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#8E8E93" strokeWidth="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>, label:'Receiver', value:c.name },
+            { icon:<svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#8E8E93" strokeWidth="1.5"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>, label:'Total amount', value:`$${parseFloat(amountStr).toFixed(2)}` },
+            { icon:<Phone className="w-5 h-5" style={{color:'#8E8E93'}}/>, label:'Phone number', value:c.phone },
+            { icon:<Percent className="w-5 h-5" style={{color:'#8E8E93'}}/>, label:'Commission', value:`$${fee.toFixed(1)}` },
+          ].map(({icon,label,value})=>(
+            <div key={label} className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{background:'#F2F2F7'}}>{icon}</div>
+              <div className="flex-1">
+                <p className="text-xs" style={{color:'#8E8E93'}}>{label}</p>
+                <p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{value}</p>
+              </div>
+            </div>
+          ))}
+          <div className="mt-5">
+            <button onClick={()=>doTransfer('contact-success')} disabled={processing}
+              className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              style={{background:ACCENT,color:'white',height:52}}>
+              {processing?<Loader2 className="w-4 h-4 animate-spin"/>:<><Send className="w-4 h-4"/>Send</>}
+            </button>
+          </div>
+        </div>
+        {walletPickerOpen&&<WalletSheet onSelect={a=>{setFromWallet(a);setWalletPickerOpen(false)}} current={fromWallet}/>}
+        {processing&&<ProcModal/>}
+      </div>
+    )
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // CONTACT SUCCESS
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='contact-success'&&selectedContact) {
+    const c = selectedContact
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Transfer" onBack={reset}/>
+        <div className="px-5 pt-2 pb-10 text-center">
+          <WalletSuccessIllustration/>
+          <p className="text-xl font-bold mt-1" style={{color:'#1C1C1E'}}>Transfer Successful!</p>
+          <p className="text-sm mt-1 mb-5" style={{color:'#8E8E93'}}>Your money has been transferred</p>
+          {/* To contact card */}
+          <p className="text-xs text-left font-medium mb-1.5" style={{color:'#8E8E93'}}>To</p>
+          <div className="flex items-center gap-3 px-4 py-4 rounded-2xl mb-3 text-left" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+            <ContactCircle c={c} size={44}/>
+            <div>
+              <p className="text-sm font-bold" style={{color:'#1C1C1E'}}>{c.name}</p>
+              <p className="text-xs" style={{color:'#8E8E93'}}>{c.phone}</p>
+            </div>
+          </div>
+          {/* Amount card */}
+          <div className="px-4 py-5 rounded-2xl" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+            <p className="text-sm mb-1" style={{color:'#8E8E93'}}>Transfer amount</p>
+            <p className="text-2xl font-bold" style={{color:'#1C1C1E'}}>${parseFloat(amountStr).toFixed(2)}</p>
+            <p className="text-xs mt-1" style={{color:'#8E8E93'}}>{dateLabel}-{timeLabel}</p>
+          </div>
+          <div className="flex gap-3 mt-6">
+            <button onClick={reset} className="flex-1 h-12 rounded-2xl text-sm font-bold cursor-pointer" style={{background:'#F2F2F7',color:'#1C1C1E'}}>Go Back</button>
+            <button onClick={()=>push('bank-receipt')} className="flex-1 h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer" style={{background:ACCENT,color:'white'}}>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M9 12h6M9 16h6M14 3H6a1 1 0 00-1 1v16a1 1 0 001 1h12a1 1 0 001-1V8l-5-5z"/><path d="M14 3v5h5"/></svg>
+              View Receipt
             </button>
           </div>
         </div>
@@ -1236,6 +1133,165 @@ export function TransferPage() {
     )
   }
 
-  // Fallback
+  // ─────────────────────────────────────────────────────────────────────────
+  // BETWEEN WALLETS (same user)
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='between-wallets') {
+    const canGo = betweenFrom && betweenTo && betweenFrom.id!==betweenTo.id && sendAmount>0 && sendAmount<=betweenFrom.balance
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Between Wallets" onBack={back}/>
+        <div className="px-5 pb-10">
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>From</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4">
+            {accounts.map(a=>{
+              const curr=getCurrency(a.currency); const sel=betweenFrom?.id===a.id
+              return (
+                <button key={a.id} onClick={()=>setBetweenFrom(a)}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer tr shrink-0 border"
+                  style={{borderColor:sel?ACCENT:'#E5E7EB',background:sel?`${ACCENT}10`:'#F8F8FA'}}>
+                  <span className="text-lg">{curr?.flag}</span>
+                  <div className="text-left"><p className="text-xs font-bold" style={{color:'#1C1C1E'}}>{a.currency}</p><p className="text-[10px]" style={{color:'#8E8E93'}}>{formatCurrency(a.balance,a.currency)}</p></div>
+                  {sel&&<Check className="w-3.5 h-3.5 shrink-0" style={{color:ACCENT}}/>}
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>To</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-5">
+            {accounts.filter(a=>a.id!==betweenFrom?.id).map(a=>{
+              const curr=getCurrency(a.currency); const sel=betweenTo?.id===a.id
+              return (
+                <button key={a.id} onClick={()=>{setBetweenTo(a);setToWallet(a)}}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer tr shrink-0 border"
+                  style={{borderColor:sel?ACCENT:'#E5E7EB',background:sel?`${ACCENT}10`:'#F8F8FA'}}>
+                  <span className="text-lg">{curr?.flag}</span>
+                  <div className="text-left"><p className="text-xs font-bold" style={{color:'#1C1C1E'}}>{a.currency}</p><p className="text-[10px]" style={{color:'#8E8E93'}}>{formatCurrency(a.balance,a.currency)}</p></div>
+                  {sel&&<Check className="w-3.5 h-3.5 shrink-0" style={{color:ACCENT}}/>}
+                </button>
+              )
+            })}
+          </div>
+          <div className="rounded-3xl py-6 text-center mb-4" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+            <p className="text-xs mb-1" style={{color:'#8E8E93'}}>Amount</p>
+            <p className="text-5xl font-light" style={{color:'#1C1C1E'}}>
+              {betweenFrom?getCurrency(betweenFrom.currency)?.symbol:'$'}{amountStr==='0'?'0':amountStr}
+            </p>
+          </div>
+          <div className="border-t border-gray-100 mb-2"><NumPad onDigit={amtDigit} onBack={amtBack} dot/></div>
+          <button onClick={()=>{setFromWallet(betweenFrom);openPin()}} disabled={!canGo}
+            className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
+            style={{background:ACCENT,color:'white',height:52}}>
+            Continue
+          </button>
+        </div>
+        {pinSheetOpen&&<PinSheet/>}
+      </div>
+    )
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PHONE SEND
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='phone-send') {
+    const found = CONTACTS.find(c=>c.phone===phoneNumber.trim())
+    const canContinue = fromWallet && sendAmount>0 && phoneNumber.length>=8
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Phone Transfer" onBack={back}/>
+        <div className="px-5 pb-10">
+          <p className="text-xs font-medium mb-1.5 mt-2" style={{color:'#8E8E93'}}>Phone number</p>
+          <input type="tel" value={phoneNumber} onChange={e=>setPhoneNumber(e.target.value)} placeholder="+1 212 456 7890"
+            className="w-full h-12 px-4 rounded-xl text-sm outline-none mb-1" style={{background:'#F2F2F7',border:'1px solid #E5E7EB',color:'#1C1C1E'}}/>
+          {found&&<div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-3" style={{background:`${ACCENT}10`,border:`1px solid ${ACCENT}30`}}>
+            <Check className="w-4 h-4 shrink-0" style={{color:ACCENT}}/><p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{found.name}</p>
+          </div>}
+          <p className="text-xs mb-4" style={{color:'#8E8E93'}}>The recipient must have a FamillyBill HT account</p>
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>From wallet</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4">
+            {accounts.map(a=>{const curr=getCurrency(a.currency);const sel=fromWallet?.id===a.id;return(
+              <button key={a.id} onClick={()=>setFromWallet(a)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer tr shrink-0 border"
+                style={{borderColor:sel?ACCENT:'#E5E7EB',background:sel?`${ACCENT}10`:'#F8F8FA'}}>
+                <span className="text-lg">{curr?.flag}</span>
+                <div className="text-left"><p className="text-xs font-bold" style={{color:'#1C1C1E'}}>{a.currency}</p><p className="text-[10px]" style={{color:'#8E8E93'}}>{formatCurrency(a.balance,a.currency)}</p></div>
+                {sel&&<Check className="w-3.5 h-3.5" style={{color:ACCENT}}/>}
+              </button>
+            )})}
+          </div>
+          <div className="rounded-3xl py-6 text-center mb-4" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+            <p className="text-5xl font-light" style={{color:'#1C1C1E'}}>
+              {fromWallet?getCurrency(fromWallet.currency)?.symbol:'$'}{amountStr==='0'?'0':amountStr}
+            </p>
+          </div>
+          <div className="border-t border-gray-100 mb-2"><NumPad onDigit={amtDigit} onBack={amtBack} dot/></div>
+          <button onClick={()=>{if(found) setSelectedContact(found); setRecipientName(found?.name??phoneNumber); openPin()}}
+            disabled={!canContinue} className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
+            style={{background:ACCENT,color:'white',height:52}}>
+            Continue
+          </button>
+        </div>
+        {pinSheetOpen&&<PinSheet/>}
+      </div>
+    )
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // WALLET ID
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen==='wallet-id') {
+    const canContinue = fromWallet && sendAmount>0 && walletIdFound
+    return (
+      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
+        <Hdr title="Transfer by ID" onBack={back} right={<QRIcon/>}/>
+        <div className="px-5 pb-10">
+          <p className="text-xs font-medium mb-1.5 mt-2" style={{color:'#8E8E93'}}>Wallet ID</p>
+          <div className="relative mb-1">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2">
+              {walletIdSearching?<Loader2 className="w-4 h-4 animate-spin" style={{color:'#C7C7CC'}}/>
+                :<Search className="w-4 h-4" style={{color:'#C7C7CC'}}/>}
+            </div>
+            <input value={walletIdInput} onChange={e=>handleWalletIdChange(e.target.value)} placeholder="FB2F4A1B" maxLength={8}
+              className="w-full h-12 pl-10 pr-10 rounded-xl font-mono tracking-widest text-base uppercase outline-none"
+              style={{background:'#F2F2F7',border:'1px solid #E5E7EB',color:'#1C1C1E'}}/>
+            {walletIdInput&&<button onClick={()=>{setWalletIdInput('');setWalletIdFound(null);setWalletIdError('')}} className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"><X className="w-4 h-4" style={{color:'#C7C7CC'}}/></button>}
+          </div>
+          {walletIdError&&<p className="text-xs text-red-500 mb-3">{walletIdError}</p>}
+          {walletIdFound&&(
+            <div className="flex items-center gap-3 px-3 py-3 rounded-xl mb-3" style={{background:`${ACCENT}10`,border:`1.5px solid ${ACCENT}40`}}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white shrink-0" style={{background:ACCENT}}>
+                {walletIdFound.name.split(' ').map((w:string)=>w[0]).join('').slice(0,2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0"><p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{walletIdFound.name}</p><p className="text-xs font-mono" style={{color:'#8E8E93'}}>{walletIdFound.code}</p></div>
+              <Check className="w-5 h-5 shrink-0" style={{color:ACCENT}}/>
+            </div>
+          )}
+          <p className="text-xs font-medium mb-1.5 mt-3" style={{color:'#8E8E93'}}>From wallet</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4">
+            {accounts.map(a=>{const curr=getCurrency(a.currency);const sel=fromWallet?.id===a.id;return(
+              <button key={a.id} onClick={()=>setFromWallet(a)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer tr shrink-0 border"
+                style={{borderColor:sel?ACCENT:'#E5E7EB',background:sel?`${ACCENT}10`:'#F8F8FA'}}>
+                <span className="text-lg">{curr?.flag}</span>
+                <div className="text-left"><p className="text-xs font-bold" style={{color:'#1C1C1E'}}>{a.currency}</p><p className="text-[10px]" style={{color:'#8E8E93'}}>{formatCurrency(a.balance,a.currency)}</p></div>
+                {sel&&<Check className="w-3.5 h-3.5" style={{color:ACCENT}}/>}
+              </button>
+            )})}
+          </div>
+          <div className="rounded-3xl py-6 text-center mb-4" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+            <p className="text-5xl font-light" style={{color:'#1C1C1E'}}>
+              {fromWallet?getCurrency(fromWallet.currency)?.symbol:'$'}{amountStr==='0'?'0':amountStr}
+            </p>
+          </div>
+          <div className="border-t border-gray-100 mb-2"><NumPad onDigit={amtDigit} onBack={amtBack} dot/></div>
+          <button onClick={()=>{setRecipientName(walletIdFound?.name??'');openPin()}} disabled={!canContinue}
+            className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
+            style={{background:ACCENT,color:'white',height:52}}>
+            Continue
+          </button>
+        </div>
+        {pinSheetOpen&&<PinSheet/>}
+      </div>
+    )
+  }
+
   return null
 }
