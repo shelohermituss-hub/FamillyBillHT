@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowUpRight, ArrowDownLeft, Repeat, Plus, Eye, EyeOff,
-  MoreHorizontal, X, Share2, Copy, Check, QrCode, LayoutGrid,
+  X, Share2, Copy, Check, QrCode, LayoutGrid,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
@@ -117,10 +117,11 @@ function BillCategoryCard({ cat }: { cat: typeof BILL_CATEGORIES[0] }) {
   return (
     <button
       onClick={() => navigate(`/bills?category=${cat.id}`)}
-      className="flex flex-col items-center gap-2 cursor-pointer group"
+      className="flex flex-col items-center gap-2 cursor-pointer group shrink-0"
+      style={{ minWidth: 64 }}
     >
       <div
-        className="w-14 h-14 rounded-2xl flex items-center justify-center tr group-hover:scale-105 overflow-hidden shrink-0"
+        className="w-14 h-14 rounded-2xl flex items-center justify-center tr group-hover:scale-105 overflow-hidden"
         style={{ background: cat.bg ?? '#F3F4F6', border: '1.5px solid #F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
       >
         {cat.icon
@@ -129,30 +130,6 @@ function BillCategoryCard({ cat }: { cat: typeof BILL_CATEGORIES[0] }) {
       </div>
       <span className="text-center leading-tight font-semibold" style={{ fontSize: 10, color: '#374151', maxWidth: 56 }}>{cat.label}</span>
     </button>
-  )
-}
-
-// ── Rate tile ─────────────────────────────────────────────────────────────────
-
-function RateTile({ from, to, base }: { from: string; to: string; base: string }) {
-  const rate = getRate(to, from)
-  const curr = getCurrency(to)
-  const change = (Math.random() * 3 - 1.5).toFixed(1) // simulated
-  const positive = parseFloat(change) >= 0
-  return (
-    <div className="shrink-0 rounded-2xl p-3 min-w-[110px]" style={{ background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-bold" style={{ color: '#111' }}>{to}</p>
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-          style={{ background: positive ? '#D1FAE5' : '#FEE2E2', color: positive ? '#059669' : '#DC2626' }}>
-          {positive ? '+' : ''}{change}%
-        </span>
-      </div>
-      <p className="font-mono text-xs" style={{ color: '#9CA3AF' }}>
-        {curr?.symbol}{rate.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-      </p>
-      <p className="text-[10px] mt-0.5" style={{ color: '#D1D5DB' }}>per {base}</p>
-    </div>
   )
 }
 
@@ -193,14 +170,6 @@ export function DashboardPage() {
   const firstName = profile?.full_name?.split(' ')[0] ?? 'là'
   const avatarUrl = (profile as any)?.avatar_url as string | undefined
   const initials = (profile?.full_name ?? 'U').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
-
-  // Exchange rate pairs to show
-  const RATE_PAIRS = [
-    { from: 'USD', to: 'EUR', base: 'USD' },
-    { from: 'USD', to: 'HTG', base: 'USD' },
-    { from: 'USD', to: 'CAD', base: 'USD' },
-    { from: 'USD', to: 'BRL', base: 'USD' },
-  ]
 
   const greetHour = new Date().getHours()
   const greetWord = greetHour < 12 ? 'Bonjour' : greetHour < 18 ? 'Bon après-midi' : 'Bonsoir'
@@ -310,13 +279,21 @@ export function DashboardPage() {
           <div className="flex items-center justify-between px-4 pt-4 pb-1">
             <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Payer vos factures</h2>
             <Link to="/bills" className="text-xs font-bold tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
-              Tout voir →
+              Voir plus →
             </Link>
           </div>
-          <div className="px-4 pb-4 pt-3 grid gap-y-3 gap-x-1" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-4 pt-3">
             {BILL_CATEGORIES.map(cat => (
               <BillCategoryCard key={cat.id} cat={cat} />
             ))}
+            {/* "Voir plus" card at end */}
+            <Link to="/bills" className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group" style={{ minWidth: 64 }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center tr group-hover:scale-105"
+                style={{ background: '#F3F4F6', border: '1.5px dashed #D1D5DB' }}>
+                <span style={{ fontSize: 22, color: '#9CA3AF' }}>+</span>
+              </div>
+              <span className="text-center leading-tight font-semibold" style={{ fontSize: 10, color: '#9CA3AF', maxWidth: 56 }}>Voir plus</span>
+            </Link>
           </div>
         </div>
 
@@ -392,19 +369,6 @@ export function DashboardPage() {
             <button onClick={() => navigate('/wallet')} className="w-full text-center text-sm font-semibold cursor-pointer tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
               Voir toutes les devises →
             </button>
-          </div>
-        </div>
-
-        {/* ── Exchange Rate ── */}
-        <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-3">
-            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Taux de Change</h2>
-            <button className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer tr hover:bg-gray-50">
-              <MoreHorizontal className="w-4 h-4" style={{ color: '#9CA3AF' }} />
-            </button>
-          </div>
-          <div className="px-4 pb-4 flex gap-2.5 overflow-x-auto scrollbar-hide">
-            {RATE_PAIRS.map(p => <RateTile key={p.to} from={p.from} to={p.to} base={p.base} />)}
           </div>
         </div>
 
