@@ -1,78 +1,658 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  User, FileText, KeyRound, Fingerprint, ShieldCheck,
-  MapPin, Languages, Gauge, ChevronRight,
-  LogOut, Check, X, Download, Bell,
-  Phone, Mail, Edit3, Loader2, Copy, Camera, Share2, QrCode,
+  ChevronRight, ChevronLeft, Bell, LogOut, User, Phone, Mail,
+  MapPin, FileText, Settings, ShieldCheck, HelpCircle,
+  Fingerprint, Key, Languages, Trash2, Eye, Check, BookOpen, Gift,
+  Camera, Loader2, Copy, Share2, QrCode, Building2, ArrowDownLeft,
+  X, Download,
 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/lib/auth-context'
+import { useNotifications, type AppNotification } from '@/lib/notifications-context'
 import { supabase, type Transaction } from '@/lib/supabase'
 import { getCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 
-const LANGUAGES = ['Français', 'English', 'Kreyòl ayisyen', 'Español', 'Português']
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-// ── Account Details Modal ─────────────────────────────────────────────────────
-function AccountDetailsModal({ onClose }: { onClose: () => void }) {
-  const { profile, user } = useAuth()
-  const [name,  setName]  = useState(profile?.full_name ?? '')
-  const [phone, setPhone] = useState((profile as any)?.phone ?? '')
-  const [saving, setSaving] = useState(false)
-  const [saved,  setSaved]  = useState(false)
+type Screen =
+  | 'main'
+  | 'personal'
+  | 'notifications-list'
+  | 'notif-manage'
+  | 'settings'
+  | 'privacy'
 
-  async function save() {
-    if (!user) return
-    setSaving(true)
-    await supabase.from('wise_users').update({ full_name: name }).eq('id', user.id)
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => { setSaved(false); onClose() }, 800)
+// ── Sub-screen shell ──────────────────────────────────────────────────────────
+
+function SubScreen({ children }: { children: ReactNode }) {
+  return (
+    <div className="fixed inset-0 overflow-y-auto overflow-x-hidden" style={{ zIndex: 60, background: '#F5F5F7' }}>
+      <div className="min-h-full pb-12">{children}</div>
+    </div>
+  )
+}
+
+function SubHeader({
+  title, onBack, right,
+}: { title: string; onBack: () => void; right?: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between px-4 h-14 bg-white sticky top-0 z-10"
+      style={{ borderBottom: '1px solid #F3F4F6' }}>
+      <button onClick={onBack}
+        className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr"
+        style={{ background: '#F3F4F6' }}>
+        <ChevronLeft className="w-5 h-5" style={{ color: '#374151' }} />
+      </button>
+      <h1 className="text-base font-bold" style={{ color: '#111', letterSpacing: '-0.02em' }}>{title}</h1>
+      <div className="w-9 h-9 flex items-center justify-center">
+        {right}
+      </div>
+    </div>
+  )
+}
+
+// ── Shared row components ─────────────────────────────────────────────────────
+
+function IconWrap({ Icon, color = '#4F46E5', bg = '#EEF2FF', size = 42 }: {
+  Icon: React.FC<{ className?: string; style?: React.CSSProperties }>
+  color?: string; bg?: string; size?: number
+}) {
+  return (
+    <div className="rounded-full flex items-center justify-center shrink-0"
+      style={{ width: size, height: size, background: bg }}>
+      <Icon className="w-5 h-5" style={{ color }} />
+    </div>
+  )
+}
+
+function RowItem({
+  Icon, label, onPress, right, last = false,
+}: {
+  Icon: React.FC<{ className?: string; style?: React.CSSProperties }>
+  label: string; onPress?: () => void; right?: ReactNode; last?: boolean
+}) {
+  return (
+    <button onClick={onPress}
+      className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50 text-left"
+      style={{ borderBottom: last ? 'none' : '1px solid #F9FAFB' }}>
+      <IconWrap Icon={Icon} />
+      <span className="flex-1 text-sm font-medium" style={{ color: '#111' }}>{label}</span>
+      {right !== undefined ? right : <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />}
+    </button>
+  )
+}
+
+function GroupCard({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <div className={cn('mx-4 rounded-2xl overflow-hidden', className)}
+      style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+      {children}
+    </div>
+  )
+}
+
+// ── Notifications list screen ─────────────────────────────────────────────────
+
+function timeAgo(date: Date) {
+  const diff = Date.now() - date.getTime()
+  const mins = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  if (mins < 60) return `${mins}m ago`
+  if (hours < 24) return `${hours}h ago`
+  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+}
+
+function groupNotifications(notifications: AppNotification[]) {
+  const groups: { label: string; items: AppNotification[] }[] = []
+  const map = new Map<string, AppNotification[]>()
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
+  for (const n of notifications) {
+    const d = new Date(n.time); d.setHours(0, 0, 0, 0)
+    let label: string
+    if (d.getTime() === today.getTime()) label = 'Aujourd\'hui'
+    else if (d.getTime() === yesterday.getTime()) label = 'Hier'
+    else label = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+    if (!map.has(label)) { map.set(label, []); groups.push({ label, items: map.get(label)! }) }
+    map.get(label)!.push(n)
+  }
+  return groups
+}
+
+function NotifIcon({ n }: { n: AppNotification }) {
+  if (n.type === 'payment_request' && n.avatarInitials) {
+    return (
+      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-sm font-bold text-white"
+        style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+        {n.avatarInitials}
+      </div>
+    )
+  }
+  if (n.type === 'receive') {
+    return (
+      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: '#F0FDF4' }}>
+        <ArrowDownLeft className="w-5 h-5" style={{ color: '#22C55E' }} />
+      </div>
+    )
+  }
+  if (n.type === 'alert') {
+    return (
+      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: '#FEF3C7' }}>
+        <Building2 className="w-5 h-5" style={{ color: '#F59E0B' }} />
+      </div>
+    )
+  }
+  if (n.type === 'info' && n.title.toLowerCase().includes('gift')) {
+    return (
+      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: '#FFF1F2' }}>
+        <Gift className="w-5 h-5" style={{ color: '#F43F5E' }} />
+      </div>
+    )
+  }
+  return (
+    <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: '#EEF2FF' }}>
+      <BookOpen className="w-5 h-5" style={{ color: '#4F46E5' }} />
+    </div>
+  )
+}
+
+function formatNotifTitle(title: string) {
+  // Bold amounts like $300.00
+  const parts = title.split(/(\$[\d,]+\.\d{2})/g)
+  return parts.map((part, i) =>
+    /^\$[\d,]+\.\d{2}$/.test(part)
+      ? <span key={i} style={{ color: '#4F46E5', fontWeight: 700 }}>{part}</span>
+      : <span key={i}>{part}</span>
+  )
+}
+
+function NotificationsListScreen({ onBack }: { onBack: () => void }) {
+  const { notifications, markRead, markAllRead } = useNotifications()
+  const navigate = useNavigate()
+  const groups = groupNotifications(notifications)
+
+  return (
+    <SubScreen>
+      <SubHeader title="Notifications" onBack={onBack} />
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+        <p className="text-base font-bold" style={{ color: '#111' }}>Toutes les notifications</p>
+        <button onClick={markAllRead} className="text-xs font-semibold cursor-pointer" style={{ color: '#4F46E5' }}>
+          Tout lire
+        </button>
+      </div>
+
+      <div className="space-y-5 px-4 mt-2">
+        {groups.map(group => (
+          <div key={group.label}>
+            <p className="text-sm font-semibold mb-3" style={{ color: '#9CA3AF' }}>{group.label}</p>
+            <div className="space-y-2">
+              {group.items.map(n => (
+                <button key={n.id}
+                  onClick={() => markRead(n.id)}
+                  className="w-full flex items-start gap-3 p-3 rounded-2xl cursor-pointer text-left tr"
+                  style={{ background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', position: 'relative' }}>
+                  {/* Unread dot */}
+                  {!n.read && (
+                    <div className="absolute top-3.5 left-3.5 w-2.5 h-2.5 rounded-full shrink-0 z-10"
+                      style={{ background: '#4F46E5' }} />
+                  )}
+                  <div style={{ marginLeft: !n.read ? 10 : 0 }}>
+                    <NotifIcon n={n} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold leading-snug mb-0.5" style={{ color: '#111' }}>
+                      {formatNotifTitle(n.title)}
+                    </p>
+                    <p className="text-xs" style={{ color: '#9CA3AF' }}>
+                      {n.time.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <div className="shrink-0 flex flex-col items-end gap-2">
+                    <span className="text-xs whitespace-nowrap" style={{ color: '#9CA3AF' }}>
+                      {timeAgo(n.time)}
+                    </span>
+                    {n.type === 'payment_request' && (
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate('/transfer') }}
+                        className="px-4 py-1.5 rounded-xl text-xs font-bold text-white cursor-pointer"
+                        style={{ background: '#4F46E5' }}>
+                        Payer
+                      </button>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </SubScreen>
+  )
+}
+
+// ── Manage Notifications screen ───────────────────────────────────────────────
+
+const NOTIF_SETTINGS = [
+  { key: 'fb-notif-bank',    label: 'Bank Statement Emails',     Icon: Building2 },
+  { key: 'fb-notif-deposit', label: 'Automatic Deposit',        Icon: ArrowDownLeft },
+  { key: 'fb-notif-receive', label: 'Received Money',           Icon: Mail },
+  { key: 'fb-notif-balance', label: 'Balance',                  Icon: Eye },
+  { key: 'fb-notif-news',    label: 'News And Updates',         Icon: BookOpen },
+  { key: 'fb-notif-tx',      label: 'Transactions And Payments', Icon: FileText },
+] as const
+
+function ManageNotifsScreen({ onBack }: { onBack: () => void }) {
+  const [values, setValues] = useState<Record<string, boolean>>(() => ({
+    'fb-notif-bank':    localStorage.getItem('fb-notif-bank') !== 'false',
+    'fb-notif-deposit': localStorage.getItem('fb-notif-deposit') === 'true',
+    'fb-notif-receive': localStorage.getItem('fb-notif-receive') !== 'false',
+    'fb-notif-balance': localStorage.getItem('fb-notif-balance') === 'true',
+    'fb-notif-news':    localStorage.getItem('fb-notif-news') === 'true',
+    'fb-notif-tx':      localStorage.getItem('fb-notif-tx') === 'true',
+  }))
+
+  function toggle(key: string) {
+    const next = !values[key]
+    localStorage.setItem(key, String(next))
+    setValues(v => ({ ...v, [key]: next }))
   }
 
   return (
-    <Modal title="Détails du compte" onClose={onClose}>
-      <div className="space-y-4">
-        <Field label="Nom complet" icon={<User className="w-4 h-4" />}>
-          <input
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full text-sm font-medium text-[var(--ink)] bg-transparent outline-none"
-            placeholder="Votre nom"
-          />
-        </Field>
-        <Field label="Email" icon={<Mail className="w-4 h-4" />}>
-          <p className="text-sm text-[var(--ink-60)]">{profile?.email ?? user?.email ?? '—'}</p>
-        </Field>
-        <Field label="Téléphone" icon={<Phone className="w-4 h-4" />}>
-          <input
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            className="w-full text-sm font-medium text-[var(--ink)] bg-transparent outline-none"
-            placeholder="+509 xxxxxxxx"
-          />
-        </Field>
-        <Field label="Statut du compte" icon={<Check className="w-4 h-4" style={{ color: 'var(--lime)' }} />}>
-          <span className="text-sm font-semibold" style={{ color: 'var(--lime)' }}>Compte vérifié</span>
-        </Field>
+    <SubScreen>
+      <SubHeader title="Notifications" onBack={onBack} />
+      <div className="px-4 pt-6 pb-4">
+        <h2 className="text-xl font-bold mb-5" style={{ color: '#111' }}>Manage Notifications</h2>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+          {NOTIF_SETTINGS.map(({ key, label, Icon }, i) => (
+            <div key={key}
+              className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
+              style={{ borderBottom: i < NOTIF_SETTINGS.length - 1 ? '1px solid #F9FAFB' : 'none' }}
+              onClick={() => toggle(key)}>
+              <IconWrap Icon={Icon} />
+              <span className="flex-1 text-sm font-medium" style={{ color: '#111' }}>{label}</span>
+              <Switch
+                checked={values[key]}
+                onCheckedChange={() => toggle(key)}
+                onClick={e => e.stopPropagation()}
+              />
+            </div>
+          ))}
+        </div>
       </div>
-      <button
-        onClick={save}
-        disabled={saving || saved}
-        className="btn-lime mt-5 w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
-      >
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
-        {saved ? 'Enregistré !' : 'Enregistrer'}
-      </button>
-    </Modal>
+    </SubScreen>
+  )
+}
+
+// ── Settings screen ───────────────────────────────────────────────────────────
+
+function SettingsScreen({ onBack, onNotifs }: { onBack: () => void; onNotifs: () => void }) {
+  const [darkTheme, setDarkTheme] = useState(() => localStorage.getItem('fb-dark-theme') === 'true')
+  const [showBalance, setShowBalance] = useState(() => localStorage.getItem('fb-show-balance-terminal') !== 'false')
+  const [showLang, setShowLang] = useState(false)
+  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('fb-lang') ?? 'Français')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const { signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const LANGUAGES = ['Français', 'English', 'Kreyòl ayisyen', 'Español', 'Português']
+
+  function toggleDark() {
+    const next = !darkTheme
+    setDarkTheme(next)
+    localStorage.setItem('fb-dark-theme', String(next))
+  }
+
+  function toggleBalance() {
+    const next = !showBalance
+    setShowBalance(next)
+    localStorage.setItem('fb-show-balance-terminal', String(next))
+  }
+
+  async function handleDeleteAccount() {
+    await signOut()
+    navigate('/')
+  }
+
+  return (
+    <SubScreen>
+      <SubHeader title="Paramètres" onBack={onBack} right={
+        <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F3F4F6' }}>
+          <Bell className="w-4 h-4" style={{ color: '#374151' }} />
+        </button>
+      } />
+
+      <div className="px-4 pt-6 space-y-5">
+        <h2 className="text-xl font-bold" style={{ color: '#111' }}>General</h2>
+
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+          {/* Dark Theme */}
+          <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
+            style={{ borderBottom: '1px solid #F9FAFB' }}
+            onClick={toggleDark}>
+            <IconWrap Icon={Eye} />
+            <span className="flex-1 text-sm font-medium" style={{ color: '#111' }}>Dark Theme</span>
+            <Switch checked={darkTheme} onCheckedChange={toggleDark} onClick={e => e.stopPropagation()} />
+          </div>
+
+          {/* Languages */}
+          <div>
+            <button
+              className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
+              style={{ borderBottom: '1px solid #F9FAFB' }}
+              onClick={() => setShowLang(v => !v)}>
+              <IconWrap Icon={Languages} />
+              <div className="flex-1 text-left">
+                <span className="text-sm font-medium" style={{ color: '#111' }}>Languages</span>
+                <p className="text-xs" style={{ color: '#9CA3AF' }}>{selectedLang}</p>
+              </div>
+              <ChevronRight className={cn("w-4 h-4 tr", showLang && "rotate-90")} style={{ color: '#C7C7CC' }} />
+            </button>
+            {showLang && (
+              <div style={{ background: '#F9FAFB', borderBottom: '1px solid #F9FAFB' }}>
+                {LANGUAGES.map(lang => (
+                  <button key={lang} onClick={() => { setSelectedLang(lang); localStorage.setItem('fb-lang', lang); setShowLang(false) }}
+                    className="w-full flex items-center justify-between px-6 py-2.5 text-sm cursor-pointer tr hover:bg-gray-50"
+                    style={{ color: lang === selectedLang ? '#4F46E5' : '#374151' }}>
+                    {lang}
+                    {lang === selectedLang && <Check className="w-3.5 h-3.5" style={{ color: '#4F46E5' }} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Notifications */}
+          <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
+            style={{ borderBottom: '1px solid #F9FAFB' }}
+            onClick={onNotifs}>
+            <IconWrap Icon={Bell} />
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Notifications</span>
+            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+          </button>
+
+          {/* Security */}
+          <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
+            style={{ borderBottom: '1px solid #F9FAFB' }}>
+            <IconWrap Icon={ShieldCheck} />
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Security</span>
+            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+          </button>
+
+          {/* Contacts */}
+          <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
+            style={{ borderBottom: '1px solid #F9FAFB' }}>
+            <IconWrap Icon={User} />
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Contacts</span>
+            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+          </button>
+
+          {/* Face ID And Pin */}
+          <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
+            style={{ borderBottom: '1px solid #F9FAFB' }}
+            onClick={() => navigate('/wallet')}>
+            <IconWrap Icon={Fingerprint} />
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Face ID And Pin</span>
+            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+          </button>
+
+          {/* Change Password */}
+          <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
+            style={{ borderBottom: '1px solid #F9FAFB' }}>
+            <IconWrap Icon={Key} />
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Change Password</span>
+            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+          </button>
+
+          {/* Show Balance In Terminal */}
+          <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
+            style={{ borderBottom: '1px solid #F9FAFB' }}
+            onClick={toggleBalance}>
+            <IconWrap Icon={Eye} />
+            <span className="flex-1 text-sm font-medium" style={{ color: '#111' }}>Show Balance In Terminal</span>
+            <Switch checked={showBalance} onCheckedChange={toggleBalance} onClick={e => e.stopPropagation()} />
+          </div>
+
+          {/* Delete Account */}
+          <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-red-50"
+            onClick={() => setShowDeleteConfirm(true)}>
+            <IconWrap Icon={Trash2} color="#EF4444" bg="#FEF2F2" />
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#EF4444' }}>Delete Account</span>
+            <ChevronRight className="w-4 h-4" style={{ color: '#EF4444' }} />
+          </button>
+        </div>
+      </div>
+
+      {/* Delete confirm modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center px-6" style={{ zIndex: 70, background: 'rgba(0,0,0,0.4)' }}>
+          <div className="w-full max-w-sm rounded-3xl p-6" style={{ background: '#fff' }}>
+            <h3 className="text-lg font-bold mb-2" style={{ color: '#111' }}>Supprimer le compte ?</h3>
+            <p className="text-sm mb-6" style={{ color: '#9CA3AF' }}>
+              Cette action est irréversible. Toutes vos données seront supprimées.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 h-12 rounded-2xl text-sm font-semibold cursor-pointer"
+                style={{ background: '#F3F4F6', color: '#374151' }}>
+                Annuler
+              </button>
+              <button onClick={handleDeleteAccount}
+                className="flex-1 h-12 rounded-2xl text-sm font-semibold cursor-pointer"
+                style={{ background: '#EF4444', color: '#fff' }}>
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </SubScreen>
+  )
+}
+
+// ── Privacy & Security screen ─────────────────────────────────────────────────
+
+function PrivacyScreen({ onBack }: { onBack: () => void }) {
+  const [twoFA,     setTwoFA]     = useState(() => localStorage.getItem('fb-2fa') !== 'false')
+  const [biometric, setBiometric] = useState(() => localStorage.getItem('fb-biometric') === 'true')
+  const [location,  setLocation]  = useState(() => localStorage.getItem('fb-location') === 'true')
+
+  function toggle(key: string, val: boolean, set: (v: boolean) => void) {
+    set(val); localStorage.setItem(key, String(val))
+  }
+
+  return (
+    <SubScreen>
+      <SubHeader title="Confidentialité & Sécurité" onBack={onBack} />
+      <div className="px-4 pt-6 space-y-4">
+        <GroupCard>
+          <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
+            style={{ borderBottom: '1px solid #F9FAFB' }}
+            onClick={() => toggle('fb-2fa', !twoFA, setTwoFA)}>
+            <IconWrap Icon={ShieldCheck} />
+            <div className="flex-1">
+              <p className="text-sm font-medium" style={{ color: '#111' }}>Double authentification (2FA)</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Protection renforcée du compte</p>
+            </div>
+            <Switch checked={twoFA} onCheckedChange={v => toggle('fb-2fa', v, setTwoFA)} onClick={e => e.stopPropagation()} />
+          </div>
+          <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
+            style={{ borderBottom: '1px solid #F9FAFB' }}
+            onClick={() => toggle('fb-biometric', !biometric, setBiometric)}>
+            <IconWrap Icon={Fingerprint} />
+            <div className="flex-1">
+              <p className="text-sm font-medium" style={{ color: '#111' }}>Biométrie</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Face ID / Empreinte digitale</p>
+            </div>
+            <Switch checked={biometric} onCheckedChange={v => toggle('fb-biometric', v, setBiometric)} onClick={e => e.stopPropagation()} />
+          </div>
+          <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
+            onClick={() => toggle('fb-location', !location, setLocation)}>
+            <IconWrap Icon={MapPin} />
+            <div className="flex-1">
+              <p className="text-sm font-medium" style={{ color: '#111' }}>Localisation</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Autorisations de géolocalisation</p>
+            </div>
+            <Switch checked={location} onCheckedChange={v => toggle('fb-location', v, setLocation)} onClick={e => e.stopPropagation()} />
+          </div>
+        </GroupCard>
+      </div>
+    </SubScreen>
+  )
+}
+
+// ── Personal Details screen ───────────────────────────────────────────────────
+
+function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
+  onBack: () => void
+  onSettings: () => void
+  onHelp: () => void
+  onSignOut: () => void
+}) {
+  const { user, profile } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string>((profile as any)?.avatar_url ?? '')
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [activeTab, setActiveTab] = useState<'personal' | 'business'>('personal')
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [phone, setPhone] = useState<string>((profile as any)?.phone ?? '212-456-7890')
+  const [address, setAddress] = useState<string>((profile as any)?.address ?? '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const initials = (profile?.full_name ?? 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploadingAvatar(true)
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = async () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 200; canvas.height = 200
+      const ctx = canvas.getContext('2d')!
+      const side = Math.min(img.width, img.height)
+      ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, 200, 200)
+      URL.revokeObjectURL(url)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+      await supabase.from('wise_users').update({ avatar_url: dataUrl }).eq('id', user.id)
+      setAvatarUrl(dataUrl)
+      setUploadingAvatar(false)
+    }
+    img.src = url
+  }
+
+  async function saveField() {
+    if (!user) return
+    setSaving(true)
+    await supabase.from('wise_users').update({ phone, address }).eq('id', user.id)
+    setSaving(false); setSaved(true)
+    setTimeout(() => { setSaved(false); setEditingField(null) }, 800)
+  }
+
+  const infoRows = [
+    { key: 'phone', label: 'Phone', value: phone || '—', Icon: Phone },
+    { key: 'email', label: 'Email', value: profile?.email ?? user?.email ?? '—', Icon: Mail },
+    { key: 'address', label: 'Address', value: address || 'Non renseigné', Icon: MapPin },
+    { key: 'docs', label: 'Documents', value: 'Passport, Driving License', Icon: FileText },
+  ]
+
+  return (
+    <SubScreen>
+      <SubHeader title="My Profile" onBack={onBack} right={
+        <button className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer" style={{ background: '#F3F4F6' }}>
+          <Bell className="w-4 h-4" style={{ color: '#374151' }} />
+        </button>
+      } />
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+
+      {/* Avatar */}
+      <div className="flex flex-col items-center pt-6 pb-5" style={{ background: '#fff' }}>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="relative w-20 h-20 rounded-full overflow-hidden cursor-pointer group"
+          disabled={uploadingAvatar}>
+          {avatarUrl
+            ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+            : <div className="w-full h-full flex items-center justify-center text-xl font-bold text-white" style={{ background: '#4F46E5' }}>{initials}</div>}
+          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 tr flex items-center justify-center rounded-full">
+            {uploadingAvatar ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
+          </div>
+        </button>
+        <p className="text-base font-bold mt-3" style={{ color: '#111' }}>{profile?.full_name ?? 'Utilisateur'}</p>
+
+        {/* Personal | Business tab */}
+        <div className="flex rounded-full overflow-hidden mt-3 border" style={{ borderColor: '#E5E7EB' }}>
+          <button onClick={() => setActiveTab('personal')}
+            className="px-6 py-1.5 text-sm font-semibold cursor-pointer tr"
+            style={activeTab === 'personal' ? { background: '#fff', color: '#111' } : { background: '#F3F4F6', color: '#9CA3AF' }}>
+            Personal
+          </button>
+          <button onClick={() => setActiveTab('business')}
+            className="px-6 py-1.5 text-sm font-semibold cursor-pointer tr"
+            style={activeTab === 'business' ? { background: '#fff', color: '#111' } : { background: '#F3F4F6', color: '#9CA3AF' }}>
+            Business
+          </button>
+        </div>
+      </div>
+
+      <div className="px-4 pt-4 space-y-3">
+        {/* Info rows */}
+        <GroupCard>
+          {infoRows.map(({ key, label, value, Icon }, i) => (
+            <button key={key}
+              className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50 text-left"
+              style={{ borderBottom: i < infoRows.length - 1 ? '1px solid #F9FAFB' : 'none' }}
+              onClick={() => key !== 'email' && key !== 'docs' && setEditingField(editingField === key ? null : key)}>
+              <IconWrap Icon={Icon} size={36} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs" style={{ color: '#9CA3AF' }}>{label}</p>
+                {editingField === key && key === 'phone' ? (
+                  <input value={phone} onChange={e => setPhone(e.target.value)}
+                    className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
+                    autoFocus onBlur={saveField} />
+                ) : editingField === key && key === 'address' ? (
+                  <input value={address} onChange={e => setAddress(e.target.value)}
+                    className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
+                    autoFocus onBlur={saveField} />
+                ) : (
+                  <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{value}</p>
+                )}
+              </div>
+              {saving && editingField === key
+                ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#4F46E5' }} />
+                : saved && editingField === key
+                  ? <Check className="w-4 h-4" style={{ color: '#22C55E' }} />
+                  : <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />}
+            </button>
+          ))}
+        </GroupCard>
+
+        {/* Settings & Help */}
+        <GroupCard>
+          <RowItem Icon={Settings} label="Settings" onPress={onSettings} />
+          <RowItem Icon={HelpCircle} label="Help Center" onPress={onHelp} last />
+        </GroupCard>
+
+        {/* Log Out */}
+        <button onClick={onSignOut}
+          className="flex items-center gap-2 px-5 py-3 rounded-2xl cursor-pointer tr"
+          style={{ background: '#FFF1F0', color: '#EF4444' }}>
+          <LogOut className="w-4 h-4" />
+          <span className="text-sm font-semibold">Log Out</span>
+        </button>
+      </div>
+    </SubScreen>
   )
 }
 
 // ── Statements Modal ──────────────────────────────────────────────────────────
+
 function StatementsModal({ onClose }: { onClose: () => void }) {
   const { user } = useAuth()
-  const [txs,     setTxs]     = useState<Transaction[]>([])
+  const [txs, setTxs] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -87,16 +667,14 @@ function StatementsModal({ onClose }: { onClose: () => void }) {
     const rows = txs.map(tx => [
       new Date(tx.created_at).toLocaleDateString('fr-FR'),
       tx.type, tx.status,
-      tx.amount.toFixed(2),
-      tx.currency,
-      tx.recipient_name ?? '',
-      tx.reference ?? '',
+      tx.amount.toFixed(2), tx.currency,
+      tx.recipient_name ?? '', tx.reference ?? '',
     ])
     const csv = [header, ...rows].map(r => r.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = `releve-${new Date().toISOString().slice(0,10)}.csv`
+    a.href = url; a.download = `releve-${new Date().toISOString().slice(0, 10)}.csv`
     a.click(); URL.revokeObjectURL(url)
   }
 
@@ -106,221 +684,97 @@ function StatementsModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal title="Relevés de compte" onClose={onClose}>
-      <button
-        onClick={exportCSV}
-        className="btn-lime w-full h-10 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer mb-4"
-      >
-        <Download className="w-4 h-4" /> Télécharger CSV
-      </button>
-
-      {loading ? (
-        <div className="space-y-2">
-          {[1,2,3].map(i => <div key={i} className="h-12 rounded-xl bg-[var(--surface-2)] animate-pulse" />)}
-        </div>
-      ) : txs.length === 0 ? (
-        <p className="text-sm text-center text-[var(--ink-60)] py-6">Aucune transaction.</p>
-      ) : (
-        <div className="space-y-1 max-h-64 overflow-y-auto">
-          {txs.map(tx => {
-            const curr = getCurrency(tx.currency)
-            const isSend = tx.type === 'send' || tx.type === 'withdraw'
-            return (
-              <div key={tx.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--surface)] tr">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-[var(--ink)] truncate">
-                    {TYPE_LABEL[tx.type] ?? tx.type}
-                    {tx.recipient_name ? ` — ${tx.recipient_name}` : ''}
-                  </p>
-                  <p className="text-[10px] text-[var(--ink-60)]">
-                    {new Date(tx.created_at).toLocaleDateString('fr-FR')}
-                  </p>
-                </div>
-                <p className={cn("text-xs font-bold tabular-nums shrink-0", isSend ? "text-red-500" : "text-[var(--ink)]")}>
-                  {isSend ? '−' : '+'}{curr?.symbol}{tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </Modal>
-  )
-}
-
-// ── Transaction Limits Modal ──────────────────────────────────────────────────
-function LimitsModal({ onClose }: { onClose: () => void }) {
-  const [dailyLimit,  setDailyLimit]  = useState('5000')
-  const [perTxLimit,  setPerTxLimit]  = useState('1000')
-  const [saved, setSaved] = useState(false)
-
-  useEffect(() => {
-    const stored = localStorage.getItem('fb-limits')
-    if (stored) {
-      const { daily, perTx } = JSON.parse(stored)
-      setDailyLimit(daily); setPerTxLimit(perTx)
-    }
-  }, [])
-
-  function save() {
-    localStorage.setItem('fb-limits', JSON.stringify({ daily: dailyLimit, perTx: perTxLimit }))
-    setSaved(true)
-    setTimeout(() => { setSaved(false); onClose() }, 800)
-  }
-
-  return (
-    <Modal title="Limites de transaction" onClose={onClose}>
-      <p className="text-sm text-[var(--ink-60)] mb-4">
-        Définissez vos plafonds de sécurité quotidiens et par transaction.
-      </p>
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">
-            Limite par transaction (USD)
-          </label>
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
-            <span className="text-[var(--ink-60)] font-semibold">$</span>
-            <input
-              type="number"
-              value={perTxLimit}
-              onChange={e => setPerTxLimit(e.target.value)}
-              className="flex-1 text-sm font-semibold text-[var(--ink)] bg-transparent outline-none tabular-nums"
-            />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">
-            Limite journalière (USD)
-          </label>
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
-            <span className="text-[var(--ink-60)] font-semibold">$</span>
-            <input
-              type="number"
-              value={dailyLimit}
-              onChange={e => setDailyLimit(e.target.value)}
-              className="flex-1 text-sm font-semibold text-[var(--ink)] bg-transparent outline-none tabular-nums"
-            />
-          </div>
-        </div>
-        <div className="p-3 rounded-xl text-xs text-[var(--ink-60)] border border-[var(--border)]" style={{ background: 'var(--surface)' }}>
-          💡 Ces limites protègent votre compte contre les transactions non autorisées.
-        </div>
-      </div>
-      <button
-        onClick={save}
-        className="btn-lime mt-5 w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer"
-      >
-        {saved ? <Check className="w-4 h-4" /> : <Check className="w-4 h-4" />}
-        {saved ? 'Enregistré !' : 'Enregistrer les limites'}
-      </button>
-    </Modal>
-  )
-}
-
-// ── Shared Modal wrapper ──────────────────────────────────────────────────────
-function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-t-3xl md:rounded-3xl p-6 animate-fade-in-up"
-        style={{ background: 'var(--card-bg)', boxShadow: '0 -4px 40px rgba(14,15,12,0.15)' }}>
+    <div className="fixed inset-0 flex items-end justify-center" style={{ zIndex: 70, background: 'rgba(0,0,0,0.4)' }}>
+      <div className="w-full max-w-md rounded-t-3xl p-6 animate-fade-in-up" style={{ background: '#fff' }}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-[var(--ink)]">{title}</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--surface)] tr cursor-pointer">
-            <X className="w-4 h-4 text-[var(--ink-60)]" />
+          <h2 className="text-lg font-bold" style={{ color: '#111' }}>Relevés de compte</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer" style={{ background: '#F3F4F6' }}>
+            <X className="w-4 h-4" style={{ color: '#374151' }} />
           </button>
         </div>
-        {children}
+        <button onClick={exportCSV}
+          className="w-full h-10 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer mb-4"
+          style={{ background: '#9fe870', color: '#0e0f0c' }}>
+          <Download className="w-4 h-4" /> Télécharger CSV
+        </button>
+        {loading ? (
+          <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="h-12 rounded-xl bg-gray-100 animate-pulse" />)}</div>
+        ) : txs.length === 0 ? (
+          <p className="text-sm text-center py-6" style={{ color: '#9CA3AF' }}>Aucune transaction.</p>
+        ) : (
+          <div className="space-y-1 max-h-60 overflow-y-auto">
+            {txs.map(tx => {
+              const curr = getCurrency(tx.currency)
+              const isSend = tx.type === 'send' || tx.type === 'withdraw'
+              return (
+                <div key={tx.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate" style={{ color: '#111' }}>
+                      {TYPE_LABEL[tx.type] ?? tx.type}{tx.recipient_name ? ` — ${tx.recipient_name}` : ''}
+                    </p>
+                    <p className="text-[10px]" style={{ color: '#9CA3AF' }}>{new Date(tx.created_at).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <p className="text-xs font-bold tabular-nums shrink-0" style={{ color: isSend ? '#EF4444' : '#22C55E' }}>
+                    {isSend ? '−' : '+'}{curr?.symbol}{tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function Field({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-3 p-3 rounded-xl border border-[var(--border)]" style={{ background: 'var(--surface)' }}>
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[var(--ink-60)]" style={{ background: 'var(--surface-2)' }}>
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0 pt-0.5">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--ink-60)] mb-0.5">{label}</p>
-        {children}
-      </div>
-    </div>
-  )
-}
+// ── Share Modal ───────────────────────────────────────────────────────────────
 
-// ── Share Profile Modal ───────────────────────────────────────────────────────
-function ShareProfileModal({ name, userCode, onClose }: { name: string; userCode: string; onClose: () => void }) {
+function ShareModal({ name, userCode, onClose }: { name: string; userCode: string; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   function copy() {
     navigator.clipboard.writeText(userCode)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
   }
 
   async function share() {
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'FamillyBill HT',
-          text: `Envoyez-moi de l'argent sur FamillyBill HT !\nMon ID: ${userCode}\nNom: ${name}`,
-        })
-        return
-      } catch { /* fallback */ }
+      try { await navigator.share({ title: 'FamillyBill HT', text: `Mon ID: ${userCode}\nNom: ${name}` }); return } catch { /* fallback */ }
     }
     copy()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm rounded-t-3xl md:rounded-3xl overflow-hidden animate-fade-in-up"
-        style={{ background: 'var(--card-bg)', boxShadow: '0 -4px 40px rgba(14,15,12,0.18)' }}>
-
+    <div className="fixed inset-0 flex items-end justify-center" style={{ zIndex: 70, background: 'rgba(0,0,0,0.5)' }}>
+      <div className="w-full max-w-sm rounded-t-3xl overflow-hidden animate-fade-in-up" style={{ background: '#fff' }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <h2 className="text-lg font-semibold text-[var(--ink)]">Partager mon profil</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr" style={{ background: 'var(--surface-2)' }}>
-            <X className="w-4 h-4 text-[var(--ink-60)]" />
+          <h2 className="text-lg font-bold" style={{ color: '#111' }}>Partager mon profil</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer" style={{ background: '#F3F4F6' }}>
+            <X className="w-4 h-4" style={{ color: '#374151' }} />
           </button>
         </div>
-
-        {/* Card */}
-        <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5" style={{ background: 'var(--ink)' }}>
-          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
-          <div className="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(26,86,219,0.15)', border: '1.5px solid rgba(26,86,219,0.3)' }}>
-              <QrCode className="w-7 h-7" style={{ color: 'var(--lime)' }} />
+        <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5" style={{ background: '#4F46E5' }}>
+          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-20" style={{ background: '#818CF8' }} />
+          <div className="relative z-10">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.15)' }}>
+              <QrCode className="w-6 h-6 text-white" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>ID FamillyBill</p>
-              <p className="text-xl font-black tracking-widest font-mono" style={{ color: 'var(--lime)' }}>{userCode}</p>
-              <p className="text-sm font-medium text-white truncate">{name}</p>
-            </div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>ID FamillyBill</p>
+            <p className="text-2xl font-black tracking-widest font-mono mb-1 text-white">{userCode}</p>
+            <p className="text-sm font-medium text-white">{name}</p>
           </div>
         </div>
-
         <div className="px-5 pb-6 grid grid-cols-2 gap-3">
-          <button
-            onClick={copy}
-            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border border-[var(--border)] tr cursor-pointer hover:bg-[var(--surface)]"
-            style={{ color: 'var(--ink)' }}
-          >
-            {copied ? <Check className="w-4 h-4" style={{ color: 'var(--lime)' }} /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copié !' : 'Copier l\'ID'}
+          <button onClick={copy}
+            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border cursor-pointer tr"
+            style={{ borderColor: '#E5E7EB', color: '#374151' }}>
+            {copied ? <Check className="w-4 h-4" style={{ color: '#22C55E' }} /> : <Copy className="w-4 h-4" />}
+            {copied ? 'Copié !' : 'Copier'}
           </button>
-          <button onClick={share} className="btn-lime flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold cursor-pointer">
-            <Share2 className="w-4 h-4" />
-            Partager
+          <button onClick={share}
+            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold cursor-pointer"
+            style={{ background: '#9fe870', color: '#0e0f0c' }}>
+            <Share2 className="w-4 h-4" /> Partager
           </button>
         </div>
       </div>
@@ -329,19 +783,25 @@ function ShareProfileModal({ name, userCode, onClose }: { name: string; userCode
 }
 
 // ── Main Profile Page ─────────────────────────────────────────────────────────
-type ModalType = 'account' | 'statements' | 'limits' | null
 
 export function ProfilePage() {
   const { user, profile, signOut } = useAuth()
+  const { unreadCount } = useNotifications()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [screenStack, setScreenStack] = useState<Screen[]>(['main'])
+  const screen = screenStack[screenStack.length - 1]
+  const push = useCallback((s: Screen) => setScreenStack(p => [...p, s]), [])
+  const back = useCallback(() => setScreenStack(p => p.length > 1 ? p.slice(0, -1) : p), [])
 
   const [displayCode,  setDisplayCode]  = useState<string>((profile as any)?.user_code ?? '')
   const [avatarUrl,    setAvatarUrl]    = useState<string>((profile as any)?.avatar_url ?? '')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [showShareModal, setShowShareModal] = useState(false)
+  const [showShare, setShowShare] = useState(false)
+  const [showStatements, setShowStatements] = useState(false)
+  const [biometric, setBiometric] = useState(() => localStorage.getItem('fb-biometric') === 'true')
 
-  // Generate user_code if missing
   const ensureUserCode = useCallback(async () => {
     if (!user || (profile as any)?.user_code) return
     const code = 'FB' + Math.random().toString(36).slice(2, 8).toUpperCase()
@@ -351,8 +811,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     const code = (profile as any)?.user_code
-    if (code) setDisplayCode(code)
-    else ensureUserCode()
+    if (code) setDisplayCode(code); else ensureUserCode()
     const av = (profile as any)?.avatar_url
     if (av) setAvatarUrl(av)
   }, [profile, ensureUserCode])
@@ -361,7 +820,6 @@ export function ProfilePage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
     setUploadingAvatar(true)
-    // Resize to 200×200 via canvas
     const img = new Image()
     const url = URL.createObjectURL(file)
     img.onload = async () => {
@@ -369,9 +827,7 @@ export function ProfilePage() {
       canvas.width = 200; canvas.height = 200
       const ctx = canvas.getContext('2d')!
       const side = Math.min(img.width, img.height)
-      const sx = (img.width - side) / 2
-      const sy = (img.height - side) / 2
-      ctx.drawImage(img, sx, sy, side, side, 0, 0, 200, 200)
+      ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, 200, 200)
       URL.revokeObjectURL(url)
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
       await supabase.from('wise_users').update({ avatar_url: dataUrl }).eq('id', user.id)
@@ -381,266 +837,125 @@ export function ProfilePage() {
     img.src = url
   }
 
-  const [modal,        setModal]        = useState<ModalType>(null)
-  const [biometric,    setBiometric]    = useState(() => localStorage.getItem('fb-biometric') === 'true')
-  const [twoFA,        setTwoFA]        = useState(() => localStorage.getItem('fb-2fa') !== 'false')
-  const [location,     setLocation]     = useState(() => localStorage.getItem('fb-location') === 'true')
-  const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('fb-notif') !== 'false')
-  const [showLang,     setShowLang]     = useState(false)
-  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('fb-lang') ?? 'Français')
-  const [codeCopied,   setCodeCopied]   = useState(false)
-
-  function toggle(key: string, val: boolean, setter: (v: boolean) => void) {
-    setter(val); localStorage.setItem(key, String(val))
-  }
-
-  function copyUserCode() {
-    if (!displayCode) return
-    navigator.clipboard.writeText(displayCode)
-    setCodeCopied(true)
-    setTimeout(() => setCodeCopied(false), 2000)
-  }
-
-  const initials = (profile?.full_name ?? 'U')
-    .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-
+  const initials = (profile?.full_name ?? 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
   async function handleSignOut() { await signOut(); navigate('/') }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
-      {modal === 'account'    && <AccountDetailsModal onClose={() => setModal(null)} />}
-      {modal === 'statements' && <StatementsModal     onClose={() => setModal(null)} />}
-      {modal === 'limits'     && <LimitsModal         onClose={() => setModal(null)} />}
+    <div className="min-h-screen overflow-x-hidden" style={{ background: '#F5F5F7', maxWidth: '100vw' }}>
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+      {showShare && <ShareModal name={profile?.full_name ?? 'Utilisateur'} userCode={displayCode} onClose={() => setShowShare(false)} />}
+      {showStatements && <StatementsModal onClose={() => setShowStatements(false)} />}
 
-      {/* Share profile modal */}
-      {showShareModal && (
-        <ShareProfileModal
-          name={profile?.full_name ?? 'Utilisateur'}
-          userCode={displayCode}
-          onClose={() => setShowShareModal(false)}
-        />
-      )}
+      {/* ── Main Screen ── */}
+      <div className="pb-28">
+        {/* Profile header */}
+        <div className="pt-5 pb-6 flex flex-col items-center" style={{ background: '#F5F5F7' }}>
+          <p className="text-base font-bold mb-5" style={{ color: '#111', letterSpacing: '-0.02em' }}>Profile</p>
 
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleAvatarChange}
-      />
-
-      <div className="max-w-lg mx-auto px-4 pt-6 space-y-5">
-
-        {/* Profile header card */}
-        <div className="card-flat p-5 animate-fade-in-up">
-          <div className="flex items-center gap-4 mb-4">
-            {/* Avatar with camera button */}
-            <div className="relative shrink-0">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white overflow-hidden relative group cursor-pointer"
-                style={avatarUrl ? {} : { background: 'var(--ink)' }}
-                disabled={uploadingAvatar}
-              >
-                {avatarUrl
-                  ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-                  : <span>{initials}</span>}
-                {/* Camera overlay on hover */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 tr flex items-center justify-center">
-                  {uploadingAvatar
-                    ? <Loader2 className="w-5 h-5 text-white animate-spin" />
-                    : <Camera className="w-5 h-5 text-white" />}
-                </div>
-              </button>
-              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[var(--card-bg)] flex items-center justify-center" style={{ background: 'var(--lime)' }}>
-                <Check className="w-2.5 h-2.5" style={{ color: 'var(--ink)' }} />
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-semibold text-[var(--ink)] truncate">{profile?.full_name ?? 'Utilisateur'}</h1>
-              <p className="text-sm text-[var(--ink-60)] truncate">{profile?.email ?? ''}</p>
-              <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--lime)', color: '#ffffff' }}>
-                <Check className="w-2.5 h-2.5" /> Compte vérifié
-              </span>
-            </div>
-            <button
-              onClick={() => setModal('account')}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[var(--surface)] tr cursor-pointer border border-[var(--border)]"
-            >
-              <Edit3 className="w-4 h-4 text-[var(--ink-60)]" />
-            </button>
-          </div>
-
-          {/* User ID card */}
-          <div
-            className="flex items-center gap-3 p-3 rounded-2xl"
-            style={{ background: 'var(--ink)' }}
-          >
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Mon ID FamillyBill
-              </p>
-              {displayCode ? (
-                <p className="text-base font-black tracking-widest font-mono" style={{ color: 'var(--lime)' }}>
-                  {displayCode}
-                </p>
-              ) : (
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>Génération…</p>
-              )}
-            </div>
-            {displayCode && (
-              <button
-                onClick={copyUserCode}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold tr cursor-pointer shrink-0"
-                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
-              >
-                {codeCopied ? <Check className="w-3.5 h-3.5" style={{ color: 'var(--lime)' }} /> : <Copy className="w-3.5 h-3.5" />}
-                {codeCopied ? 'Copié !' : 'Copier'}
-              </button>
-            )}
-          </div>
-
-          {/* Share profile button */}
+          {/* Avatar */}
           <button
-            onClick={() => setShowShareModal(true)}
-            className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold tr cursor-pointer"
-            style={{ background: 'var(--lime)', color: '#ffffff' }}
-          >
-            <Share2 className="w-4 h-4" />
-            Partager mon profil pour recevoir des paiements
+            onClick={() => fileInputRef.current?.click()}
+            className="relative w-20 h-20 rounded-full overflow-hidden cursor-pointer group mb-3"
+            disabled={uploadingAvatar}>
+            {avatarUrl
+              ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white" style={{ background: '#4F46E5' }}>{initials}</div>}
+            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 tr flex items-center justify-center rounded-full">
+              {uploadingAvatar ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
+            </div>
           </button>
+
+          <p className="text-base font-bold" style={{ color: '#111' }}>{profile?.full_name ?? 'Utilisateur'}</p>
+
+          {/* Verified badge */}
+          <div className="flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full"
+            style={{ background: '#4F46E5' }}>
+            <Check className="w-3 h-3 text-white" strokeWidth={3} />
+            <span className="text-xs font-semibold text-white">Verified</span>
+          </div>
         </div>
 
-        {/* Compte section */}
-        <Section title="Compte" delay={50}>
-          <MenuItem icon={User}     label="Détails du compte"   desc="Informations personnelles"    onClick={() => setModal('account')} />
-          <MenuItem icon={FileText} label="Relevés de compte"   desc="Historique et export CSV"     onClick={() => setModal('statements')} />
-          <MenuItem icon={KeyRound} label="Changer le code PIN" desc="Modifier votre code secret"   onClick={() => navigate('/wallet')} last />
-        </Section>
+        <div className="px-4 space-y-3">
+          {/* Group 1 */}
+          <GroupCard>
+            <RowItem Icon={User} label="Personal Details" onPress={() => push('personal')} />
+            <RowItem Icon={Bell} label={`Notifications${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
+              onPress={() => push('notifications-list')} />
+            <RowItem Icon={Fingerprint} label="Set Up Face ID" right={
+              <Switch checked={biometric}
+                onCheckedChange={v => { setBiometric(v); localStorage.setItem('fb-biometric', String(v)) }}
+                onClick={e => e.stopPropagation()} />
+            } />
+            <RowItem Icon={ShieldCheck} label="Privacy & Security" onPress={() => push('privacy')} last />
+          </GroupCard>
 
-        {/* Sécurité section */}
-        <Section title="Sécurité" delay={100}>
-          <ToggleItem
-            icon={Fingerprint} label="Authentification biométrique" desc="Face ID / Empreinte digitale"
-            checked={biometric} onChange={v => toggle('fb-biometric', v, setBiometric)}
-          />
-          <ToggleItem
-            icon={ShieldCheck} label="Double authentification (2FA)" desc="Protection renforcée"
-            checked={twoFA} onChange={v => toggle('fb-2fa', v, setTwoFA)}
-          />
-          <ToggleItem
-            icon={Bell} label="Notifications" desc="Alertes transactions et offres"
-            checked={notifEnabled} onChange={v => toggle('fb-notif', v, setNotifEnabled)}
-          />
-          <ToggleItem
-            icon={MapPin} label="Localisation" desc="Transactions par géolocalisation"
-            checked={location} onChange={v => toggle('fb-location', v, setLocation)} last
-          />
-        </Section>
+          {/* Group 2 */}
+          <GroupCard>
+            <RowItem Icon={Settings} label="Settings" onPress={() => push('settings')} />
+            <RowItem Icon={FileText} label="Terms And Conditions"
+              onPress={() => { /* terms screen placeholder */ }} />
+            <RowItem Icon={HelpCircle} label="Support" onPress={() => { /* support */ }} last />
+          </GroupCard>
 
-        {/* Préférences section */}
-        <Section title="Préférences" delay={150}>
-          {/* Language */}
-          <div className="relative">
-            <div
-              className="flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer"
-              onClick={() => setShowLang(!showLang)}
-            >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-                <Languages className="w-5 h-5 text-[var(--ink-60)]" />
+          {/* User ID */}
+          <GroupCard>
+            <div className="px-4 py-4 flex items-center gap-3"
+              style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', borderRadius: 16 }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                <QrCode className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-[var(--ink)]">Langue</p>
-                <p className="text-xs text-[var(--ink-60)]">{selectedLang}</p>
+                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>Mon ID</p>
+                <p className="text-base font-black font-mono text-white">{displayCode || '—'}</p>
               </div>
-              <ChevronRight className={cn("w-4 h-4 text-[var(--ink-30)] tr", showLang && "rotate-90")} />
+              <button onClick={() => setShowShare(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer"
+                style={{ background: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)' }}>
+                <Share2 className="w-3.5 h-3.5" /> Partager
+              </button>
             </div>
-            {showLang && (
-              <div className="mx-4 mb-2 rounded-xl border border-[var(--border)] overflow-hidden animate-scale-in" style={{ background: 'var(--card-bg)' }}>
-                {LANGUAGES.map(lang => (
-                  <button
-                    key={lang}
-                    onClick={() => { setSelectedLang(lang); localStorage.setItem('fb-lang', lang); setShowLang(false) }}
-                    className={cn("w-full flex items-center justify-between px-4 py-2.5 text-sm tr cursor-pointer hover:bg-[var(--surface)]",
-                      lang === selectedLang ? "font-semibold text-[var(--ink)]" : "text-[var(--ink-60)]"
-                    )}
-                  >
-                    {lang}
-                    {lang === selectedLang && <Check className="w-3.5 h-3.5" style={{ color: 'var(--lime)' }} />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          </GroupCard>
 
-          <MenuItem icon={Gauge} label="Limites de transaction" desc="Gérer vos plafonds quotidiens" onClick={() => setModal('limits')} last />
-        </Section>
+          {/* Statements link */}
+          <button onClick={() => setShowStatements(true)}
+            className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl cursor-pointer tr"
+            style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <IconWrap Icon={Download} />
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Relevés de compte (CSV)</span>
+            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+          </button>
 
-        {/* Sign out */}
-        <button
-          onClick={handleSignOut}
-          className="w-full card-flat flex items-center gap-3 px-4 py-4 text-red-500 hover:bg-red-50 tr cursor-pointer animate-fade-in-up"
-          style={{ animationDelay: '200ms' }}
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="font-semibold text-sm">Déconnexion</span>
-        </button>
+          {/* Sign out */}
+          <button onClick={handleSignOut}
+            className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl cursor-pointer tr"
+            style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <IconWrap Icon={LogOut} color="#EF4444" bg="#FEF2F2" />
+            <span className="flex-1 text-left text-sm font-semibold" style={{ color: '#EF4444' }}>Déconnexion</span>
+          </button>
+        </div>
+      </div>
 
-      </div>
-    </div>
-  )
-}
-
-function Section({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) {
-  return (
-    <div className="animate-fade-in-up" style={{ animationDelay: `${delay}ms` }}>
-      <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)] px-1 mb-2">{title}</p>
-      <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function MenuItem({
-  icon: Icon, label, desc, last = false, onClick,
-}: {
-  icon: typeof User; label: string; desc?: string; last?: boolean; onClick?: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn("w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left", last && "")}
-    >
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-        <Icon className="w-5 h-5 text-[var(--ink-60)]" />
-      </div>
-      <div className="flex-1">
-        <p className="text-sm font-medium text-[var(--ink)]">{label}</p>
-        {desc && <p className="text-xs text-[var(--ink-60)]">{desc}</p>}
-      </div>
-      <ChevronRight className="w-4 h-4 text-[var(--ink-30)] shrink-0" />
-    </button>
-  )
-}
-
-function ToggleItem({
-  icon: Icon, label, desc, checked, onChange, last = false,
-}: {
-  icon: typeof User; label: string; desc?: string; checked: boolean; onChange: (v: boolean) => void; last?: boolean
-}) {
-  return (
-    <div className={cn("flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer", last && "")}
-      onClick={() => onChange(!checked)}>
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-        <Icon className="w-5 h-5 text-[var(--ink-60)]" />
-      </div>
-      <div className="flex-1">
-        <p className="text-sm font-medium text-[var(--ink)]">{label}</p>
-        {desc && <p className="text-xs text-[var(--ink-60)]">{desc}</p>}
-      </div>
-      <Switch checked={checked} onCheckedChange={onChange} onClick={e => e.stopPropagation()} />
+      {/* ── Sub-screens (rendered as fixed overlays) ── */}
+      {screen === 'personal' && (
+        <PersonalDetailsScreen
+          onBack={back}
+          onSettings={() => push('settings')}
+          onHelp={() => {}}
+          onSignOut={handleSignOut}
+        />
+      )}
+      {screen === 'notifications-list' && (
+        <NotificationsListScreen onBack={back} />
+      )}
+      {screen === 'notif-manage' && (
+        <ManageNotifsScreen onBack={back} />
+      )}
+      {screen === 'settings' && (
+        <SettingsScreen onBack={back} onNotifs={() => push('notif-manage')} />
+      )}
+      {screen === 'privacy' && (
+        <PrivacyScreen onBack={back} />
+      )}
     </div>
   )
 }
