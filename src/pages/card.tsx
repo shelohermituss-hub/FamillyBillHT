@@ -95,17 +95,18 @@ export function CardPage() {
       <div className="min-h-screen pb-36" style={{ background: '#080e1c' }}>
 
         {/* ── Header ── */}
-        <div className="px-5 pt-6 pb-3 flex items-center justify-between">
+        <div className="px-5 pt-7 pb-4 flex items-center justify-between">
           <div>
-            <h1 className="text-white text-xl font-bold tracking-tight">Mes Cartes</h1>
-            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>{CURRENCY_CARDS.length} comptes devises</p>
+            <h1 className="font-extrabold text-white" style={{ fontSize: 22, letterSpacing: '-0.03em' }}>Mes Cartes</h1>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginTop: 2 }}>{CURRENCY_CARDS.length} comptes devises</p>
           </div>
           <button
             onClick={() => navigate('/wallet')}
-            className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer tr hover:opacity-80"
-            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)' }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer tr hover:opacity-80"
+            style={{ background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.1)' }}
           >
             <Plus className="w-4 h-4 text-white/70" />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Ajouter</span>
           </button>
         </div>
 
@@ -255,32 +256,31 @@ export function CardPage() {
         </div>
 
         {/* ── Card settings ── */}
-        <div
-          className="mx-5 mt-5 rounded-2xl overflow-hidden"
-          style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
+        <div className="mx-5 mt-5 space-y-2">
+          <p className="font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>
+            Contrôles de la carte
+          </p>
           {[
             { label: 'Paiements en ligne',    Icon: Zap,           value: 'Activé' },
             { label: 'Paiement sans contact', Icon: MoreHorizontal, value: 'Activé' },
-          ].map((item, i) => (
+          ].map((item) => (
             <div
               key={item.label}
-              className="flex items-center justify-between px-4 py-4 cursor-pointer tr hover:opacity-80"
-              style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : undefined }}
+              className="flex items-center justify-between px-4 py-4 rounded-2xl cursor-pointer tr hover:opacity-80"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
             >
               <div className="flex items-center gap-3">
-                <item.Icon className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.3)' }} />
-                <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14, fontWeight: 500 }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  <item.Icon className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
+                </div>
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600 }}>
                   {item.label}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>{item.value}</span>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-lg text-[11px] font-semibold" style={{ background: 'rgba(74,222,128,0.15)', color: '#4ade80' }}>{item.value}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
               </div>
