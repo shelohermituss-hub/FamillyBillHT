@@ -72,11 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.from('wise_users').upsert({
         id: data.user.id, email, full_name: fullName, verified: false, user_code: userCode,
       })
-      await supabase.from('currency_accounts').upsert([
-        { user_id: data.user.id, currency: 'HTG', balance: 0, is_main: true },
-        { user_id: data.user.id, currency: 'USD', balance: 0, is_main: false },
-        { user_id: data.user.id, currency: 'EUR', balance: 0, is_main: false },
-      ], { onConflict: 'user_id,currency' })
+      await supabase.from('currency_accounts').insert(
+        { user_id: data.user.id, currency: 'USD', balance: 0, is_main: true }
+      )
       await fetchProfile(data.user.id)
     }
     return { error: null }

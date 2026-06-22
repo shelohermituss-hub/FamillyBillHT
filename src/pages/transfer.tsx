@@ -7,7 +7,7 @@ import {
   Download, Percent,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { supabase, type CurrencyAccount } from '@/lib/supabase'
+import { supabase, type CurrencyAccount, type WiseUser } from '@/lib/supabase'
 import { getCurrency, formatCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 
@@ -22,21 +22,6 @@ type Contact = { id: string; name: string; initials: string; phone: string; isFa
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const ACCENT = '#4F46E5'
-const CONTACTS: Contact[] = [
-  { id:'c1', name:'James Martin',   initials:'JM', phone:'+1-212-456-7890', isFav:true  },
-  { id:'c2', name:'Richard Dupont', initials:'RI', phone:'+1-212-336-9898', isFav:true  },
-  { id:'c3', name:'Thomas Bernard', initials:'TA', phone:'+1-212-777-1478', isFav:false },
-  { id:'c4', name:'Jennifer Lopez', initials:'JE', phone:'+1-212-456-7891', isFav:false },
-  { id:'c5', name:'Linda Carter',   initials:'LI', phone:'+1-111-225-7890', isFav:false },
-  { id:'c6', name:'Daniel Craig',   initials:'DA', phone:'+1-212-002-2221', isFav:false },
-  { id:'c7', name:'Austin Brown',   initials:'AU', phone:'+1-212-456-7892', isFav:false },
-  { id:'c8', name:'Ann Blair',      initials:'AN', phone:'+1-212-666-6569', isFav:false },
-  { id:'c9', name:'Anna Kate',      initials:'AK', phone:'+1-111-225-7891', isFav:false },
-  { id:'c10',name:'Brian Johnson',  initials:'BR', phone:'+1-212-336-9899', isFav:false },
-  { id:'c11',name:'Brooke Shields', initials:'BS', phone:'+1-212-777-1479', isFav:false },
-  { id:'c12',name:'Brody Stevens',  initials:'BD', phone:'+1-212-777-6598', isFav:false },
-]
-const RECENT = CONTACTS.slice(0, 6)
 
 const CARD_STYLES = [
   { id:'purple', g:'linear-gradient(135deg,#1a0070,#3b12cc,#6d28d9)' },
@@ -264,12 +249,40 @@ export function TransferPage() {
   // Between wallets (same user)
   const [betweenFrom, setBetweenFrom] = useState<CurrencyAccount|null>(null)
   const [betweenTo, setBetweenTo] = useState<CurrencyAccount|null>(null)
+  const [betweenPickerFor, setBetweenPickerFor] = useState<'from'|'to'>('from')
+
+  // Real users / contacts
+  const [appUsers, setAppUsers] = useState<WiseUser[]>([])
+  const [favUserIds, setFavUserIds] = useState<string[]>(()=>{
+    try { return JSON.parse(localStorage.getItem('fb-fav-contacts')?? '[]') } catch { return [] }
+  })
+  const [recipientWalletAcct, setRecipientWalletAcct] = useState<CurrencyAccount|null>(null)
 
   useEffect(()=>{
     if (!user) return
     supabase.from('currency_accounts').select('*').eq('user_id', user.id)
       .then(({data})=>{ if (data?.length) { setAccounts(data); setFromWallet(data.find(a=>a.is_main)??data[0]) }})
+    supabase.from('wise_users').select('*').neq('id', user.id)
+      .then(({data})=>{ if (data) setAppUsers(data) })
   },[user])
+
+  const toContact = (u: WiseUser): Contact => ({
+    id: u.id,
+    name: u.full_name,
+    initials: u.full_name.split(' ').map((w:string)=>w[0]).join('').slice(0,2).toUpperCase(),
+    phone: u.user_code ?? u.email,
+    isFav: favUserIds.includes(u.id),
+  })
+  const allContacts = appUsers.map(toContact)
+  const recentContacts = allContacts.slice(0, 6)
+
+  function toggleFav(id: string) {
+    setFavUserIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]
+      localStorage.setItem('fb-fav-contacts', JSON.stringify(next))
+      return next
+    })
+  }
 
   const sendAmount = parseFloat(amountStr)||0
   const fee = sendAmount>0 ? Math.max(1.2, sendAmount*0.005) : 0
@@ -311,21 +324,37 @@ export function TransferPage() {
   async function doTransfer(nextScreen: Screen){
     if (!user||!fromWallet) return
     setProcessing(true)
-    await supabase.from('transactions').insert({
-      user_id:user.id, type:'send', status:'completed',
-      amount:sendAmount, currency:fromWallet.currency, fee,
-      recipient_name: selectedContact?.name??recipientName??null,
-      note:note||null, reference:txRef,
-    })
+    const recipName = selectedContact?.name ?? recipientName ?? null
+    // Deduct from sender
     await supabase.from('currency_accounts')
-      .update({ balance:Math.max(0, fromWallet.balance-sendAmount-fee) })
+      .update({ balance: Math.max(0, fromWallet.balance - sendAmount - fee) })
       .eq('id', fromWallet.id)
-    if (betweenTo&&betweenTo.user_id===user.id){
+    // Credit recipient
+    if (betweenTo && betweenTo.user_id === user.id) {
+      // Same-user between-wallets: add net amount to destination wallet
       await supabase.from('currency_accounts')
-        .update({ balance:betweenTo.balance+(sendAmount-fee) })
+        .update({ balance: betweenTo.balance + (sendAmount - fee) })
         .eq('id', betweenTo.id)
+    } else if (recipientWalletAcct) {
+      // Cross-user wallet transfer: credit recipient's account
+      await supabase.from('currency_accounts')
+        .update({ balance: recipientWalletAcct.balance + (sendAmount - fee) })
+        .eq('id', recipientWalletAcct.id)
+      // Record incoming transaction for recipient
+      await supabase.from('transactions').insert({
+        user_id: recipientWalletAcct.user_id, type:'receive', status:'completed',
+        amount: sendAmount - fee, currency: fromWallet.currency, fee: 0,
+        recipient_name: recipName, note: note || null, reference: txRef,
+      })
     }
-    const {data} = await supabase.from('currency_accounts').select('*').eq('user_id',user.id)
+    // Record outgoing transaction for sender
+    await supabase.from('transactions').insert({
+      user_id: user.id, type:'send', status:'completed',
+      amount: sendAmount, currency: fromWallet.currency, fee,
+      recipient_name: recipName, note: note || null, reference: txRef,
+    })
+    // Refresh sender's accounts
+    const {data} = await supabase.from('currency_accounts').select('*').eq('user_id', user.id)
     if (data){ setAccounts(data); const f=data.find(a=>a.id===fromWallet.id); if(f) setFromWallet(f) }
     setProcessing(false)
     push(nextScreen)
@@ -334,28 +363,33 @@ export function TransferPage() {
   function reset(){
     setScreens(['hub']); setAmountStr('0'); setNote(''); setPin(''); setTxRef('')
     setSelectedContact(null); setRecipientName(''); setRecipientAccount(''); setPurpose('')
-    setWalletIdInput(''); setWalletIdFound(null); setPhoneNumber('')
+    setWalletIdInput(''); setWalletIdFound(null); setWalletIdError(''); setRecipientWalletAcct(null); setPhoneNumber('')
     setBetweenFrom(null); setBetweenTo(null)
     setWalletPickerOpen(false); setPinSheetOpen(false); setProcessing(false)
   }
 
   function handleWalletIdChange(v:string){
-    const val=v.toUpperCase().slice(0,8); setWalletIdInput(val); setWalletIdFound(null); setWalletIdError('')
+    const val=v.toUpperCase().slice(0,8); setWalletIdInput(val); setWalletIdFound(null); setWalletIdError(''); setRecipientWalletAcct(null)
     clearTimeout(walletIdTimer.current)
-    if (val.length===8){
+    if (val.length>=6){
       setWalletIdSearching(true)
       walletIdTimer.current=setTimeout(async()=>{
-        const {data}=await supabase.from('wise_users').select('id,full_name,user_code').eq('user_code',val).maybeSingle()
+        const {data:wu}=await supabase.from('wise_users').select('id,full_name,user_code').eq('user_code',val).maybeSingle()
+        if (!wu){ setWalletIdSearching(false); setWalletIdError('Aucun utilisateur trouvé.'); return }
+        setWalletIdFound({id:wu.id,name:wu.full_name,code:wu.user_code})
+        // Find recipient's account matching sender's currency
+        const currency = fromWallet?.currency ?? 'USD'
+        const {data:accts}=await supabase.from('currency_accounts').select('*').eq('user_id',wu.id).eq('currency',currency)
         setWalletIdSearching(false)
-        if (data) setWalletIdFound({id:data.id,name:data.full_name,code:data.user_code})
-        else setWalletIdError('Aucun portefeuille trouvé.')
+        if (accts&&accts.length>0) setRecipientWalletAcct(accts[0])
+        else setWalletIdError(`Destinataire n'a pas de portefeuille ${currency}.`)
       },350)
     }
   }
 
-  const filteredC = CONTACTS.filter(c=>{
+  const filteredC = allContacts.filter(c=>{
     if (cSearch) return c.name.toLowerCase().includes(cSearch.toLowerCase())||c.phone.includes(cSearch)
-    if (cTab==='recent') return RECENT.some(r=>r.id===c.id)
+    if (cTab==='recent') return recentContacts.some(r=>r.id===c.id)
     if (cTab==='favorites') return c.isFav
     return true
   })
@@ -490,8 +524,10 @@ export function TransferPage() {
             <button className="cursor-pointer"><MoreHorizontal className="w-5 h-5" style={{color:'#8E8E93'}}/></button>
           </div>
           <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-1">
-            {RECENT.map(c=>(
-              <button key={c.id} onClick={()=>{setSelectedContact(c);setContactIdx(RECENT.indexOf(c));push('send-money')}}
+            {recentContacts.length===0
+              ? <p className="text-xs py-2" style={{color:'#C7C7CC'}}>Aucun contact trouvé</p>
+              : recentContacts.map(c=>(
+              <button key={c.id} onClick={()=>{setSelectedContact(c);push('send-money')}}
                 className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
                 <ContactCircle c={c} size={50}/>
                 <p className="text-xs font-medium" style={{color:'#8E8E93'}}>{c.name.split(' ')[0]}</p>
@@ -545,10 +581,10 @@ export function TransferPage() {
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='send-money') {
     const displayList = selectedContact ? [
-      ...RECENT.filter(c=>c.id!==selectedContact.id).slice(0,2),
+      ...recentContacts.filter(c=>c.id!==selectedContact.id).slice(0,2),
       selectedContact,
-      ...RECENT.filter(c=>c.id!==selectedContact.id).slice(2,4),
-    ] : RECENT
+      ...recentContacts.filter(c=>c.id!==selectedContact.id).slice(2,4),
+    ] : recentContacts
     const selIdx = displayList.findIndex(c=>c.id===selectedContact?.id)
     const canContinue = fromWallet && sendAmount>0 && sendAmount<=fromWallet.balance
     return (
@@ -927,7 +963,9 @@ export function TransferPage() {
               <button className="cursor-pointer"><MoreHorizontal className="w-5 h-5" style={{color:'#8E8E93'}}/></button>
             </div>
             <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-3 mb-2">
-              {RECENT.map(c=>(
+              {recentContacts.length===0
+                ? <p className="text-xs py-2" style={{color:'#C7C7CC'}}>Aucun contact récent</p>
+                : recentContacts.map(c=>(
                 <button key={c.id} onClick={()=>{setSelectedContact(c);push('contact-form')}}
                   className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
                   <ContactCircle c={c} size={48}/>
@@ -943,16 +981,21 @@ export function TransferPage() {
           <div key={letter}>
             <p className="text-sm font-bold px-1 py-2.5" style={{color:'#8E8E93'}}>{letter}</p>
             {cs.map(c=>(
-              <button key={c.id} onClick={()=>{setSelectedContact(c);push('contact-form')}}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl mb-1 hover:bg-gray-50 cursor-pointer tr"
+              <div key={c.id} className="flex items-center gap-3 px-3 py-3 rounded-2xl mb-1 hover:bg-gray-50 tr"
                 style={cSearch&&filteredC[0]?.id===c.id?{border:`2px solid ${ACCENT}`,background:`${ACCENT}08`}:{}}>
-                <ContactCircle c={c} size={44}/>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{c.name}</p>
-                  <p className="text-xs" style={{color:'#8E8E93'}}>{c.phone}</p>
-                </div>
-                <ChevronLeft className="w-4 h-4 rotate-180 shrink-0" style={{color:'#C7C7CC'}}/>
-              </button>
+                <button onClick={()=>{setSelectedContact(c);push('contact-form')}} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+                  <ContactCircle c={c} size={44}/>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{c.name}</p>
+                    <p className="text-xs truncate" style={{color:'#8E8E93'}}>{c.phone}</p>
+                  </div>
+                </button>
+                <button onClick={()=>toggleFav(c.id)} className="w-8 h-8 flex items-center justify-center shrink-0 cursor-pointer">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill={c.isFav?ACCENT:'none'} stroke={ACCENT} strokeWidth="2">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </button>
+              </div>
             ))}
           </div>
         ))}
@@ -1079,7 +1122,16 @@ export function TransferPage() {
             </div>
           ))}
           <div className="mt-5">
-            <button onClick={()=>doTransfer('contact-success')} disabled={processing}
+            <button onClick={async()=>{
+              if (!fromWallet||!selectedContact) return
+              // Find recipient's wallet for this currency
+              if (!recipientWalletAcct) {
+                const {data}=await supabase.from('currency_accounts').select('*')
+                  .eq('user_id', selectedContact.id).eq('currency', fromWallet.currency)
+                if (data?.length) setRecipientWalletAcct(data[0])
+              }
+              doTransfer('contact-success')
+            }} disabled={processing}
               className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
               style={{background:ACCENT,color:'white',height:52}}>
               {processing?<Loader2 className="w-4 h-4 animate-spin"/>:<><Send className="w-4 h-4"/>Send</>}
@@ -1136,40 +1188,70 @@ export function TransferPage() {
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='between-wallets') {
     const canGo = betweenFrom && betweenTo && betweenFrom.id!==betweenTo.id && sendAmount>0 && sendAmount<=betweenFrom.balance
+    const WalletDropdown = ({ label, selected, onOpen }: { label:string; selected:CurrencyAccount|null; onOpen:()=>void }) => {
+      const curr = selected ? getCurrency(selected.currency) : null
+      return (
+        <div className="mb-4">
+          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>{label}</p>
+          <button onClick={onOpen} className="w-full flex items-center gap-3 px-4 h-14 rounded-2xl cursor-pointer tr"
+            style={{background:'#F8F8FA',border:'1px solid #E5E7EB'}}>
+            {selected ? (
+              <>
+                <span className="text-2xl">{curr?.flag}</span>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold" style={{color:'#1C1C1E'}}>{selected.currency}</p>
+                  <p className="text-xs" style={{color:'#8E8E93'}}>{formatCurrency(selected.balance, selected.currency)}</p>
+                </div>
+              </>
+            ) : (
+              <span className="flex-1 text-left text-sm" style={{color:'#C7C7CC'}}>Sélectionner un portefeuille</span>
+            )}
+            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+      )
+    }
+    const betweenWalletSheet = (
+      <div className="fixed inset-0 z-[75] flex flex-col justify-end">
+        <div className="absolute inset-0 bg-black/40" onClick={()=>setWalletPickerOpen(false)}/>
+        <div className="relative bg-white rounded-t-3xl pb-8" style={{boxShadow:'0 -8px 30px rgba(0,0,0,0.12)'}}>
+          <div className="flex justify-center pt-3 pb-4"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
+          <p className="text-base font-bold text-center mb-2 px-4" style={{color:'#1C1C1E'}}>
+            {betweenPickerFor==='from' ? 'Portefeuille source' : 'Portefeuille destination'}
+          </p>
+          <div className="max-h-72 overflow-y-auto divide-y divide-gray-100">
+            {accounts
+              .filter(a => betweenPickerFor==='to' ? a.id!==betweenFrom?.id : true)
+              .map(a=>{
+                const curr=getCurrency(a.currency)
+                const isSel = betweenPickerFor==='from' ? betweenFrom?.id===a.id : betweenTo?.id===a.id
+                return (
+                  <button key={a.id} onClick={()=>{
+                    if (betweenPickerFor==='from') setBetweenFrom(a); else { setBetweenTo(a); setToWallet(a) }
+                    setWalletPickerOpen(false)
+                  }} className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 cursor-pointer tr">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{background:getGradient(a)}}>{curr?.flag}</div>
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{curr?.name??a.currency}</p>
+                      <p className="text-xs" style={{color:'#8E8E93'}}>{formatCurrency(a.balance,a.currency)}</p>
+                    </div>
+                    <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
+                      style={{borderColor:isSel?ACCENT:'#D1D5DB'}}>
+                      {isSel&&<div className="w-2.5 h-2.5 rounded-full" style={{background:ACCENT}}/>}
+                    </div>
+                  </button>
+                )
+              })}
+          </div>
+        </div>
+      </div>
+    )
     return (
       <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
         <Hdr title="Between Wallets" onBack={back}/>
         <div className="px-5 pb-10">
-          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>From</p>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4">
-            {accounts.map(a=>{
-              const curr=getCurrency(a.currency); const sel=betweenFrom?.id===a.id
-              return (
-                <button key={a.id} onClick={()=>setBetweenFrom(a)}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer tr shrink-0 border"
-                  style={{borderColor:sel?ACCENT:'#E5E7EB',background:sel?`${ACCENT}10`:'#F8F8FA'}}>
-                  <span className="text-lg">{curr?.flag}</span>
-                  <div className="text-left"><p className="text-xs font-bold" style={{color:'#1C1C1E'}}>{a.currency}</p><p className="text-[10px]" style={{color:'#8E8E93'}}>{formatCurrency(a.balance,a.currency)}</p></div>
-                  {sel&&<Check className="w-3.5 h-3.5 shrink-0" style={{color:ACCENT}}/>}
-                </button>
-              )
-            })}
-          </div>
-          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>To</p>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-5">
-            {accounts.filter(a=>a.id!==betweenFrom?.id).map(a=>{
-              const curr=getCurrency(a.currency); const sel=betweenTo?.id===a.id
-              return (
-                <button key={a.id} onClick={()=>{setBetweenTo(a);setToWallet(a)}}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer tr shrink-0 border"
-                  style={{borderColor:sel?ACCENT:'#E5E7EB',background:sel?`${ACCENT}10`:'#F8F8FA'}}>
-                  <span className="text-lg">{curr?.flag}</span>
-                  <div className="text-left"><p className="text-xs font-bold" style={{color:'#1C1C1E'}}>{a.currency}</p><p className="text-[10px]" style={{color:'#8E8E93'}}>{formatCurrency(a.balance,a.currency)}</p></div>
-                  {sel&&<Check className="w-3.5 h-3.5 shrink-0" style={{color:ACCENT}}/>}
-                </button>
-              )
-            })}
-          </div>
+          <WalletDropdown label="From" selected={betweenFrom} onOpen={()=>{ setBetweenPickerFor('from'); setWalletPickerOpen(true) }}/>
+          <WalletDropdown label="To" selected={betweenTo} onOpen={()=>{ setBetweenPickerFor('to'); setWalletPickerOpen(true) }}/>
           <div className="rounded-3xl py-6 text-center mb-4" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
             <p className="text-xs mb-1" style={{color:'#8E8E93'}}>Amount</p>
             <p className="text-5xl font-light" style={{color:'#1C1C1E'}}>
@@ -1177,12 +1259,13 @@ export function TransferPage() {
             </p>
           </div>
           <div className="border-t border-gray-100 mb-2"><NumPad onDigit={amtDigit} onBack={amtBack} dot/></div>
-          <button onClick={()=>{setFromWallet(betweenFrom);openPin()}} disabled={!canGo}
-            className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
+          <button onClick={()=>{ if(betweenFrom) setFromWallet(betweenFrom); openPin() }} disabled={!canGo}
+            className="w-full rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
             style={{background:ACCENT,color:'white',height:52}}>
             Continue
           </button>
         </div>
+        {walletPickerOpen&&betweenWalletSheet}
         {pinSheetOpen&&<PinSheet/>}
       </div>
     )
