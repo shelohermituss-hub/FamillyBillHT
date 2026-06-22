@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type WiseUser } from '@/lib/supabase'
-import { getCurrency, formatCurrency } from '@/lib/currencies'
+import { getCurrency, formatCurrency, getRate } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -330,9 +330,13 @@ export function TransferPage() {
       .eq('id', fromWallet.id)
     // Credit recipient
     if (betweenTo && betweenTo.user_id === user.id) {
-      // Same-user between-wallets: add net amount to destination wallet
+      // Same-user between-wallets: convert then credit destination wallet
+      const netSend = sendAmount - fee
+      const converted = betweenTo.currency !== fromWallet.currency
+        ? netSend * getRate(fromWallet.currency, betweenTo.currency)
+        : netSend
       await supabase.from('currency_accounts')
-        .update({ balance: betweenTo.balance + (sendAmount - fee) })
+        .update({ balance: betweenTo.balance + converted })
         .eq('id', betweenTo.id)
     } else if (recipientWalletAcct) {
       // Cross-user wallet transfer: credit recipient's account
@@ -554,7 +558,7 @@ export function TransferPage() {
         <div className="grid grid-cols-2 gap-3">
           {[
             { icon:Building2, label:'Bank transfer',               action:()=>push('bank-form')      },
-            { icon:Repeat2,   label:'Wallet to wallet',            action:()=>push('contacts')       },
+            { icon:Repeat2,   label:'Wallet to wallet',            action:()=>push('wallet-id')      },
             { icon:ArrowRight,label:'Between wallets',             action:()=>push('between-wallets')},
             { icon:Phone,     label:'Phone number',                action:()=>push('phone-send')     },
             { icon:Users,     label:'Contact transfer',            action:()=>push('contacts')       },
@@ -691,18 +695,44 @@ export function TransferPage() {
           </div>
           {/* To */}
           <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>To</p>
-          {c&&(
+          {c ? (
             <div className="flex items-center gap-3 px-4 h-14 rounded-2xl mb-5" style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
               <ContactCircle c={c} size={32}/>
               <span className="flex-1 text-sm font-semibold" style={{color:'#1C1C1E'}}>{c.name}</span>
             </div>
+          ) : betweenTo ? (
+            <div className="flex items-center gap-3 px-4 h-14 rounded-2xl mb-5" style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg shrink-0" style={{background:getGradient(betweenTo)}}>{getCurrency(betweenTo.currency)?.flag}</div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{betweenTo.currency} — {maskId(betweenTo.id)}</p>
+                {fromWallet && betweenTo.currency !== fromWallet.currency && sendAmount > 0 && (
+                  <p className="text-xs font-semibold" style={{color:ACCENT}}>
+                    ≈ {formatCurrency((sendAmount - fee) * getRate(fromWallet.currency, betweenTo.currency), betweenTo.currency)}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : walletIdFound ? (
+            <div className="flex items-center gap-3 px-4 h-14 rounded-2xl mb-5" style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm text-white shrink-0" style={{background:ACCENT}}>
+                {walletIdFound.name.split(' ').map((w:string)=>w[0]).join('').slice(0,2).toUpperCase()}
+              </div>
+              <span className="flex-1 text-sm font-semibold" style={{color:'#1C1C1E'}}>{walletIdFound.name}</span>
+            </div>
+          ) : (
+            <div className="flex items-center px-4 h-14 rounded-2xl mb-5" style={{background:'#F2F2F7',border:'1px solid #E5E7EB'}}>
+              <span className="text-sm" style={{color:'#C7C7CC'}}>{recipientName || '—'}</span>
+            </div>
           )}
           {/* Details */}
           <div className="border-t border-gray-100">
-            <Row label="Amount will send" value={`$${parseFloat(amountStr).toFixed(2)}`}/>
+            <Row label="Amount will send" value={formatCurrency(sendAmount, fromWallet?.currency??'USD')}/>
+            {betweenTo && fromWallet && betweenTo.currency !== fromWallet.currency && (
+              <Row label="Amount to receive" value={formatCurrency((sendAmount - fee) * getRate(fromWallet.currency, betweenTo.currency), betweenTo.currency)} green/>
+            )}
             <Row label="Reference number" value={txRef}/>
             <Row label="Date" value={new Date().toLocaleDateString('en-GB')}/>
-            <Row label="Fees" value={`$${fee.toFixed(1)}`}/>
+            <Row label="Fees" value={formatCurrency(fee, fromWallet?.currency??'USD')}/>
           </div>
         </div>
         <div className="px-5 pt-4 pb-10">
@@ -1251,11 +1281,20 @@ export function TransferPage() {
         <div className="px-5 pb-10">
           <WalletDropdown label="From" selected={betweenFrom} onOpen={()=>{ setBetweenPickerFor('from'); setWalletPickerOpen(true) }}/>
           <WalletDropdown label="To" selected={betweenTo} onOpen={()=>{ setBetweenPickerFor('to'); setWalletPickerOpen(true) }}/>
-          <div className="rounded-3xl py-6 text-center mb-4" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
+          <div className="rounded-3xl py-5 text-center mb-4" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
             <p className="text-xs mb-1" style={{color:'#8E8E93'}}>Amount</p>
             <p className="text-5xl font-light" style={{color:'#1C1C1E'}}>
               {betweenFrom?getCurrency(betweenFrom.currency)?.symbol:'$'}{amountStr==='0'?'0':amountStr}
             </p>
+            {betweenFrom && betweenTo && betweenTo.currency !== betweenFrom.currency && sendAmount > 0 && (
+              <div className="mt-3 mx-auto px-4 py-2 rounded-xl inline-flex items-center gap-2" style={{background:`${ACCENT}12`}}>
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5"><path strokeLinecap="round" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                <span className="text-sm font-semibold" style={{color:ACCENT}}>
+                  ≈ {formatCurrency((sendAmount - fee) * getRate(betweenFrom.currency, betweenTo.currency), betweenTo.currency)}
+                </span>
+                <span className="text-xs" style={{color:'#8E8E93'}}>après frais</span>
+              </div>
+            )}
           </div>
           <div className="border-t border-gray-100 mb-2"><NumPad onDigit={amtDigit} onBack={amtBack} dot/></div>
           <button onClick={()=>{ if(betweenFrom) setFromWallet(betweenFrom); openPin() }} disabled={!canGo}
