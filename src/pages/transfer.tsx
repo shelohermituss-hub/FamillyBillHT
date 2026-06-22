@@ -254,7 +254,7 @@ export function TransferPage() {
   const [walletIdFound, setWalletIdFound] = useState<{id:string;name:string;code:string}|null>(null)
   const [walletIdSearching, setWalletIdSearching] = useState(false)
   const [walletIdError, setWalletIdError] = useState('')
-  const walletIdTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
+  const walletIdTimer = useRef<ReturnType<typeof setTimeout>|undefined>(undefined)
 
   // Contacts
   const [cTab, setCTab] = useState<'recent'|'contact'|'favorites'>('recent')
