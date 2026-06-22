@@ -62,7 +62,7 @@ function getUserDisplayName(u: UserLike) {
 }
 const walletPinKey = (id: string) => `fb-w-pin-${id}`
 
-const MOCK_SAVED_CARDS: SavedCard[] = [{ id: 'mc1', name: 'Gold Master Card', last4: '2257' }]
+const MOCK_SAVED_CARDS: SavedCard[] = []
 
 function MastercardLogo() {
   return (
@@ -491,6 +491,12 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
         {/* Cards list */}
         <div className="flex-1 overflow-y-auto px-4 py-5 pb-28 space-y-3" style={{ WebkitOverflowScrolling: 'touch' as const }}>
           <p className="text-xs font-semibold mb-4" style={{ color: '#9CA3AF', letterSpacing: '0.06em' }}>CARTES SAUVEGARDÉES</p>
+          {MOCK_SAVED_CARDS.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 gap-2">
+              <CreditCard className="w-10 h-10" style={{ color: '#D1D5DB' }} />
+              <p className="text-sm font-medium" style={{ color: '#9CA3AF' }}>Aucune carte sauvegardée</p>
+            </div>
+          )}
           {MOCK_SAVED_CARDS.map(card => (
             <button key={card.id} onClick={() => { setSelectedCard(card); setCvv(''); setShowCvvSheet(true) }}
               className="w-full flex items-center gap-4 p-4 rounded-2xl cursor-pointer tr"

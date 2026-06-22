@@ -7,6 +7,7 @@ import {
   Download, Percent,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useNotifications } from '@/lib/notifications-context'
 import { supabase, type CurrencyAccount, type WiseUser } from '@/lib/supabase'
 import { getCurrency, formatCurrency, getRate } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
@@ -204,6 +205,7 @@ function WalletPill({ acc, onTap }: { acc:CurrencyAccount; onTap:()=>void }) {
 export function TransferPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { addNotification } = useNotifications()
 
   const [screens, setScreens] = useState<Screen[]>(['hub'])
   const screen = screens[screens.length-1]
@@ -284,7 +286,8 @@ export function TransferPage() {
   }
 
   const sendAmount = parseFloat(amountStr)||0
-  const fee = sendAmount>0 ? Math.max(1.2, sendAmount*0.005) : 0
+  const minFee = fromWallet ? 1.2 * getRate('USD', fromWallet.currency) : 1.2
+  const fee = sendAmount>0 ? Math.max(minFee, sendAmount*0.005) : 0
   const now = new Date()
   const dateLabel = now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
   const timeLabel = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
@@ -359,6 +362,14 @@ export function TransferPage() {
     // Refresh sender's accounts
     const {data} = await supabase.from('currency_accounts').select('*').eq('user_id', user.id)
     if (data){ setAccounts(data); const f=data.find(a=>a.id===fromWallet.id); if(f) setFromWallet(f) }
+    // Trigger notification
+    addNotification({
+      type: 'send',
+      title: `Transfert de ${formatCurrency(sendAmount, fromWallet.currency)} envoyé`,
+      body: recipName ? `Envoyé à ${recipName} · Réf: ${txRef}` : `Réf: ${txRef}`,
+      amount: sendAmount,
+      from: recipName ?? undefined,
+    })
     setProcessing(false)
     push(nextScreen)
   }
@@ -766,7 +777,7 @@ export function TransferPage() {
             <Row label="Reference number" value={txRef}/>
             <Row label="Date" value={new Date().toLocaleDateString('en-GB')}/>
             <Row label="Time" value={timeLabel} blue/>
-            <Row label="Fees" value={`$${fee.toFixed(1)}`}/>
+            <Row label="Fees" value={formatCurrency(fee, fromWallet?.currency??'USD')}/>
           </div>
           <div className="mt-6">
             <button onClick={reset} className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer" style={{background:ACCENT,color:'white',height:52}}>Back</button>
@@ -860,7 +871,7 @@ export function TransferPage() {
           <Row label="Transaction ID" value={txRef}/>
           <Row label="Account number" value={recipientAccount}/>
           <Row label="Send to" value={recipientName}/>
-          <Row label="Fees" value={`$${fee.toFixed(1)}`} green/>
+          <Row label="Fees" value={formatCurrency(fee, fromWallet?.currency??'USD')} green/>
         </div>
         <div className="mt-6">
           <button onClick={()=>doTransfer('bank-success')} disabled={processing}
@@ -937,7 +948,7 @@ export function TransferPage() {
             <Row label="Send to" value={recipientName}/>
             <Row label="Time" value={timeLabel} blue/>
             <Row label="Issue Tracking" value={Date.now().toString().slice(-13)}/>
-            <Row label="Fees" value={`$${fee.toFixed(1)}`}/>
+            <Row label="Fees" value={formatCurrency(fee, fromWallet?.currency??'USD')}/>
           </div>
           <button onClick={()=>{navigator.clipboard.writeText(txRef).catch(()=>{}); setCopied(true); setTimeout(()=>setCopied(false),2000)}}
             className="w-full mt-4 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer tr"
@@ -1140,7 +1151,7 @@ export function TransferPage() {
             { icon:<svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#8E8E93" strokeWidth="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>, label:'Receiver', value:c.name },
             { icon:<svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#8E8E93" strokeWidth="1.5"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>, label:'Total amount', value:`$${parseFloat(amountStr).toFixed(2)}` },
             { icon:<Phone className="w-5 h-5" style={{color:'#8E8E93'}}/>, label:'Phone number', value:c.phone },
-            { icon:<Percent className="w-5 h-5" style={{color:'#8E8E93'}}/>, label:'Commission', value:`$${fee.toFixed(1)}` },
+            { icon:<Percent className="w-5 h-5" style={{color:'#8E8E93'}}/>, label:'Commission', value:formatCurrency(fee, fromWallet?.currency??'USD') },
           ].map(({icon,label,value})=>(
             <div key={label} className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{background:'#F2F2F7'}}>{icon}</div>

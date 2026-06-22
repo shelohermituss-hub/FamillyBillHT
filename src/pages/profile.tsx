@@ -894,7 +894,7 @@ export function ProfilePage() {
             <RowItem Icon={Settings} label="Settings" onPress={() => push('settings')} />
             <RowItem Icon={FileText} label="Terms And Conditions"
               onPress={() => { /* terms screen placeholder */ }} />
-            <RowItem Icon={HelpCircle} label="Support" onPress={() => { /* support */ }} last />
+            <RowItem Icon={HelpCircle} label="Support" onPress={() => navigate('/support')} last />
           </GroupCard>
 
           {/* User ID */}

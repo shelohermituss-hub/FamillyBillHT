@@ -22,7 +22,7 @@ const DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b1
 
 function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; user_code?: string } | null; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
-  const userCode = (profile as any)?.user_code as string | undefined
+  const userCode = profile?.user_code
   const name = profile?.full_name ?? 'Utilisateur'
 
   useEffect(() => {
@@ -168,7 +168,7 @@ export function DashboardPage() {
   const totalUSD = accounts.reduce((s, a) => s + a.balance * getRate(a.currency, 'USD'), 0)
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'là'
-  const avatarUrl = (profile as any)?.avatar_url as string | undefined
+  const avatarUrl = profile?.avatar_url
   const initials = (profile?.full_name ?? 'U').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
 
   const greetHour = new Date().getHours()
