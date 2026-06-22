@@ -52,7 +52,7 @@ function genRef() {
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   return Array.from({length:10},()=>c[Math.floor(Math.random()*c.length)]).join('')
 }
-function getGradient(acc: CurrencyAccount) {
+function getGradient(acc: CurrencyAccount): string {
   const id = localStorage.getItem(`fb-card-style-${acc.id}`) ?? CUR_STYLE[acc.currency] ?? 'purple'
   return CARD_STYLES.find(s=>s.id===id)?.g ?? CARD_STYLES[0].g
 }
@@ -218,7 +218,7 @@ function WalletPill({ acc, onTap }: { acc:CurrencyAccount; onTap:()=>void }) {
 // ── Main Component ────────────────────────────────────────────────────────────
 export function TransferPage() {
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
 
   const [screens, setScreens] = useState<Screen[]>(['hub'])
   const screen = screens[screens.length-1]
@@ -233,9 +233,9 @@ export function TransferPage() {
   // Data
   const [accounts, setAccounts] = useState<CurrencyAccount[]>([])
   const [fromWallet, setFromWallet] = useState<CurrencyAccount|null>(null)
-  const [toWallet, setToWallet] = useState<CurrencyAccount|null>(null)
+  const [, setToWallet] = useState<CurrencyAccount|null>(null)
   const [selectedContact, setSelectedContact] = useState<Contact|null>(null)
-  const [contactIdx, setContactIdx] = useState(0)
+  const [, setContactIdx] = useState(0)
   const [amountStr, setAmountStr] = useState('0')
   const [note, setNote] = useState('')
   const [pin, setPin] = useState('')
@@ -254,7 +254,7 @@ export function TransferPage() {
   const [walletIdFound, setWalletIdFound] = useState<{id:string;name:string;code:string}|null>(null)
   const [walletIdSearching, setWalletIdSearching] = useState(false)
   const [walletIdError, setWalletIdError] = useState('')
-  const walletIdTimer = useRef<ReturnType<typeof setTimeout>>()
+  const walletIdTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
 
   // Contacts
   const [cTab, setCTab] = useState<'recent'|'contact'|'favorites'>('recent')
@@ -277,9 +277,8 @@ export function TransferPage() {
   const dateLabel = now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
   const timeLabel = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
 
-  function amtDigit(d:string){ setAmountStr(p=>{ if(p==='0') return d; if(p.includes('.')&&p.split('.')[1].length>=2) return p; return p+d }) }
+  function amtDigit(d:string){ setAmountStr(p=>{ if(d==='.'){ return p.includes('.')?p:p+'.' }; if(p==='0') return d; if(p.includes('.')&&p.split('.')[1].length>=2) return p; return p+d }) }
   function amtBack(){ setAmountStr(p=>p.length<=1?'0':p.slice(0,-1)) }
-  function amtDot(){ setAmountStr(p=>p.includes('.')?p:p+'.') }
 
   function openPin(){ setPin(''); setPinError(''); setPinSheetOpen(true) }
 
@@ -377,7 +376,7 @@ export function TransferPage() {
             return (
               <button key={a.id} onClick={()=>{onSelect(a);setWalletPickerOpen(false)}}
                 className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 cursor-pointer tr">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{background:'#F2F2F7'}}>{curr?.flag}</div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{background:getGradient(a)}}>{curr?.flag}</div>
                 <div className="flex-1 text-left min-w-0">
                   <p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{curr?.name??a.currency}</p>
                   <p className="text-xs" style={{color:'#8E8E93'}}>Account {maskId(a.id)}</p>
@@ -688,7 +687,6 @@ export function TransferPage() {
   // SEND SUCCESS
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='send-success') {
-    const c = selectedContact
     return (
       <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
         <Hdr title="Send Money" onBack={reset}/>
