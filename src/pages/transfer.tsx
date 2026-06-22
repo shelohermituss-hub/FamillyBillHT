@@ -269,20 +269,25 @@ export function TransferPage() {
       .then(({data})=>{ if (data) setAppUsers(data) })
   },[user])
 
-  // Re-check recipient wallet availability whenever the sender's wallet changes
+  // Re-check recipient wallet availability whenever the sender's wallet changes.
+  // Uses a SECURITY DEFINER RPC to bypass RLS (we cannot SELECT another user's currency_accounts directly).
   useEffect(()=>{
     if (!walletIdFound) return
     setRecipientWalletAcct(null); setRecipientMainWallet(null)
     const currency = fromWallet?.currency ?? 'USD'
-    supabase.from('currency_accounts').select('*').eq('user_id', walletIdFound.id)
-      .then(({data:accts})=>{
-        if (!accts||accts.length===0) return
-        const match = accts.find(a=>a.currency===currency)
-        if (match) { setRecipientWalletAcct(match) }
-        else {
-          const main = accts.find(a=>a.is_main) ?? accts.find(a=>a.currency==='USD') ?? accts[0]
-          setRecipientMainWallet(main ?? null)
+    supabase.rpc('get_recipient_wallet', { p_user_id: walletIdFound.id, p_currency: currency })
+      .then(({ data: info }) => {
+        if (!info) return
+        const acct: CurrencyAccount = {
+          id: info.id,
+          user_id: info.user_id,
+          currency: info.currency,
+          is_main: info.is_main,
+          balance: 0,
+          created_at: new Date().toISOString(),
         }
+        if (info.exact_match) setRecipientWalletAcct(acct)
+        else setRecipientMainWallet(acct)
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[walletIdFound?.id, fromWallet?.id])
