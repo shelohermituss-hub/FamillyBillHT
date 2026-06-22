@@ -7,7 +7,7 @@ type AuthContextType = {
   profile: WiseUser | null
   session: Session | null
   loading: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, fullName: string, phone?: string, country?: string) => Promise<{ error: Error | null; userId?: string }>
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function signUp(email: string, password: string, fullName: string) {
+  async function signUp(email: string, password: string, fullName: string, phone?: string, country?: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -70,12 +70,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.user) {
       const userCode = 'FB' + Math.random().toString(36).slice(2, 8).toUpperCase()
       await supabase.from('wise_users').upsert({
-        id: data.user.id, email, full_name: fullName, verified: false, user_code: userCode,
+        id: data.user.id,
+        email,
+        full_name: fullName,
+        verified: false,
+        user_code: userCode,
+        phone: phone ?? null,
+        country: country ?? null,
       })
       await supabase.from('currency_accounts').insert(
         { user_id: data.user.id, currency: 'USD', balance: 0, is_main: true }
       )
       await fetchProfile(data.user.id)
+      return { error: null, userId: data.user.id }
     }
     return { error: null }
   }
