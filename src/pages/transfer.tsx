@@ -216,6 +216,7 @@ export function TransferPage() {
   const [walletPickerOpen, setWalletPickerOpen] = useState(false)
   const [pinSheetOpen, setPinSheetOpen] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [transferError, setTransferError] = useState('')
 
   // Data
   const [accounts, setAccounts] = useState<CurrencyAccount[]>([])
@@ -326,43 +327,49 @@ export function TransferPage() {
   async function doTransfer(nextScreen: Screen){
     if (!user||!fromWallet) return
     setProcessing(true)
+    setTransferError('')
     const recipName = selectedContact?.name ?? recipientName ?? null
-    // Deduct from sender
-    await supabase.from('currency_accounts')
-      .update({ balance: Math.max(0, fromWallet.balance - sendAmount - fee) })
-      .eq('id', fromWallet.id)
-    // Credit recipient
+
+    // Determine destination and credit amount
+    let toAccountId: string|null = null
+    let recipientUserId: string|null = null
+    let creditAmount = sendAmount - fee
+
     if (betweenTo && betweenTo.user_id === user.id) {
-      // Same-user between-wallets: convert then credit destination wallet
-      const netSend = sendAmount - fee
-      const converted = betweenTo.currency !== fromWallet.currency
-        ? netSend * getRate(fromWallet.currency, betweenTo.currency)
-        : netSend
-      await supabase.from('currency_accounts')
-        .update({ balance: betweenTo.balance + converted })
-        .eq('id', betweenTo.id)
+      toAccountId = betweenTo.id
+      creditAmount = betweenTo.currency !== fromWallet.currency
+        ? (sendAmount - fee) * getRate(fromWallet.currency, betweenTo.currency)
+        : sendAmount - fee
     } else if (recipientWalletAcct) {
-      // Cross-user wallet transfer: credit recipient's account
-      await supabase.from('currency_accounts')
-        .update({ balance: recipientWalletAcct.balance + (sendAmount - fee) })
-        .eq('id', recipientWalletAcct.id)
-      // Record incoming transaction for recipient
-      await supabase.from('transactions').insert({
-        user_id: recipientWalletAcct.user_id, type:'receive', status:'completed',
-        amount: sendAmount - fee, currency: fromWallet.currency, fee: 0,
-        recipient_name: recipName, note: note || null, reference: txRef,
-      })
+      toAccountId = recipientWalletAcct.id
+      recipientUserId = recipientWalletAcct.user_id
+      creditAmount = sendAmount - fee
     }
-    // Record outgoing transaction for sender
-    await supabase.from('transactions').insert({
-      user_id: user.id, type:'send', status:'completed',
-      amount: sendAmount, currency: fromWallet.currency, fee,
-      recipient_name: recipName, note: note || null, reference: txRef,
+
+    // Single atomic RPC call — balance check + debit + credit + transaction records
+    const { data: result, error } = await supabase.rpc('do_transfer', {
+      p_from_account_id:   fromWallet.id,
+      p_to_account_id:     toAccountId,
+      p_recipient_user_id: recipientUserId,
+      p_send_amount:       sendAmount,
+      p_fee:               fee,
+      p_credit_amount:     creditAmount,
+      p_recipient_name:    recipName,
+      p_note:              note || null,
+      p_reference:         txRef,
     })
-    // Refresh sender's accounts
+
+    if (error || !result?.success) {
+      setTransferError(result?.error ?? error?.message ?? 'Erreur lors du transfert. Réessayez.')
+      setProcessing(false)
+      return
+    }
+
+    // Refresh sender's accounts with fresh balances
     const {data} = await supabase.from('currency_accounts').select('*').eq('user_id', user.id)
     if (data){ setAccounts(data); const f=data.find(a=>a.id===fromWallet.id); if(f) setFromWallet(f) }
-    // Trigger notification
+
+    // Trigger in-app notification
     addNotification({
       type: 'send',
       title: `Transfert de ${formatCurrency(sendAmount, fromWallet.currency)} envoyé`,
@@ -379,7 +386,7 @@ export function TransferPage() {
     setSelectedContact(null); setRecipientName(''); setRecipientAccount(''); setPurpose('')
     setWalletIdInput(''); setWalletIdFound(null); setWalletIdError(''); setRecipientWalletAcct(null); setPhoneNumber('')
     setBetweenFrom(null); setBetweenTo(null)
-    setWalletPickerOpen(false); setPinSheetOpen(false); setProcessing(false)
+    setWalletPickerOpen(false); setPinSheetOpen(false); setProcessing(false); setTransferError('')
   }
 
   function handleWalletIdChange(v:string){
@@ -747,6 +754,7 @@ export function TransferPage() {
           </div>
         </div>
         <div className="px-5 pt-4 pb-10">
+          {transferError&&<p className="text-xs text-red-500 mb-3 text-center">{transferError}</p>}
           <button onClick={()=>doTransfer('send-success')} disabled={processing}
             className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             style={{background:ACCENT,color:'white',height:52}}>
@@ -874,6 +882,7 @@ export function TransferPage() {
           <Row label="Fees" value={formatCurrency(fee, fromWallet?.currency??'USD')} green/>
         </div>
         <div className="mt-6">
+          {transferError&&<p className="text-xs text-red-500 mb-3 text-center">{transferError}</p>}
           <button onClick={()=>doTransfer('bank-success')} disabled={processing}
             className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             style={{background:ACCENT,color:'white',height:52}}>
@@ -1162,6 +1171,7 @@ export function TransferPage() {
             </div>
           ))}
           <div className="mt-5">
+            {transferError&&<p className="text-xs text-red-500 mb-3 text-center">{transferError}</p>}
             <button onClick={async()=>{
               if (!fromWallet||!selectedContact) return
               // Find recipient's wallet for this currency
