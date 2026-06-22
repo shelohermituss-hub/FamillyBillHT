@@ -220,7 +220,6 @@ export function TransferPage() {
   const [fromWallet, setFromWallet] = useState<CurrencyAccount|null>(null)
   const [, setToWallet] = useState<CurrencyAccount|null>(null)
   const [selectedContact, setSelectedContact] = useState<Contact|null>(null)
-  const [, setContactIdx] = useState(0)
   const [amountStr, setAmountStr] = useState('0')
   const [note, setNote] = useState('')
   const [pin, setPin] = useState('')
@@ -760,7 +759,7 @@ export function TransferPage() {
           <p className="text-lg font-bold mb-0.5" style={{color:'#1C1C1E'}}>Beneficiaries</p>
           <p className="text-sm mb-3" style={{color:'#8E8E93'}}>Recently saved Beneficiaries</p>
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 mb-5">
-            {RECENT.map(c=>(
+            {recentContacts.map(c=>(
               <button key={c.id} onClick={()=>{setRecipientName(c.name)}}
                 className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-[13px] text-white"
@@ -1275,7 +1274,7 @@ export function TransferPage() {
   // PHONE SEND
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='phone-send') {
-    const found = CONTACTS.find(c=>c.phone===phoneNumber.trim())
+    const found = allContacts.find(c=>c.phone===phoneNumber.trim()||c.name.toLowerCase().includes(phoneNumber.trim().toLowerCase()))
     const canContinue = fromWallet && sendAmount>0 && phoneNumber.length>=8
     return (
       <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
