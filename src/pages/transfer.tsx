@@ -33,7 +33,7 @@ const CARD_STYLES = [
 ]
 const CUR_STYLE: Record<string,string> = { HTG:'purple', USD:'green', EUR:'blue', CAD:'orange', BRL:'rose' }
 const walletPin = (id: string) => `fb-w-pin-${id}`
-function maskId(id: string) { return '•••• ' + id.replace(/-/g,'').slice(-4).toUpperCase() }
+function maskId(id: string) { const h=id.replace(/-/g,'').slice(-8).toUpperCase(); return h.slice(0,4)+' '+h.slice(4) }
 function genRef() {
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   return Array.from({length:10},()=>c[Math.floor(Math.random()*c.length)]).join('')
@@ -259,6 +259,7 @@ export function TransferPage() {
     try { return JSON.parse(localStorage.getItem('fb-fav-contacts')?? '[]') } catch { return [] }
   })
   const [recipientWalletAcct, setRecipientWalletAcct] = useState<CurrencyAccount|null>(null)
+  const [recipientMainWallet, setRecipientMainWallet] = useState<CurrencyAccount|null>(null)
 
   useEffect(()=>{
     if (!user) return
@@ -267,6 +268,24 @@ export function TransferPage() {
     supabase.from('wise_users').select('*').neq('id', user.id)
       .then(({data})=>{ if (data) setAppUsers(data) })
   },[user])
+
+  // Re-check recipient wallet availability whenever the sender's wallet changes
+  useEffect(()=>{
+    if (!walletIdFound) return
+    setRecipientWalletAcct(null); setRecipientMainWallet(null)
+    const currency = fromWallet?.currency ?? 'USD'
+    supabase.from('currency_accounts').select('*').eq('user_id', walletIdFound.id)
+      .then(({data:accts})=>{
+        if (!accts||accts.length===0) return
+        const match = accts.find(a=>a.currency===currency)
+        if (match) { setRecipientWalletAcct(match) }
+        else {
+          const main = accts.find(a=>a.is_main) ?? accts.find(a=>a.currency==='USD') ?? accts[0]
+          setRecipientMainWallet(main ?? null)
+        }
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[walletIdFound?.id, fromWallet?.id])
 
   const toContact = (u: WiseUser): Contact => ({
     id: u.id,
@@ -344,6 +363,12 @@ export function TransferPage() {
       toAccountId = recipientWalletAcct.id
       recipientUserId = recipientWalletAcct.user_id
       creditAmount = sendAmount - fee
+    } else if (recipientMainWallet) {
+      toAccountId = recipientMainWallet.id
+      recipientUserId = recipientMainWallet.user_id
+      creditAmount = recipientMainWallet.currency !== fromWallet.currency
+        ? (sendAmount - fee) * getRate(fromWallet.currency, recipientMainWallet.currency)
+        : sendAmount - fee
     }
 
     // Single atomic RPC call — balance check + debit + credit + transaction records
@@ -384,27 +409,25 @@ export function TransferPage() {
   function reset(){
     setScreens(['hub']); setAmountStr('0'); setNote(''); setPin(''); setTxRef('')
     setSelectedContact(null); setRecipientName(''); setRecipientAccount(''); setPurpose('')
-    setWalletIdInput(''); setWalletIdFound(null); setWalletIdError(''); setRecipientWalletAcct(null); setPhoneNumber('')
+    setWalletIdInput(''); setWalletIdFound(null); setWalletIdError(''); setRecipientWalletAcct(null); setRecipientMainWallet(null); setPhoneNumber('')
     setBetweenFrom(null); setBetweenTo(null)
     setWalletPickerOpen(false); setPinSheetOpen(false); setProcessing(false); setTransferError('')
   }
 
-  function handleWalletIdChange(v:string){
-    const val=v.toUpperCase().slice(0,8); setWalletIdInput(val); setWalletIdFound(null); setWalletIdError(''); setRecipientWalletAcct(null)
+  function handleWalletIdChange(v: string) {
+    const val = v.toUpperCase().slice(0, 8)
+    setWalletIdInput(val); setWalletIdFound(null); setWalletIdError('')
+    setRecipientWalletAcct(null); setRecipientMainWallet(null)
     clearTimeout(walletIdTimer.current)
-    if (val.length>=6){
+    if (val.length >= 6) {
       setWalletIdSearching(true)
-      walletIdTimer.current=setTimeout(async()=>{
-        const {data:wu}=await supabase.from('wise_users').select('id,full_name,user_code').eq('user_code',val).maybeSingle()
-        if (!wu){ setWalletIdSearching(false); setWalletIdError('Aucun utilisateur trouvé.'); return }
-        setWalletIdFound({id:wu.id,name:wu.full_name,code:wu.user_code})
-        // Find recipient's account matching sender's currency
-        const currency = fromWallet?.currency ?? 'USD'
-        const {data:accts}=await supabase.from('currency_accounts').select('*').eq('user_id',wu.id).eq('currency',currency)
+      walletIdTimer.current = setTimeout(async () => {
+        const { data: wu } = await supabase.from('wise_users').select('id,full_name,user_code').eq('user_code', val).maybeSingle()
         setWalletIdSearching(false)
-        if (accts&&accts.length>0) setRecipientWalletAcct(accts[0])
-        else setWalletIdError(`Destinataire n'a pas de portefeuille ${currency}.`)
-      },350)
+        if (!wu) { setWalletIdError('Aucun utilisateur trouvé.'); return }
+        setWalletIdFound({ id: wu.id, name: wu.full_name, code: wu.user_code })
+        // wallet availability is checked by useEffect watching [walletIdFound?.id, fromWallet?.id]
+      }, 350)
     }
   }
 
@@ -496,6 +519,31 @@ export function TransferPage() {
       </div>
     </div>
   )
+
+  // Reusable wallet dropdown trigger (used in between-wallets and wallet-id screens)
+  const WalletDropdown = ({ label, selected, onOpen }: { label:string; selected:CurrencyAccount|null; onOpen:()=>void }) => {
+    const curr = selected ? getCurrency(selected.currency) : null
+    return (
+      <div className="mb-4">
+        <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>{label}</p>
+        <button onClick={onOpen} className="w-full flex items-center gap-3 px-4 h-14 rounded-2xl cursor-pointer tr"
+          style={{background:'#F8F8FA',border:'1px solid #E5E7EB'}}>
+          {selected ? (
+            <>
+              <span className="text-2xl">{curr?.flag}</span>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold" style={{color:'#1C1C1E'}}>{selected.currency}</p>
+                <p className="text-xs" style={{color:'#8E8E93'}}>{formatCurrency(selected.balance, selected.currency)}</p>
+              </div>
+            </>
+          ) : (
+            <span className="flex-1 text-left text-sm" style={{color:'#C7C7CC'}}>Sélectionner un portefeuille</span>
+          )}
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </div>
+    )
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // HUB
@@ -1238,29 +1286,6 @@ export function TransferPage() {
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='between-wallets') {
     const canGo = betweenFrom && betweenTo && betweenFrom.id!==betweenTo.id && sendAmount>0 && sendAmount<=betweenFrom.balance
-    const WalletDropdown = ({ label, selected, onOpen }: { label:string; selected:CurrencyAccount|null; onOpen:()=>void }) => {
-      const curr = selected ? getCurrency(selected.currency) : null
-      return (
-        <div className="mb-4">
-          <p className="text-xs font-medium mb-1.5" style={{color:'#8E8E93'}}>{label}</p>
-          <button onClick={onOpen} className="w-full flex items-center gap-3 px-4 h-14 rounded-2xl cursor-pointer tr"
-            style={{background:'#F8F8FA',border:'1px solid #E5E7EB'}}>
-            {selected ? (
-              <>
-                <span className="text-2xl">{curr?.flag}</span>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-bold" style={{color:'#1C1C1E'}}>{selected.currency}</p>
-                  <p className="text-xs" style={{color:'#8E8E93'}}>{formatCurrency(selected.balance, selected.currency)}</p>
-                </div>
-              </>
-            ) : (
-              <span className="flex-1 text-left text-sm" style={{color:'#C7C7CC'}}>Sélectionner un portefeuille</span>
-            )}
-            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
-          </button>
-        </div>
-      )
-    }
     const betweenWalletSheet = (
       <div className="fixed inset-0 z-[75] flex flex-col justify-end">
         <div className="absolute inset-0 bg-black/40" onClick={()=>setWalletPickerOpen(false)}/>
@@ -1379,55 +1404,90 @@ export function TransferPage() {
   // WALLET ID
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='wallet-id') {
-    const canContinue = fromWallet && sendAmount>0 && walletIdFound
+    const canContinue = fromWallet && sendAmount>0 && walletIdFound && (recipientWalletAcct || recipientMainWallet)
     return (
       <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
         <Hdr title="Transfer by ID" onBack={back} right={<QRIcon/>}/>
         <div className="px-5 pb-10">
+          {/* Wallet ID input */}
           <p className="text-xs font-medium mb-1.5 mt-2" style={{color:'#8E8E93'}}>Wallet ID</p>
           <div className="relative mb-1">
             <div className="absolute left-3 top-1/2 -translate-y-1/2">
-              {walletIdSearching?<Loader2 className="w-4 h-4 animate-spin" style={{color:'#C7C7CC'}}/>
-                :<Search className="w-4 h-4" style={{color:'#C7C7CC'}}/>}
+              {walletIdSearching
+                ? <Loader2 className="w-4 h-4 animate-spin" style={{color:'#C7C7CC'}}/>
+                : <Search className="w-4 h-4" style={{color:'#C7C7CC'}}/>}
             </div>
             <input value={walletIdInput} onChange={e=>handleWalletIdChange(e.target.value)} placeholder="FB2F4A1B" maxLength={8}
               className="w-full h-12 pl-10 pr-10 rounded-xl font-mono tracking-widest text-base uppercase outline-none"
               style={{background:'#F2F2F7',border:'1px solid #E5E7EB',color:'#1C1C1E'}}/>
-            {walletIdInput&&<button onClick={()=>{setWalletIdInput('');setWalletIdFound(null);setWalletIdError('')}} className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"><X className="w-4 h-4" style={{color:'#C7C7CC'}}/></button>}
+            {walletIdInput&&(
+              <button onClick={()=>{setWalletIdInput('');setWalletIdFound(null);setWalletIdError('');setRecipientWalletAcct(null);setRecipientMainWallet(null)}}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer">
+                <X className="w-4 h-4" style={{color:'#C7C7CC'}}/>
+              </button>
+            )}
           </div>
           {walletIdError&&<p className="text-xs text-red-500 mb-3">{walletIdError}</p>}
+
+          {/* Found user card */}
           {walletIdFound&&(
             <div className="flex items-center gap-3 px-3 py-3 rounded-xl mb-3" style={{background:`${ACCENT}10`,border:`1.5px solid ${ACCENT}40`}}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white shrink-0" style={{background:ACCENT}}>
                 {walletIdFound.name.split(' ').map((w:string)=>w[0]).join('').slice(0,2).toUpperCase()}
               </div>
-              <div className="flex-1 min-w-0"><p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{walletIdFound.name}</p><p className="text-xs font-mono" style={{color:'#8E8E93'}}>{walletIdFound.code}</p></div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate" style={{color:'#1C1C1E'}}>{walletIdFound.name}</p>
+                <p className="text-xs font-mono" style={{color:'#8E8E93'}}>{walletIdFound.code}</p>
+              </div>
               <Check className="w-5 h-5 shrink-0" style={{color:ACCENT}}/>
             </div>
           )}
-          <p className="text-xs font-medium mb-1.5 mt-3" style={{color:'#8E8E93'}}>From wallet</p>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4">
-            {accounts.map(a=>{const curr=getCurrency(a.currency);const sel=fromWallet?.id===a.id;return(
-              <button key={a.id} onClick={()=>setFromWallet(a)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer tr shrink-0 border"
-                style={{borderColor:sel?ACCENT:'#E5E7EB',background:sel?`${ACCENT}10`:'#F8F8FA'}}>
-                <span className="text-lg">{curr?.flag}</span>
-                <div className="text-left"><p className="text-xs font-bold" style={{color:'#1C1C1E'}}>{a.currency}</p><p className="text-[10px]" style={{color:'#8E8E93'}}>{formatCurrency(a.balance,a.currency)}</p></div>
-                {sel&&<Check className="w-3.5 h-3.5" style={{color:ACCENT}}/>}
-              </button>
-            )})}
-          </div>
+
+          {/* Fallback wallet warning — recipient has no matching currency wallet */}
+          {walletIdFound && !recipientWalletAcct && recipientMainWallet && (
+            <div className="flex items-start gap-3 px-3 py-3 rounded-xl mb-3" style={{background:'#FFF7ED',border:'1.5px solid #FED7AA'}}>
+              <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div>
+                <p className="text-sm font-semibold" style={{color:'#C2410C'}}>
+                  Portefeuille {fromWallet?.currency} non disponible
+                </p>
+                <p className="text-xs mt-0.5" style={{color:'#9A3412'}}>
+                  Le destinataire n'a pas de portefeuille {fromWallet?.currency}. Le montant sera converti et crédité dans son portefeuille {recipientMainWallet.currency}.
+                </p>
+                {sendAmount > 0 && fromWallet && (
+                  <p className="text-sm font-bold mt-1.5" style={{color:'#C2410C'}}>
+                    ≈ {formatCurrency((sendAmount - fee) * getRate(fromWallet.currency, recipientMainWallet.currency), recipientMainWallet.currency)} reçu
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* From wallet dropdown */}
+          <WalletDropdown label="From" selected={fromWallet} onOpen={()=>setWalletPickerOpen(true)}/>
+
+          {/* Amount display */}
           <div className="rounded-3xl py-6 text-center mb-4" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
             <p className="text-5xl font-light" style={{color:'#1C1C1E'}}>
               {fromWallet?getCurrency(fromWallet.currency)?.symbol:'$'}{amountStr==='0'?'0':amountStr}
             </p>
+            {recipientWalletAcct && sendAmount > 0 && (
+              <p className="text-xs mt-2" style={{color:'#8E8E93'}}>
+                Destinataire reçoit {formatCurrency(sendAmount - fee, recipientWalletAcct.currency)}
+              </p>
+            )}
           </div>
           <div className="border-t border-gray-100 mb-2"><NumPad onDigit={amtDigit} onBack={amtBack} dot/></div>
           <button onClick={()=>{setRecipientName(walletIdFound?.name??'');openPin()}} disabled={!canContinue}
-            className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
+            className="w-full rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
             style={{background:ACCENT,color:'white',height:52}}>
             Continue
           </button>
         </div>
+        {walletPickerOpen&&<WalletSheet onSelect={a=>setFromWallet(a)} current={fromWallet}/>}
         {pinSheetOpen&&<PinSheet/>}
       </div>
     )
