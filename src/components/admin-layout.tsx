@@ -3,8 +3,77 @@ import { Link, useLocation, useNavigate, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, ArrowLeftRight, Building2, FileText,
   Bell, BarChart3, Shield, Settings, LogOut, Menu, X, ChevronRight,
+  Loader2, ShieldCheck, ArrowLeft,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { supabase } from '@/lib/supabase'
+
+// ── Access Denied / Bootstrap ──────────────────────────────────
+function AdminAccessDenied() {
+  const { refreshProfile } = useAuth()
+  const navigate = useNavigate()
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+
+  async function handleGrantSelf() {
+    setStatus('loading')
+    setErrorMsg('')
+    const { data, error } = await supabase.rpc('grant_self_admin')
+    if (error) {
+      setErrorMsg(error.message)
+      setStatus('error')
+      return
+    }
+    if (data === 'already_exists') {
+      setErrorMsg('Un administrateur existe déjà. Contactez-le pour obtenir l\'accès.')
+      setStatus('error')
+      return
+    }
+    // Role granted — reload profile then redirect
+    await refreshProfile()
+    navigate('/admin/dashboard', { replace: true })
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#0D1B4B' }}>
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+        style={{ background: 'rgba(159,232,112,0.15)', border: '1px solid rgba(159,232,112,0.3)' }}>
+        <ShieldCheck className="w-8 h-8" style={{ color: '#9fe870' }} />
+      </div>
+      <h1 className="text-xl font-bold text-white text-center mb-2">Accès Administration</h1>
+      <p className="text-sm text-center mb-8" style={{ color: 'rgba(255,255,255,0.5)', maxWidth: 320 }}>
+        Votre compte n'a pas encore les droits administrateur. Si vous êtes le premier administrateur, cliquez ci-dessous pour activer l'accès.
+      </p>
+
+      {errorMsg && (
+        <div className="w-full max-w-sm mb-4 px-4 py-3 rounded-xl text-sm text-center"
+          style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }}>
+          {errorMsg}
+        </div>
+      )}
+
+      <button
+        onClick={handleGrantSelf}
+        disabled={status === 'loading'}
+        className="w-full max-w-sm h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mb-3"
+        style={{ background: '#9fe870', color: '#0D1B4B' }}
+      >
+        {status === 'loading'
+          ? <Loader2 className="w-4 h-4 animate-spin" />
+          : <ShieldCheck className="w-4 h-4" />}
+        Activer l'accès administrateur
+      </button>
+
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-sm cursor-pointer"
+        style={{ color: 'rgba(255,255,255,0.4)' }}
+      >
+        <ArrowLeft className="w-4 h-4" /> Retour au tableau de bord
+      </button>
+    </div>
+  )
+}
 
 // ── AdminProtectedRoute ────────────────────────────────────────
 export function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -16,7 +85,7 @@ export function AdminProtectedRoute({ children }: { children: React.ReactNode })
   )
   if (!user) return <Navigate to="/login" replace />
   const role = (profile as { role?: string } | null)?.role
-  if (role !== 'admin' && role !== 'super_admin') return <Navigate to="/dashboard" replace />
+  if (role !== 'admin' && role !== 'super_admin') return <AdminAccessDenied />
   return <>{children}</>
 }
 
