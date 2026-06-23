@@ -62,7 +62,6 @@ function NavIconStats({ className, style }: IconProps) {
 
 import { useAuth } from '@/lib/auth-context'
 import { useNotifications } from '@/lib/notifications-context'
-import { NotificationsPanel } from '@/components/notifications-panel'
 import { cn } from '@/lib/utils'
 
 type NavItemDef =
@@ -196,7 +195,7 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 function HeaderActions() {
   const { unreadCount } = useNotifications()
   const { profile } = useAuth()
-  const [notifOpen, setNotifOpen] = useState(false)
+  const navigate = useNavigate()
 
   const initials = (profile?.full_name ?? 'U')
     .split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
@@ -204,25 +203,22 @@ function HeaderActions() {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="relative">
-        <button
-          onClick={() => setNotifOpen(v => !v)}
-          aria-label="Notifications"
-          className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer relative"
-          style={{ background: 'var(--surface-2)', color: 'var(--ink-60)' }}
-        >
-          <Bell className="w-[17px] h-[17px]" />
-          {unreadCount > 0 && (
-            <span
-              className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-              style={{ background: 'var(--lime)', color: '#ffffff' }}
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
-        <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
-      </div>
+      <button
+        onClick={() => navigate('/notifications')}
+        aria-label="Notifications"
+        className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer relative"
+        style={{ background: 'var(--surface-2)', color: 'var(--ink-60)' }}
+      >
+        <Bell className="w-[17px] h-[17px]" />
+        {unreadCount > 0 && (
+          <span
+            className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+            style={{ background: 'var(--lime)', color: '#ffffff' }}
+          >
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
 
       {/* Profile avatar — display only, not clickable */}
       <div

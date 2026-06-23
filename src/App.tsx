@@ -26,6 +26,8 @@ const BillsPage            = lazy(() => import('@/pages/bills').then(m => ({ def
 const WalletPage           = lazy(() => import('@/pages/wallet').then(m => ({ default: m.WalletPage })))
 const FamilyPage           = lazy(() => import('@/pages/family').then(m => ({ default: m.FamilyPage })))
 const SupportPage          = lazy(() => import('@/pages/support').then(m => ({ default: m.SupportPage })))
+const NotificationsPage    = lazy(() => import('@/pages/notifications').then(m => ({ default: m.NotificationsPage })))
+const BeneficiariesPage    = lazy(() => import('@/pages/beneficiaries').then(m => ({ default: m.BeneficiariesPage })))
 
 // Lazily loaded admin pages
 const AdminPage              = lazy(() => import('@/pages/admin').then(m => ({ default: m.AdminPage })))
@@ -165,6 +167,20 @@ function AppRoutes() {
             <ProtectedRoute>
               <DashboardLayout>
                 <SupportPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <NotificationsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/beneficiaries" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <BeneficiariesPage />
               </DashboardLayout>
             </ProtectedRoute>
           } />
