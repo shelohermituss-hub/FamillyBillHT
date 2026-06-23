@@ -58,9 +58,7 @@ import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { icon: NavIconHome,   label: 'Accueil',  href: '/dashboard' },
-  { icon: NavIconPay,    label: 'Payer',    href: '/bills'     },
   { icon: NavIconWallet, label: 'Wallet',   href: '/wallet'    },
-  { icon: NavIconTransfer, label: 'Transfert', href: '/transfer' },
   { icon: NavIconStats,  label: 'Stats',    href: '/history'   },
 ]
 

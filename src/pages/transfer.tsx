@@ -207,7 +207,7 @@ export function TransferPage() {
   const { user } = useAuth()
   const { addNotification } = useNotifications()
 
-  const [screens, setScreens] = useState<Screen[]>(['hub'])
+  const [screens, setScreens] = useState<Screen[]>(['wallet-id'])
   const screen = screens[screens.length-1]
   const push = (s: Screen) => setScreens(p=>[...p, s])
   const back = () => { if (screens.length<=1) navigate(-1); else setScreens(p=>p.slice(0,-1)) }
