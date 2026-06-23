@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ArrowDownLeft, TrendingUp, Info, AlertTriangle, X, CheckCheck, ArrowUpRight, Bell } from 'lucide-react'
+import { ArrowDownLeft, TrendingUp, Info, Shield, X, CheckCheck, ArrowUpRight, Bell, Receipt, Wallet } from 'lucide-react'
 import { useNotifications, type AppNotification } from '@/lib/notifications-context'
 import { cn } from '@/lib/utils'
 
@@ -16,12 +16,16 @@ const TYPE_CONFIG: Record<AppNotification['type'], {
   bg: string
   color: string
 }> = {
-  receive:         { icon: ArrowDownLeft,  bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]' },
-  send:            { icon: ArrowUpRight,   bg: 'bg-red-50',              color: 'text-red-500'       },
-  info:            { icon: Info,           bg: 'bg-blue-50',             color: 'text-blue-500'      },
-  alert:           { icon: AlertTriangle,  bg: 'bg-amber-50',            color: 'text-amber-500'     },
-  rate:            { icon: TrendingUp,     bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
-  payment_request: { icon: ArrowUpRight,   bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
+  transfer_sent:     { icon: ArrowUpRight,   bg: 'bg-red-50',              color: 'text-red-500'       },
+  transfer_received: { icon: ArrowDownLeft,  bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
+  transfer_failed:   { icon: ArrowUpRight,   bg: 'bg-red-50',              color: 'text-red-500'       },
+  deposit:           { icon: Wallet,         bg: 'bg-purple-50',           color: 'text-purple-500'    },
+  withdrawal:        { icon: Wallet,         bg: 'bg-purple-50',           color: 'text-purple-500'    },
+  bill_paid:         { icon: Receipt,        bg: 'bg-blue-50',             color: 'text-blue-500'      },
+  rate_alert:        { icon: TrendingUp,     bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
+  security:          { icon: Shield,         bg: 'bg-amber-50',            color: 'text-amber-500'     },
+  system:            { icon: Info,           bg: 'bg-gray-50',             color: 'text-gray-500'      },
+  promotion:         { icon: Info,           bg: 'bg-blue-50',             color: 'text-blue-500'      },
 }
 
 export function NotificationsPanel({
