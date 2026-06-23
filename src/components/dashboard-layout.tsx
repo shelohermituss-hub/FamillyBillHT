@@ -13,31 +13,12 @@ function NavIconHome({ className, style }: IconProps) {
     </svg>
   )
 }
-function NavIconPay({ className, style }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-      <rect x="2" y="5" width="20" height="14" rx="3"/>
-      <path d="M2 10h20"/>
-      <path d="M6 15h3M17 15h1"/>
-    </svg>
-  )
-}
 function NavIconWallet({ className, style }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
       <path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
       <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
       <circle cx="16.5" cy="13" r="1.5" fill="currentColor" stroke="none"/>
-    </svg>
-  )
-}
-function NavIconTransfer({ className, style }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-      <path d="M5 12h14"/>
-      <path d="M15 7l5 5-5 5"/>
-      <path d="M3 6l3-3 3 3"/>
-      <path d="M6 3v8"/>
     </svg>
   )
 }
