@@ -374,6 +374,10 @@ export function TransferPage() {
       creditAmount = recipientMainWallet.currency !== fromWallet.currency
         ? (sendAmount - fee) * getRate(fromWallet.currency, recipientMainWallet.currency)
         : sendAmount - fee
+    } else if (walletIdFound) {
+      // get_recipient_wallet RPC may not be available — let SQL auto-find via p_recipient_user_id
+      recipientUserId = walletIdFound.id
+      creditAmount = sendAmount - fee
     }
 
     // Single atomic RPC call — balance check + debit + credit + transaction records
@@ -412,7 +416,7 @@ export function TransferPage() {
   }
 
   function reset(){
-    setScreens(['hub']); setAmountStr('0'); setNote(''); setPin(''); setTxRef('')
+    setScreens(['wallet-id']); setAmountStr('0'); setNote(''); setPin(''); setTxRef('')
     setSelectedContact(null); setRecipientName(''); setRecipientAccount(''); setPurpose('')
     setWalletIdInput(''); setWalletIdFound(null); setWalletIdError(''); setRecipientWalletAcct(null); setRecipientMainWallet(null); setPhoneNumber('')
     setBetweenFrom(null); setBetweenTo(null)
@@ -1409,7 +1413,7 @@ export function TransferPage() {
   // WALLET ID
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='wallet-id') {
-    const canContinue = fromWallet && sendAmount>0 && walletIdFound && (recipientWalletAcct || recipientMainWallet)
+    const canContinue = fromWallet && sendAmount>0 && walletIdFound
     return (
       <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
         <Hdr title="Transfer by ID" onBack={back} right={<QRIcon/>}/>
