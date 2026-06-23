@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, Bell, User, ChevronRight, Settings, History, X } from 'lucide-react'
+import { LogOut, Bell, User, ChevronRight, Settings, X } from 'lucide-react'
 
 type IconProps = { className?: string; style?: React.CSSProperties }
 

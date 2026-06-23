@@ -4,7 +4,7 @@ import { ChevronLeft, ArrowRight, CheckCircle2, Loader2, ChevronRight, Info, Wal
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth-context'
-import { supabase, type CurrencyAccount } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { getRate, getFeeRate } from '@/lib/currencies'
 import {
   BILL_CATEGORIES,
