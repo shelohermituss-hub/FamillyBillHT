@@ -39,7 +39,7 @@ const SECTION_LABELS: Record<Section, string> = {
 const SENSITIVE_SECTIONS: Section[] = ['fees', 'limits']
 
 export function AdminSettingsPage() {
-  const [settings, setSettings] = useState<AdminSettings>({})
+  const [, setSettings] = useState<AdminSettings>({})
   const [draft, setDraft] = useState<AdminSettings>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

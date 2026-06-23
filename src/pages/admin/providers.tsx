@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { PROVIDERS, BILL_CATEGORIES, type Provider } from '@/lib/haiti-providers'
 import { getAdminSettings, updateAdminSetting } from '@/lib/admin-api'
 import { supabase } from '@/lib/supabase'
-import { AlertCircle, Building2, CheckCircle, XCircle, X } from 'lucide-react'
+import { AlertCircle, CheckCircle, XCircle, X } from 'lucide-react'
 
 type ProviderStats = { count: number; total: number }
 

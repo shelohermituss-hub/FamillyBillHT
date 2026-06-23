@@ -98,6 +98,27 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
   const amountStr = txAmountStr(tx)
   const amountColor = isSend ? '#F43F5E' : '#22C55E'
   const date = new Date(tx.created_at)
+  const [shareToast, setShareToast] = useState<string | null>(null)
+
+  async function handleShare() {
+    const ref = tx.reference ?? tx.id.slice(0, 8).toUpperCase()
+    const text = [
+      'FamillyBill HT — Reçu',
+      txLabel(tx),
+      amountStr,
+      `Réf: ${ref}`,
+      `Date: ${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+      `Statut: ${tx.status === 'completed' ? 'Complété' : tx.status}`,
+    ].join('\n')
+
+    if (navigator.share) {
+      await navigator.share({ title: 'Reçu FamillyBill HT', text }).catch(() => {})
+    } else {
+      await navigator.clipboard.writeText(text).catch(() => {})
+      setShareToast('Reçu copié !')
+      setTimeout(() => setShareToast(null), 2500)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-80 flex items-end justify-center" style={{ zIndex: 80 }}>
@@ -157,11 +178,20 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
 
         {/* Action buttons */}
         <div className="mx-5 mb-4 grid grid-cols-2 gap-3">
-          <button className="h-11 rounded-2xl text-sm font-semibold cursor-pointer tr"
+          <button
+            onClick={() => {
+              const ref = tx.reference ?? tx.id.slice(0, 8).toUpperCase()
+              navigator.clipboard.writeText(ref).catch(() => {})
+              setShareToast(`Réf. ${ref} copiée !`)
+              setTimeout(() => setShareToast(null), 2500)
+            }}
+            className="h-11 rounded-2xl text-sm font-semibold cursor-pointer tr hover:opacity-80"
             style={{ background: '#F3F4F6', color: '#374151' }}>
-            Voir reçu
+            Copier réf.
           </button>
-          <button className="h-11 rounded-2xl text-sm font-semibold cursor-pointer tr"
+          <button
+            onClick={handleShare}
+            className="h-11 rounded-2xl text-sm font-semibold cursor-pointer tr hover:opacity-80"
             style={{ background: '#F3F4F6', color: '#374151' }}>
             Partager
           </button>
@@ -174,11 +204,21 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
             style={{ background: '#9fe870', color: '#0e0f0c' }}>
             Terminé
           </button>
-          <button className="w-full h-12 rounded-2xl text-sm font-semibold cursor-pointer flex items-center justify-center gap-2"
+          <button
+            onClick={handleShare}
+            className="w-full h-12 rounded-2xl text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 hover:opacity-80 tr"
             style={{ background: '#F9FAFB', color: '#374151', border: '1px solid #F3F4F6' }}>
             <Share2 className="w-4 h-4" /> Partager le reçu
           </button>
         </div>
+
+        {/* Share toast */}
+        {shareToast && (
+          <div className="mx-5 mb-4 px-4 py-3 rounded-2xl text-center text-sm font-semibold"
+            style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
+            {shareToast}
+          </div>
+        )}
       </div>
     </div>
   )
