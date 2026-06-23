@@ -19,6 +19,7 @@ import { BillsPage } from '@/pages/bills'
 import { WalletPage } from '@/pages/wallet'
 import { FamilyPage } from '@/pages/family'
 import { SupportPage } from '@/pages/support'
+import { AdminPage } from '@/pages/admin'
 import { NotFoundPage } from '@/pages/not-found'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -142,6 +143,13 @@ function AppRoutes() {
           <ProtectedRoute>
             <DashboardLayout>
               <SupportPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <AdminPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

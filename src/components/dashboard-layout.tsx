@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, Bell, User, ChevronRight, Settings, X } from 'lucide-react'
+import { LogOut, Bell, User, ChevronRight, Settings, X, ShieldCheck } from 'lucide-react'
 
 type IconProps = { className?: string; style?: React.CSSProperties }
 
@@ -156,6 +156,20 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.25)' }} />
             </button>
           ))}
+
+          {/* Admin access */}
+          <button onClick={() => go('/admin')}
+            className="w-full flex items-center gap-4 px-2 py-3.5 rounded-xl cursor-pointer tr mt-1"
+            style={{ color: '#0D1B4B' }}>
+            <div className="w-9 h-9 flex items-center justify-center rounded-xl shrink-0"
+              style={{ background: 'rgba(159,232,112,0.15)' }}>
+              <ShieldCheck className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+            </div>
+            <span className="flex-1 text-sm font-semibold text-left">Administration</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full mr-1"
+              style={{ background: 'var(--lime)', color: '#fff' }}>ADMIN</span>
+            <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.25)' }} />
+          </button>
         </div>
 
         {/* Logout */}
