@@ -81,6 +81,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.from('currency_accounts').insert(
         { user_id: data.user.id, currency: 'USD', balance: 0, is_main: true }
       )
+      await supabase.from('notifications').insert({
+        user_id: data.user.id,
+        type: 'system',
+        title: 'Bienvenue sur FamillyBill HT !',
+        body: 'Votre compte est prêt. Envoyez et recevez de l\'argent en quelques secondes.',
+        data: { action: 'welcome' },
+        read: false,
+      })
       await fetchProfile(data.user.id)
       return { error: null, userId: data.user.id }
     }

@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import {
   ChevronRight, ChevronLeft, Bell, LogOut, User, Phone, Mail,
   MapPin, FileText, Settings, ShieldCheck, HelpCircle,
-  Fingerprint, Key, Languages, Trash2, Eye, Check, BookOpen, Gift,
+  Fingerprint, Key, Languages, Trash2, Eye, Check, BookOpen,
   Camera, Loader2, Copy, Share2, QrCode, Building2, ArrowDownLeft,
   X, Download,
 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/lib/auth-context'
-import { useNotifications, type AppNotification } from '@/lib/notifications-context'
+import { useNotifications } from '@/lib/notifications-context'
 import { supabase, type Transaction } from '@/lib/supabase'
 import { getCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
@@ -19,10 +19,10 @@ import { cn } from '@/lib/utils'
 type Screen =
   | 'main'
   | 'personal'
-  | 'notifications-list'
   | 'notif-manage'
   | 'settings'
   | 'privacy'
+  | 'change-password'
 
 // ── Sub-screen shell ──────────────────────────────────────────────────────────
 
@@ -95,143 +95,6 @@ function GroupCard({ children, className = '' }: { children: ReactNode; classNam
 
 // ── Notifications list screen ─────────────────────────────────────────────────
 
-function timeAgo(date: Date) {
-  const diff = Date.now() - date.getTime()
-  const mins = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  if (mins < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-}
-
-function groupNotifications(notifications: AppNotification[]) {
-  const groups: { label: string; items: AppNotification[] }[] = []
-  const map = new Map<string, AppNotification[]>()
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
-  for (const n of notifications) {
-    const d = new Date(n.time); d.setHours(0, 0, 0, 0)
-    let label: string
-    if (d.getTime() === today.getTime()) label = 'Aujourd\'hui'
-    else if (d.getTime() === yesterday.getTime()) label = 'Hier'
-    else label = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
-    if (!map.has(label)) { map.set(label, []); groups.push({ label, items: map.get(label)! }) }
-    map.get(label)!.push(n)
-  }
-  return groups
-}
-
-function NotifIcon({ n }: { n: AppNotification }) {
-  if (n.type === 'payment_request' && n.avatarInitials) {
-    return (
-      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-sm font-bold text-white"
-        style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
-        {n.avatarInitials}
-      </div>
-    )
-  }
-  if (n.type === 'receive') {
-    return (
-      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: '#F0FDF4' }}>
-        <ArrowDownLeft className="w-5 h-5" style={{ color: '#22C55E' }} />
-      </div>
-    )
-  }
-  if (n.type === 'alert') {
-    return (
-      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: '#FEF3C7' }}>
-        <Building2 className="w-5 h-5" style={{ color: '#F59E0B' }} />
-      </div>
-    )
-  }
-  if (n.type === 'info' && n.title.toLowerCase().includes('gift')) {
-    return (
-      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: '#FFF1F2' }}>
-        <Gift className="w-5 h-5" style={{ color: '#F43F5E' }} />
-      </div>
-    )
-  }
-  return (
-    <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: '#EEF2FF' }}>
-      <BookOpen className="w-5 h-5" style={{ color: '#4F46E5' }} />
-    </div>
-  )
-}
-
-function formatNotifTitle(title: string) {
-  // Bold amounts like $300.00
-  const parts = title.split(/(\$[\d,]+\.\d{2})/g)
-  return parts.map((part, i) =>
-    /^\$[\d,]+\.\d{2}$/.test(part)
-      ? <span key={i} style={{ color: '#4F46E5', fontWeight: 700 }}>{part}</span>
-      : <span key={i}>{part}</span>
-  )
-}
-
-function NotificationsListScreen({ onBack }: { onBack: () => void }) {
-  const { notifications, markRead, markAllRead } = useNotifications()
-  const navigate = useNavigate()
-  const groups = groupNotifications(notifications)
-
-  return (
-    <SubScreen>
-      <SubHeader title="Notifications" onBack={onBack} />
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <p className="text-base font-bold" style={{ color: '#111' }}>Toutes les notifications</p>
-        <button onClick={markAllRead} className="text-xs font-semibold cursor-pointer" style={{ color: '#4F46E5' }}>
-          Tout lire
-        </button>
-      </div>
-
-      <div className="space-y-5 px-4 mt-2">
-        {groups.map(group => (
-          <div key={group.label}>
-            <p className="text-sm font-semibold mb-3" style={{ color: '#9CA3AF' }}>{group.label}</p>
-            <div className="space-y-2">
-              {group.items.map(n => (
-                <button key={n.id}
-                  onClick={() => markRead(n.id)}
-                  className="w-full flex items-start gap-3 p-3 rounded-2xl cursor-pointer text-left tr"
-                  style={{ background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', position: 'relative' }}>
-                  {/* Unread dot */}
-                  {!n.read && (
-                    <div className="absolute top-3.5 left-3.5 w-2.5 h-2.5 rounded-full shrink-0 z-10"
-                      style={{ background: '#4F46E5' }} />
-                  )}
-                  <div style={{ marginLeft: !n.read ? 10 : 0 }}>
-                    <NotifIcon n={n} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold leading-snug mb-0.5" style={{ color: '#111' }}>
-                      {formatNotifTitle(n.title)}
-                    </p>
-                    <p className="text-xs" style={{ color: '#9CA3AF' }}>
-                      {n.time.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <div className="shrink-0 flex flex-col items-end gap-2">
-                    <span className="text-xs whitespace-nowrap" style={{ color: '#9CA3AF' }}>
-                      {timeAgo(n.time)}
-                    </span>
-                    {n.type === 'payment_request' && (
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate('/transfer') }}
-                        className="px-4 py-1.5 rounded-xl text-xs font-bold text-white cursor-pointer"
-                        style={{ background: '#4F46E5' }}>
-                        Payer
-                      </button>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </SubScreen>
-  )
-}
-
 // ── Manage Notifications screen ───────────────────────────────────────────────
 
 const NOTIF_SETTINGS = [
@@ -287,7 +150,7 @@ function ManageNotifsScreen({ onBack }: { onBack: () => void }) {
 
 // ── Settings screen ───────────────────────────────────────────────────────────
 
-function SettingsScreen({ onBack, onNotifs }: { onBack: () => void; onNotifs: () => void }) {
+function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => void; onNotifs: () => void; onChangePassword: () => void }) {
   const [darkTheme, setDarkTheme] = useState(() => localStorage.getItem('fb-dark-theme') === 'true')
   const [showBalance, setShowBalance] = useState(() => localStorage.getItem('fb-show-balance-terminal') !== 'false')
   const [showLang, setShowLang] = useState(false)
@@ -399,9 +262,10 @@ function SettingsScreen({ onBack, onNotifs }: { onBack: () => void; onNotifs: ()
 
           {/* Change Password */}
           <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
-            style={{ borderBottom: '1px solid #F9FAFB' }}>
+            style={{ borderBottom: '1px solid #F9FAFB' }}
+            onClick={onChangePassword}>
             <IconWrap Icon={Key} />
-            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Change Password</span>
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Changer le mot de passe</span>
             <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
           </button>
 
@@ -502,6 +366,92 @@ function PrivacyScreen({ onBack }: { onBack: () => void }) {
   )
 }
 
+// ── Change Password screen ────────────────────────────────────────────────────
+
+function ChangePasswordScreen({ onBack }: { onBack: () => void }) {
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (newPassword.length < 6) { setError('Le mot de passe doit avoir au moins 6 caractères.'); return }
+    if (newPassword !== confirmPassword) { setError('Les mots de passe ne correspondent pas.'); return }
+    setStatus('loading'); setError('')
+    const { error: err } = await supabase.auth.updateUser({ password: newPassword })
+    if (err) { setError(err.message); setStatus('error'); return }
+    setStatus('success')
+    setTimeout(onBack, 1500)
+  }
+
+  return (
+    <SubScreen>
+      <SubHeader title="Changer le mot de passe" onBack={onBack} />
+      <div className="px-4 pt-6 space-y-4">
+        {status === 'success' ? (
+          <div className="flex flex-col items-center py-12 gap-4">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: '#D1FAE5' }}>
+              <Check className="w-8 h-8" style={{ color: '#059669' }} />
+            </div>
+            <p className="text-base font-semibold" style={{ color: '#111' }}>Mot de passe modifié !</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-sm" style={{ color: '#9CA3AF' }}>
+              Entrez votre nouveau mot de passe. Il doit contenir au moins 6 caractères.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                  Nouveau mot de passe
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full h-12 rounded-2xl px-4 text-sm border outline-none"
+                  style={{ borderColor: '#E5E7EB', background: '#fff', color: '#111' }}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                  Confirmer le mot de passe
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full h-12 rounded-2xl px-4 text-sm border outline-none"
+                  style={{ borderColor: '#E5E7EB', background: '#fff', color: '#111' }}
+                  required
+                />
+              </div>
+            </div>
+            {error && (
+              <p className="text-xs px-3 py-2 rounded-xl" style={{ background: '#FEF2F2', color: '#EF4444' }}>
+                {error}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="w-full h-12 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              style={{ background: '#9fe870', color: '#0e0f0c' }}
+            >
+              {status === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
+              Enregistrer
+            </button>
+          </form>
+        )}
+      </div>
+    </SubScreen>
+  )
+}
+
 // ── Personal Details screen ───────────────────────────────────────────────────
 
 function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
@@ -516,12 +466,13 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [activeTab, setActiveTab] = useState<'personal' | 'business'>('personal')
   const [editingField, setEditingField] = useState<string | null>(null)
-  const [phone, setPhone] = useState<string>((profile as any)?.phone ?? '212-456-7890')
+  const [fullName, setFullName] = useState<string>((profile as any)?.full_name ?? '')
+  const [phone, setPhone] = useState<string>((profile as any)?.phone ?? '')
   const [address, setAddress] = useState<string>((profile as any)?.address ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  const initials = (profile?.full_name ?? 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+  const initials = (fullName || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -547,16 +498,16 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
   async function saveField() {
     if (!user) return
     setSaving(true)
-    await supabase.from('wise_users').update({ phone, address }).eq('id', user.id)
+    await supabase.from('wise_users').update({ full_name: fullName, phone, address }).eq('id', user.id)
     setSaving(false); setSaved(true)
     setTimeout(() => { setSaved(false); setEditingField(null) }, 800)
   }
 
   const infoRows = [
-    { key: 'phone', label: 'Phone', value: phone || '—', Icon: Phone },
+    { key: 'full_name', label: 'Nom complet', value: fullName || '—', Icon: User },
+    { key: 'phone', label: 'Téléphone', value: phone || '—', Icon: Phone },
     { key: 'email', label: 'Email', value: profile?.email ?? user?.email ?? '—', Icon: Mail },
-    { key: 'address', label: 'Address', value: address || 'Non renseigné', Icon: MapPin },
-    { key: 'docs', label: 'Documents', value: 'Passport, Driving License', Icon: FileText },
+    { key: 'address', label: 'Adresse', value: address || 'Non renseigné', Icon: MapPin },
   ]
 
   return (
@@ -605,11 +556,15 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
             <button key={key}
               className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50 text-left"
               style={{ borderBottom: i < infoRows.length - 1 ? '1px solid #F9FAFB' : 'none' }}
-              onClick={() => key !== 'email' && key !== 'docs' && setEditingField(editingField === key ? null : key)}>
+              onClick={() => key !== 'email' && setEditingField(editingField === key ? null : key)}>
               <IconWrap Icon={Icon} size={36} />
               <div className="flex-1 min-w-0">
                 <p className="text-xs" style={{ color: '#9CA3AF' }}>{label}</p>
-                {editingField === key && key === 'phone' ? (
+                {editingField === key && key === 'full_name' ? (
+                  <input value={fullName} onChange={e => setFullName(e.target.value)}
+                    className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
+                    autoFocus onBlur={saveField} />
+                ) : editingField === key && key === 'phone' ? (
                   <input value={phone} onChange={e => setPhone(e.target.value)}
                     className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
                     autoFocus onBlur={saveField} />
@@ -880,7 +835,7 @@ export function ProfilePage() {
           <GroupCard>
             <RowItem Icon={User} label="Personal Details" onPress={() => push('personal')} />
             <RowItem Icon={Bell} label={`Notifications${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
-              onPress={() => push('notifications-list')} />
+              onPress={() => navigate('/notifications')} />
             <RowItem Icon={Fingerprint} label="Set Up Face ID" right={
               <Switch checked={biometric}
                 onCheckedChange={v => { setBiometric(v); localStorage.setItem('fb-biometric', String(v)) }}
@@ -891,11 +846,30 @@ export function ProfilePage() {
 
           {/* Group 2 */}
           <GroupCard>
-            <RowItem Icon={Settings} label="Settings" onPress={() => push('settings')} />
-            <RowItem Icon={FileText} label="Terms And Conditions"
-              onPress={() => { /* terms screen placeholder */ }} />
+            <RowItem Icon={Settings} label="Paramètres" onPress={() => push('settings')} />
             <RowItem Icon={HelpCircle} label="Support" onPress={() => navigate('/support')} last />
           </GroupCard>
+
+          {/* Admin link — visible only for admin/super_admin */}
+          {((profile as any)?.role === 'admin' || (profile as any)?.role === 'super_admin') && (
+            <GroupCard>
+              <RowItem
+                Icon={ShieldCheck}
+                label="Administration"
+                onPress={() => navigate('/admin/dashboard')}
+                last
+                right={
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: '#9fe870', color: '#0e0f0c' }}>
+                      {(profile as any)?.role === 'super_admin' ? 'SUPER' : 'ADMIN'}
+                    </span>
+                    <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+                  </div>
+                }
+              />
+            </GroupCard>
+          )}
 
           {/* User ID */}
           <GroupCard>
@@ -944,17 +918,21 @@ export function ProfilePage() {
           onSignOut={handleSignOut}
         />
       )}
-      {screen === 'notifications-list' && (
-        <NotificationsListScreen onBack={back} />
-      )}
       {screen === 'notif-manage' && (
         <ManageNotifsScreen onBack={back} />
       )}
       {screen === 'settings' && (
-        <SettingsScreen onBack={back} onNotifs={() => push('notif-manage')} />
+        <SettingsScreen
+          onBack={back}
+          onNotifs={() => push('notif-manage')}
+          onChangePassword={() => push('change-password')}
+        />
       )}
       {screen === 'privacy' && (
         <PrivacyScreen onBack={back} />
+      )}
+      {screen === 'change-password' && (
+        <ChangePasswordScreen onBack={back} />
       )}
     </div>
   )

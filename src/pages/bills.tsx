@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { getRate, getFeeRate } from '@/lib/currencies'
+import { insertNotification } from '@/lib/api'
 import {
   BILL_CATEGORIES,
   PROVIDERS,
@@ -142,7 +143,7 @@ function ProviderStep({
   )
 
   return (
-    <div className="space-y-4 animate-fade-in-up">
+    <div className="space-y-3 animate-fade-in-up">
       <div className="flex items-center gap-2 mb-1">
         <CategoryIcon cat={category} size="sm" />
         <h2 className="text-lg font-semibold text-[var(--ink)]">{category.label}</h2>
@@ -725,7 +726,16 @@ export function BillsPage() {
       setSubmitting(false)
       return
     }
-    if (data) setTxId(data.id)
+    if (data) {
+      setTxId(data.id)
+      await insertNotification({
+        user_id: user.id,
+        type: 'bill_paid',
+        title: `Facture payée — ${selectedProvider.name}`,
+        body: `Paiement de G ${parseFloat(amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} à ${selectedProvider.name} effectué.`,
+        data: { tx_id: data.id, provider: selectedProvider.id, amount: parseFloat(amount) },
+      })
+    }
     setSubmitting(false)
     setStep('success')
   }
@@ -755,7 +765,7 @@ export function BillsPage() {
   const stepNumber = STEPS.indexOf(step)
 
   return (
-    <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'var(--surface)' }}>
+    <div className="pb-6" style={{ background: 'var(--surface)' }}>
       <div className="max-w-lg mx-auto px-4 pt-6">
 
         {step !== 'success' && (

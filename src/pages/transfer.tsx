@@ -403,14 +403,16 @@ export function TransferPage() {
     const {data} = await supabase.from('currency_accounts').select('*').eq('user_id', user.id)
     if (data){ setAccounts(data); const f=data.find(a=>a.id===fromWallet.id); if(f) setFromWallet(f) }
 
-    // Trigger in-app notification
-    addNotification({
-      type: 'send',
-      title: `Transfert de ${formatCurrency(sendAmount, fromWallet.currency)} envoyé`,
-      body: recipName ? `Envoyé à ${recipName} · Réf: ${txRef}` : `Réf: ${txRef}`,
-      amount: sendAmount,
-      from: recipName ?? undefined,
-    })
+    // Persist notification to DB
+    if (user) {
+      addNotification({
+        user_id: user.id,
+        type: 'transfer_sent',
+        title: `Transfert de ${formatCurrency(sendAmount, fromWallet.currency)} envoyé`,
+        body: recipName ? `Envoyé à ${recipName} · Réf: ${txRef}` : `Réf: ${txRef}`,
+        data: { amount: sendAmount, currency: fromWallet.currency, recipient: recipName ?? null, ref: txRef },
+      })
+    }
     setProcessing(false)
     push(nextScreen)
   }
