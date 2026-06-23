@@ -740,9 +740,17 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
   const [apple,  setApple]  = useState(localStorage.getItem(`fb-apple-${acc.id}`)   === 'true')
   const [limitAmt, setLimitAmt] = useState(localStorage.getItem(`fb-limit-amt-${acc.id}`) ?? '')
   const [showBlock, setShowBlock] = useState(false)
+  const [themeId, setThemeId] = useState(
+    localStorage.getItem(`fb-card-style-${acc.id}`) ?? CURRENCY_DEFAULT_STYLE[acc.currency] ?? 'purple'
+  )
   const curr = getCurrency(acc.currency)
 
   const persist = (key: string, val: boolean) => localStorage.setItem(`fb-${key}-${acc.id}`, String(val))
+
+  function changeTheme(id: string) {
+    localStorage.setItem(`fb-card-style-${acc.id}`, id)
+    setThemeId(id)
+  }
 
   return (
     <ScreenOverlay title="Paramètres du portefeuille" onBack={onBack}>
@@ -808,6 +816,23 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
             <Toggle on={apple} onChange={v => { setApple(v); persist('apple', v) }} />
           </div>
         </div>
+        {/* Card theme picker */}
+        <div className="rounded-2xl p-4" style={{ background: '#fff' }}>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'rgba(13,27,75,0.45)', letterSpacing: '0.08em' }}>THÈME DE CARTE</p>
+          <div className="flex gap-2.5">
+            {CARD_STYLES.map(s => (
+              <button key={s.id} onClick={() => changeTheme(s.id)}
+                className="flex-1 h-10 rounded-xl cursor-pointer tr active:scale-95 flex items-center justify-center"
+                style={{
+                  background: s.gradient,
+                  boxShadow: themeId === s.id ? `0 0 0 2.5px #fff, 0 0 0 5px ${s.glow}` : 'none',
+                }}>
+                {themeId === s.id && <Check className="w-4 h-4 text-white" />}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Quick links */}
         <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
           {[
@@ -1402,14 +1427,12 @@ function AddWalletScreen({ user, onBack, onNext }: {
 type WalletScreen = 'main' | 'details' | 'settings' | 'card-back' | 'full-settings' | 'add-wallet' | 'pin-setup' | 'change-pin' | 'wallet-history'
 const SENSITIVE_SCREENS: WalletScreen[] = ['details', 'settings', 'card-back', 'full-settings', 'change-pin']
 
-function MainWalletScreen({ accounts, loading, user, onNavigate, onAddWallet, onRecharge }: {
+function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
   accounts: CurrencyAccount[]; loading: boolean; user: UserLike
   onNavigate: (s: WalletScreen, acc?: CurrencyAccount) => void
-  onAddWallet: () => void
   onRecharge: (acc: CurrencyAccount) => void
 }) {
   const navigate = useNavigate()
-  const [cardIdx, setCardIdx] = useState(0)
   const [visible, setVisible] = useState(true)
 
   const sorted = [...accounts].sort((a, b) => {
@@ -1417,167 +1440,127 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onAddWallet, on
     if (!a.is_main && b.is_main) return 1
     return 0
   })
-  const activeAcc = sorted[cardIdx] ?? null
-  const totalUSD  = accounts.reduce((s, a) => s + a.balance * getRate(a.currency, 'USD'), 0)
+  const totalUSD = accounts.reduce((s, a) => s + a.balance * getRate(a.currency, 'USD'), 0)
 
   return (
     <div className="min-h-screen pb-28" style={{ background: '#F3F3F6' }}>
       {/* Header */}
       <div className="px-5 pt-4 pb-3 flex items-center justify-between" style={{ background: '#fff', borderBottom: '1px solid #F3F3F6' }}>
         <h1 className="font-bold text-lg" style={{ color: '#0D1B4B', letterSpacing: '-0.02em' }}>Mes Portefeuilles</h1>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setVisible(v => !v)}
-            className="w-9 h-9 flex items-center justify-center rounded-full border cursor-pointer tr"
-            style={{ borderColor: '#DDE1F0', background: '#fff' }}>
-            {visible ? <Eye className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.6)' }} /> : <EyeOff className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.6)' }} />}
-          </button>
-          <button onClick={onAddWallet}
-            className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr active:scale-95"
-            style={{ background: '#1A56DB' }}>
-            <Plus className="w-4 h-4 text-white" />
-          </button>
-        </div>
+        <button onClick={() => setVisible(v => !v)}
+          className="w-9 h-9 flex items-center justify-center rounded-full border cursor-pointer tr"
+          style={{ borderColor: '#DDE1F0', background: '#fff' }}>
+          {visible
+            ? <Eye className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.6)' }} />
+            : <EyeOff className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.6)' }} />}
+        </button>
       </div>
 
-      <div className="px-4 pt-5 space-y-5">
-        {/* Card carousel */}
+      {/* Total balance + quick actions */}
+      {!loading && accounts.length > 0 && (
+        <div className="px-5 py-5" style={{ background: '#fff', borderBottom: '1px solid #F3F3F6' }}>
+          <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.5)' }}>Solde total (USD)</p>
+          <p className="font-black tabular-nums mb-4" style={{ fontSize: 34, color: '#0D1B4B', letterSpacing: '-0.03em', lineHeight: 1.05 }}>
+            {visible
+              ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : '$•••,•••.••'}
+          </p>
+          <div className="flex gap-3">
+            <button onClick={() => navigate('/transfer')}
+              className="flex-1 h-11 rounded-full font-semibold text-sm cursor-pointer tr active:scale-[0.97]"
+              style={{ background: '#1A56DB', color: '#fff' }}>
+              Transférer
+            </button>
+            <button onClick={() => sorted[0] && onRecharge(sorted[0])}
+              className="flex-1 h-11 rounded-full font-semibold text-sm cursor-pointer tr active:scale-[0.97]"
+              style={{ background: '#F3F3F6', color: '#0D1B4B', border: '1.5px solid #DDE1F0' }}>
+              Recharger
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="px-4 pt-5 space-y-3">
         {loading ? (
-          <div className="h-[210px] rounded-[1.75rem] animate-pulse" style={{ background: '#DDE1F0' }} />
+          <div className="h-24 rounded-2xl animate-pulse" style={{ background: '#DDE1F0' }} />
         ) : sorted.length === 0 ? (
-          <button onClick={onAddWallet}
-            className="h-[210px] w-full rounded-[1.75rem] flex flex-col items-center justify-center gap-3 border-2 border-dashed cursor-pointer tr"
-            style={{ borderColor: '#DDE1F0', background: '#fff' }}>
+          <div className="w-full h-36 rounded-2xl flex flex-col items-center justify-center gap-3"
+            style={{ background: '#fff', border: '2px dashed #DDE1F0' }}>
             <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#EEF3FF' }}>
               <Plus className="w-7 h-7" style={{ color: '#1A56DB' }} />
             </div>
-            <p className="font-semibold text-sm" style={{ color: '#1A56DB' }}>Ajouter un portefeuille</p>
-          </button>
-        ) : activeAcc ? (
-          <div>
-            <CardFront acc={activeAcc} user={user} visible={visible} />
-            {sorted.length > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-3">
-                <button onClick={() => setCardIdx(i => Math.max(0, i - 1))} disabled={cardIdx === 0}
-                  className="w-7 h-7 flex items-center justify-center rounded-full cursor-pointer disabled:opacity-30 tr"
-                  style={{ background: '#fff', border: '1px solid #DDE1F0' }}>
-                  <ChevronLeft className="w-4 h-4" style={{ color: '#0D1B4B' }} />
-                </button>
-                <div className="flex gap-1.5">
-                  {sorted.map((_, i) => (
-                    <button key={i} onClick={() => setCardIdx(i)} className="cursor-pointer tr rounded-full"
-                      style={{ width: i === cardIdx ? 20 : 6, height: 6, background: i === cardIdx ? '#1A56DB' : '#DDE1F0' }} />
-                  ))}
-                </div>
-                <button onClick={() => setCardIdx(i => Math.min(sorted.length - 1, i + 1))} disabled={cardIdx === sorted.length - 1}
-                  className="w-7 h-7 flex items-center justify-center rounded-full cursor-pointer disabled:opacity-30 tr"
-                  style={{ background: '#fff', border: '1px solid #DDE1F0' }}>
-                  <ChevronRight className="w-4 h-4" style={{ color: '#0D1B4B' }} />
-                </button>
-              </div>
-            )}
+            <p className="font-semibold text-sm" style={{ color: '#1A56DB' }}>Aucun portefeuille</p>
           </div>
-        ) : null}
+        ) : (
+          sorted.map(acc => {
+            const curr    = getCurrency(acc.currency)
+            const cs      = getCardStyle(acc)
+            const flag    = CURRENCY_FLAGS[acc.currency]
+            const usdVal  = acc.balance * getRate(acc.currency, 'USD')
+            const frozen  = localStorage.getItem(`fb-frozen-${acc.id}`)  === 'true'
+            const blocked = localStorage.getItem(`fb-blocked-${acc.id}`) === 'true'
+            const rawHex  = acc.id.replace(/-/g, '').slice(-8).toUpperCase()
+            const maskedId = '****' + rawHex.slice(4)
+            return (
+              <button key={acc.id} onClick={() => onNavigate('details', acc)}
+                className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl cursor-pointer tr active:scale-[0.99]"
+                style={{ background: '#fff', boxShadow: '0 1px 6px rgba(13,27,75,0.07)' }}>
 
-        {/* Total */}
-        {!loading && accounts.length > 0 && (
-          <div className="text-center py-1">
-            <p className="text-xs font-medium" style={{ color: 'rgba(13,27,75,0.5)' }}>Total Cards Balance</p>
-            <p className="font-bold tabular-nums" style={{ fontSize: 30, color: '#0D1B4B', letterSpacing: '-0.02em', lineHeight: 1.15, marginTop: 4 }}>
-              {visible ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$•••,•••.••'}
-            </p>
-          </div>
-        )}
-
-        {/* Quick actions */}
-        {!loading && accounts.length > 0 && (
-          <div className="flex items-center gap-2.5">
-            {[
-              { label: 'Transférer', fn: () => navigate('/transfer'), primary: true  },
-              { label: 'Recharger',  fn: () => activeAcc && onRecharge(activeAcc),   primary: false },
-              { label: 'Payer',      fn: () => navigate('/bills'),     primary: false },
-            ].map(({ label, fn, primary }) => (
-              <button key={label} onClick={fn}
-                className="flex-1 h-11 rounded-full font-semibold text-sm cursor-pointer tr active:scale-[0.97]"
-                style={primary ? { background: '#1A56DB', color: '#fff' } : { background: '#fff', color: '#0D1B4B', border: '1.5px solid #DDE1F0' }}>
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Settings menu */}
-        {!loading && accounts.length > 0 && (
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
-            <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #F3F3F6' }}>
-              <p className="font-bold text-sm" style={{ color: '#0D1B4B' }}>Portefeuille Settings</p>
-            </div>
-            {[
-              { label: 'Portefeuille Info',    s: 'details'         as WalletScreen },
-              { label: 'Paramètres',           s: 'settings'        as WalletScreen },
-              { label: 'Historique',           s: 'wallet-history'  as WalletScreen },
-            ].map(({ label, s }, i) => {
-              const action = undefined
-              const hasPIN = !!activeAcc && !!localStorage.getItem(walletPinKey(activeAcc.id))
-              return (
-                <button key={label} onClick={() => action ? (action as () => void)() : onNavigate(s, activeAcc ?? undefined)}
-                  className="w-full flex items-center justify-between px-4 py-4 cursor-pointer tr"
-                  style={{ borderBottom: i < 2 ? '1px solid #F3F3F6' : 'none' }}>
-                  <span className="text-sm font-medium" style={{ color: '#0D1B4B' }}>{label}</span>
-                  <div className="flex items-center gap-2">
-                    {hasPIN && s !== 'main' && (
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: '#EEF3FF' }}>
-                        <Key className="w-3 h-3" style={{ color: '#1A56DB' }} />
-                      </div>
-                    )}
-                    <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
+                {/* Mini card icon */}
+                <div className="relative shrink-0 rounded-xl overflow-hidden"
+                  style={{ width: 58, height: 42, background: cs.gradient, boxShadow: `0 4px 14px ${cs.glow}44` }}>
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.2) 0%,transparent 55%)' }} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {flag
+                      ? <img src={flag} alt={acc.currency} className="w-8 h-5 object-cover rounded"
+                          style={{ border: '1px solid rgba(255,255,255,0.45)' }}
+                          onError={e => (e.currentTarget.style.display = 'none')} />
+                      : <span className="font-bold text-white text-xs">{acc.currency}</span>}
                   </div>
-                </button>
-              )
-            })}
-          </div>
-        )}
+                  {/* Currency pill */}
+                  <div className="absolute bottom-0 inset-x-0 flex justify-center pb-0.5">
+                    <span className="font-bold px-1.5 rounded-sm"
+                      style={{ background: 'rgba(0,0,0,0.38)', color: 'rgba(255,255,255,0.92)', fontSize: 7, letterSpacing: '0.04em' }}>
+                      {acc.currency}
+                    </span>
+                  </div>
+                </div>
 
-        {/* Wallets list */}
-        {!loading && sorted.length > 1 && (
-          <div>
-            <p className="text-xs font-semibold mb-3 px-1" style={{ color: 'rgba(13,27,75,0.45)', letterSpacing: '0.08em' }}>TOUS MES PORTEFEUILLES</p>
-            <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
-              {sorted.map((acc, i) => {
-                const curr = getCurrency(acc.currency)
-                const cs   = getCardStyle(acc)
-                const flag = CURRENCY_FLAGS[acc.currency]
-                const isActive = i === cardIdx
-                const frozen   = localStorage.getItem(`fb-frozen-${acc.id}`)  === 'true'
-                const blocked  = localStorage.getItem(`fb-blocked-${acc.id}`) === 'true'
-                return (
-                  <button key={acc.id} onClick={() => setCardIdx(i)}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 cursor-pointer tr"
-                    style={{ borderBottom: i < sorted.length - 1 ? '1px solid #F3F3F6' : 'none', background: isActive ? '#EEF3FF' : '#fff' }}>
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 relative overflow-hidden"
-                      style={{ background: cs.gradient }}>
-                      {flag
-                        ? <img src={flag} alt={acc.currency} className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
-                        : <span className="font-bold text-white text-xs">{acc.currency}</span>}
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>{acc.currency}</p>
-                        {frozen  && !blocked && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#DBEAFE', color: '#1D4ED8' }}>GELÉ</span>}
-                        {blocked && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#FEE2E2', color: '#DC2626' }}>BLOQUÉ</span>}
-                      </div>
-                      <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>{curr?.name}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-bold text-sm tabular-nums" style={{ color: '#0D1B4B' }}>
-                        {visible ? `${curr?.symbol} ${acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}` : `${curr?.symbol} ••••`}
-                      </p>
-                    </div>
-                    {isActive && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#1A56DB' }} />}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+                {/* Name + masked ID */}
+                <div className="flex-1 text-left min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <p className="font-bold text-sm truncate" style={{ color: '#0D1B4B' }}>{curr?.name ?? acc.currency}</p>
+                    {acc.is_main && (
+                      <span className="text-[8px] font-bold px-1 py-0.5 rounded shrink-0" style={{ background: '#DCFCE7', color: '#16A34A' }}>PRIN.</span>
+                    )}
+                    {frozen && !blocked && (
+                      <span className="text-[8px] font-bold px-1 py-0.5 rounded shrink-0" style={{ background: '#DBEAFE', color: '#1D4ED8' }}>GELÉ</span>
+                    )}
+                    {blocked && (
+                      <span className="text-[8px] font-bold px-1 py-0.5 rounded shrink-0" style={{ background: '#FEE2E2', color: '#DC2626' }}>BLOQUÉ</span>
+                    )}
+                  </div>
+                  <p className="text-xs font-mono" style={{ color: 'rgba(13,27,75,0.38)' }}>{maskedId}</p>
+                </div>
+
+                {/* Balance + USD equivalent */}
+                <div className="text-right shrink-0">
+                  <p className="font-bold text-sm tabular-nums" style={{ color: '#0D1B4B' }}>
+                    {visible
+                      ? `${curr?.symbol}${acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}`
+                      : `${curr?.symbol}••••`}
+                  </p>
+                  {acc.currency !== 'USD' && visible && (
+                    <p className="text-[10px] mt-0.5 tabular-nums" style={{ color: 'rgba(13,27,75,0.38)' }}>
+                      ≈ ${usdVal.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                    </p>
+                  )}
+                </div>
+
+                <ChevronRight className="w-4 h-4 shrink-0 ml-1" style={{ color: 'rgba(13,27,75,0.22)' }} />
+              </button>
+            )
+          })
         )}
       </div>
     </div>
@@ -1745,7 +1728,6 @@ export function WalletPage() {
       <MainWalletScreen
         accounts={accounts} loading={loadingAcc} user={user}
         onNavigate={goTo}
-        onAddWallet={() => setScreen('add-wallet')}
         onRecharge={acc => { setDepositAcc(acc); setShowDeposit(true) }}
       />
     </div>
