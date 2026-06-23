@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme-context'
 import { NotificationsProvider } from '@/lib/notifications-context'
 import { DashboardLayout } from '@/components/dashboard-layout'
+import { AdminLayout, AdminProtectedRoute } from '@/components/admin-layout'
 import { LandingPage } from '@/pages/landing'
 import { LoginPage } from '@/pages/login'
 import { RegisterPage } from '@/pages/register'
@@ -19,8 +20,18 @@ import { BillsPage } from '@/pages/bills'
 import { WalletPage } from '@/pages/wallet'
 import { FamilyPage } from '@/pages/family'
 import { SupportPage } from '@/pages/support'
-import { AdminPage } from '@/pages/admin'
 import { NotFoundPage } from '@/pages/not-found'
+// Admin pages
+import { AdminPage } from '@/pages/admin'
+import { AdminDashboardPage } from '@/pages/admin/dashboard'
+import { AdminUsersPage } from '@/pages/admin/users'
+import { AdminTransactionsPage } from '@/pages/admin/transactions'
+import { AdminProvidersPage } from '@/pages/admin/providers'
+import { AdminReceiptsPage } from '@/pages/admin/receipts'
+import { AdminNotificationsPage } from '@/pages/admin/notifications'
+import { AdminReportsPage } from '@/pages/admin/reports'
+import { AdminAuditLogsPage } from '@/pages/admin/audit-logs'
+import { AdminSettingsPage } from '@/pages/admin/settings'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -146,13 +157,79 @@ function AppRoutes() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
+
+        {/* Admin routes — protected by AdminProtectedRoute (role check) */}
         <Route path="/admin" element={
-          <ProtectedRoute>
-            <DashboardLayout>
+          <AdminProtectedRoute>
+            <AdminLayout>
               <AdminPage />
-            </DashboardLayout>
-          </ProtectedRoute>
+            </AdminLayout>
+          </AdminProtectedRoute>
         } />
+        <Route path="/admin/dashboard" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminDashboardPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminUsersPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/transactions" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminTransactionsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/providers" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminProvidersPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/receipts" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminReceiptsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/notifications" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminNotificationsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/reports" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminReportsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/audit-logs" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminAuditLogsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminSettingsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
