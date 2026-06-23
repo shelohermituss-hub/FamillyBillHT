@@ -70,11 +70,10 @@ type NavItemDef =
   | { icon: React.FC<IconProps>; label: string; href?: never; special: 'profile' }
 
 const NAV_ITEMS: NavItemDef[] = [
-  { icon: NavIconHome,    label: 'Accueil',  href: '/dashboard' },
-  { icon: NavIconWallet,  label: 'Wallet',   href: '/wallet'    },
-  { icon: NavIconBills,   label: 'Factures', href: '/bills'     },
-  { icon: NavIconFamily,  label: 'Famille',  href: '/family'    },
-  { icon: NavIconProfile, label: 'Profil',   special: 'profile' },
+  { icon: NavIconHome,    label: 'Accueil', href: '/dashboard' },
+  { icon: NavIconWallet,  label: 'Wallet',  href: '/wallet'    },
+  { icon: NavIconStats,   label: 'Stats',   href: '/history'   },
+  { icon: NavIconProfile, label: 'Profil',  special: 'profile' },
 ]
 
 const SIDEBAR_ITEMS = [
