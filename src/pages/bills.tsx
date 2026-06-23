@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ArrowRight, CheckCircle2, Loader2, ChevronRight, Info } from 'lucide-react'
+import { ChevronLeft, ArrowRight, CheckCircle2, Loader2, ChevronRight, Info, Wallet, CreditCard, Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth-context'
-import { supabase } from '@/lib/supabase'
+import { supabase, type CurrencyAccount } from '@/lib/supabase'
 import { getRate, getFeeRate } from '@/lib/currencies'
 import {
   BILL_CATEGORIES,
@@ -14,8 +14,8 @@ import {
   type BillCategory,
 } from '@/lib/haiti-providers'
 
-type Step = 'category' | 'provider' | 'details' | 'review' | 'success'
-const STEPS: Step[] = ['category', 'provider', 'details', 'review', 'success']
+type Step = 'category' | 'provider' | 'details' | 'review' | 'payment-method' | 'success'
+const STEPS: Step[] = ['category', 'provider', 'details', 'review', 'payment-method', 'success']
 
 // ── Icon helpers ─────────────────────────────────────────────────────────────
 function ProviderLogo({
@@ -431,13 +431,134 @@ function ReviewStep({
         onClick={onConfirm}
         disabled={submitting}
       >
-        {submitting
-          ? <><Loader2 className="w-4 h-4 animate-spin" />Traitement...</>
-          : <>Confirmer — G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</>}
+        <ArrowRight className="w-4 h-4" />
+        Choisir le moyen de paiement
       </button>
       <p className="text-xs text-[var(--ink-60)] text-center">
         En confirmant, vous acceptez nos conditions générales de paiement.
       </p>
+    </div>
+  )
+}
+
+// ── Payment Method ─────────────────────────────────────────────────────────────
+type PayMethod = 'wallet' | 'card'
+
+function PaymentMethodStep({
+  amount,
+  submitting,
+  error,
+  onConfirm,
+}: {
+  amount: string
+  submitting: boolean
+  error: string
+  onConfirm: (method: PayMethod) => void
+}) {
+  const { user } = useAuth()
+  const [selected, setSelected] = useState<PayMethod>('wallet')
+  const [walletBalance, setWalletBalance] = useState<number | null>(null)
+  const htgAmount = parseFloat(amount) || 0
+
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from('currency_accounts')
+      .select('balance')
+      .eq('user_id', user.id)
+      .eq('is_main', true)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setWalletBalance(data.balance) })
+  }, [user])
+
+  const walletInsufficient = walletBalance !== null && walletBalance < htgAmount
+
+  return (
+    <div className="space-y-5 animate-fade-in-up">
+      <div>
+        <h2 className="text-lg font-semibold text-[var(--ink)]">Moyen de paiement</h2>
+        <p className="text-sm text-[var(--ink-60)] mt-1">Choisissez comment payer votre facture</p>
+      </div>
+
+      {/* Amount summary */}
+      <div className="flex items-center justify-between px-4 py-3.5 rounded-2xl"
+        style={{ background: 'var(--lime-light)', border: '1px solid var(--lime)20' }}>
+        <span className="text-sm font-semibold text-[var(--ink)]">Total à payer</span>
+        <span className="text-lg font-bold text-[var(--ink)]">
+          G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+        </span>
+      </div>
+
+      {/* Options */}
+      <div className="space-y-3">
+        {/* Wallet option */}
+        <button
+          onClick={() => !walletInsufficient && setSelected('wallet')}
+          className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 tr cursor-pointer"
+          style={{
+            borderColor: selected === 'wallet' ? 'var(--lime)' : 'var(--border)',
+            background: selected === 'wallet' ? 'var(--lime-light)' : 'var(--card-bg)',
+            opacity: walletInsufficient ? 0.5 : 1,
+          }}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: selected === 'wallet' ? 'var(--lime)' : 'var(--surface-2)' }}>
+            <Wallet className="w-5 h-5" style={{ color: selected === 'wallet' ? '#fff' : 'var(--ink-60)' }} />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-semibold text-sm text-[var(--ink)]">Solde du portefeuille</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>
+              {walletBalance !== null
+                ? `G ${walletBalance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} disponible`
+                : 'Chargement…'}
+              {walletInsufficient && ' — Solde insuffisant'}
+            </p>
+          </div>
+          {selected === 'wallet' && (
+            <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: 'var(--lime)' }}>
+              <Check className="w-3.5 h-3.5 text-white" />
+            </div>
+          )}
+        </button>
+
+        {/* Card option */}
+        <button
+          onClick={() => setSelected('card')}
+          className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 tr cursor-pointer"
+          style={{
+            borderColor: selected === 'card' ? 'var(--lime)' : 'var(--border)',
+            background: selected === 'card' ? 'var(--lime-light)' : 'var(--card-bg)',
+          }}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: selected === 'card' ? 'var(--lime)' : 'var(--surface-2)' }}>
+            <CreditCard className="w-5 h-5" style={{ color: selected === 'card' ? '#fff' : 'var(--ink-60)' }} />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-semibold text-sm text-[var(--ink)]">Carte bancaire</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Visa / Mastercard</p>
+          </div>
+          {selected === 'card' && (
+            <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: 'var(--lime)' }}>
+              <Check className="w-3.5 h-3.5 text-white" />
+            </div>
+          )}
+        </button>
+      </div>
+
+      {error && (
+        <div className="p-3 rounded-xl text-sm text-red-600 bg-red-50">{error}</div>
+      )}
+
+      <button
+        className="btn-lime w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+        onClick={() => onConfirm(selected)}
+        disabled={submitting || (selected === 'wallet' && !!walletInsufficient)}
+      >
+        {submitting
+          ? <><Loader2 className="w-4 h-4 animate-spin" />Traitement...</>
+          : <>Payer — G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</>}
+      </button>
     </div>
   )
 }
@@ -548,10 +669,11 @@ export function BillsPage() {
   const [txId, setTxId] = useState('')
 
   function goBack() {
-    if (step === 'category') { navigate(-1); return }
-    if (step === 'provider') { setStep('category'); return }
-    if (step === 'details')  { setStep('provider'); return }
-    if (step === 'review')   { setStep('details');  return }
+    if (step === 'category')        { navigate(-1);           return }
+    if (step === 'provider')        { setStep('category');    return }
+    if (step === 'details')         { setStep('provider');    return }
+    if (step === 'review')          { setStep('details');     return }
+    if (step === 'payment-method')  { setStep('review');      return }
   }
 
   function handleCategorySelect(cat: BillCategory) {
@@ -569,7 +691,7 @@ export function BillsPage() {
     setStep('details')
   }
 
-  async function handleConfirm() {
+  async function handleConfirm(method: PayMethod = 'wallet') {
     if (!user || !selectedProvider) return
     setSubmitting(true)
     setSubmitError('')
@@ -591,7 +713,7 @@ export function BillsPage() {
       exchange_rate: 1,
       fee: parseFloat(amount) * getFeeRate('HTG', 'USD'),
       recipient_name: recipientName,
-      note: `Paiement ${selectedProvider.name} — ${Object.entries(fieldValues)
+      note: `Paiement ${selectedProvider.name} via ${method === 'wallet' ? 'portefeuille' : 'carte'} — ${Object.entries(fieldValues)
         .filter(([, v]) => v)
         .map(([k, v]) => `${k}: ${v}`)
         .join(', ')}`,
@@ -626,7 +748,9 @@ export function BillsPage() {
         ? selectedCategory?.label ?? 'Fournisseur'
         : step === 'details'
           ? selectedProvider?.name ?? 'Informations'
-          : 'Confirmation'
+          : step === 'payment-method'
+            ? 'Moyen de paiement'
+            : 'Confirmation'
 
   const stepNumber = STEPS.indexOf(step)
 
@@ -680,6 +804,15 @@ export function BillsPage() {
             provider={selectedProvider}
             category={selectedCategory}
             fields={fieldValues}
+            amount={amount}
+            submitting={false}
+            error=""
+            onConfirm={() => setStep('payment-method')}
+          />
+        )}
+
+        {step === 'payment-method' && (
+          <PaymentMethodStep
             amount={amount}
             submitting={submitting}
             error={submitError}
