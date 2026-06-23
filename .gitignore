@@ -26,3 +26,6 @@ dist-ssr
 *.sln
 *.sw?
 __pycache__/
+
+# Claude Code agent worktrees (temporary, never commit)
+.claude/worktrees/
