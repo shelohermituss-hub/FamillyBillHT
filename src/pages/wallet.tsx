@@ -1427,8 +1427,8 @@ function AddWalletScreen({ user, onBack, onNext }: {
 type WalletScreen = 'main' | 'details' | 'settings' | 'card-back' | 'full-settings' | 'add-wallet' | 'pin-setup' | 'change-pin' | 'wallet-history'
 const SENSITIVE_SCREENS: WalletScreen[] = ['details', 'settings', 'card-back', 'full-settings', 'change-pin']
 
-function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
-  accounts: CurrencyAccount[]; loading: boolean; user: UserLike
+function MainWalletScreen({ accounts, loading, onNavigate, onRecharge }: {
+  accounts: CurrencyAccount[]; loading: boolean
   onNavigate: (s: WalletScreen, acc?: CurrencyAccount) => void
   onRecharge: (acc: CurrencyAccount) => void
 }) {
@@ -1726,7 +1726,7 @@ export function WalletPage() {
 
       {/* Main always in DOM */}
       <MainWalletScreen
-        accounts={accounts} loading={loadingAcc} user={user}
+        accounts={accounts} loading={loadingAcc}
         onNavigate={goTo}
         onRecharge={acc => { setDepositAcc(acc); setShowDeposit(true) }}
       />
