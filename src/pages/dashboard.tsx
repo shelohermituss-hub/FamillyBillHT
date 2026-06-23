@@ -89,11 +89,25 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
 
 // ── USD Wallet Card ───────────────────────────────────────────────────────────
 
+const DASHBOARD_CARD_STYLES = [
+  { id: 'purple', gradient: 'linear-gradient(135deg,#1a0070 0%,#3b12cc 45%,#6d28d9 100%)', glow: '#7c3aed', accent: 'rgba(167,139,250,0.35)' },
+  { id: 'green',  gradient: 'linear-gradient(135deg,#064e3b 0%,#059669 45%,#34d399 100%)', glow: '#10b981', accent: 'rgba(52,211,153,0.35)'   },
+  { id: 'blue',   gradient: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 45%,#60a5fa 100%)', glow: '#3b82f6', accent: 'rgba(96,165,250,0.35)'   },
+  { id: 'orange', gradient: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 45%,#fb923c 100%)', glow: '#f97316', accent: 'rgba(251,146,60,0.35)'   },
+  { id: 'rose',   gradient: 'linear-gradient(135deg,#831843 0%,#e11d48 45%,#fb7185 100%)', glow: '#f43f5e', accent: 'rgba(251,113,133,0.35)'  },
+]
+
+function getDashCardStyle(accountId: string | undefined) {
+  const id = (accountId ? localStorage.getItem(`fb-card-style-${accountId}`) : null) ?? 'green'
+  return DASHBOARD_CARD_STYLES.find(s => s.id === id) ?? DASHBOARD_CARD_STYLES[1]
+}
+
 function UsdWalletCard({ account, visible }: { account: CurrencyAccount | null; visible: boolean }) {
   const navigate = useNavigate()
   const balance = account?.balance ?? 0
   const lastChars = account ? account.id.replace(/-/g, '').slice(-8).toUpperCase() : '————'
   const maskedId  = lastChars.slice(0, 4) + ' ' + lastChars.slice(4)
+  const cs = getDashCardStyle(account?.id)
 
   return (
     <button
@@ -101,16 +115,16 @@ function UsdWalletCard({ account, visible }: { account: CurrencyAccount | null; 
       className="relative w-full overflow-hidden cursor-pointer"
       style={{
         borderRadius: 24,
-        background: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)',
-        boxShadow: '0 8px 32px rgba(5,150,105,0.35)',
+        background: cs.gradient,
+        boxShadow: `0 8px 32px ${cs.glow}55`,
         minHeight: 172,
       }}
     >
       {/* decorative circles */}
       <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20"
-        style={{ background: 'rgba(255,255,255,0.4)' }} />
+        style={{ background: cs.accent }} />
       <div className="absolute -bottom-10 -left-6 w-32 h-32 rounded-full opacity-10"
-        style={{ background: 'rgba(255,255,255,0.4)' }} />
+        style={{ background: cs.accent }} />
 
       <div className="relative z-10 p-5 flex flex-col h-full text-left">
         {/* Top row */}
