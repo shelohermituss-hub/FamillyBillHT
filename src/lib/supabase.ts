@@ -11,6 +11,7 @@ export type WiseUser = {
   full_name: string
   avatar_url?: string
   verified: boolean
+  role?: string
   created_at: string
 }
 

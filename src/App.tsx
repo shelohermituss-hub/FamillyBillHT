@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { Navbar } from '@/components/navbar'
 import { DashboardLayout } from '@/components/dashboard-layout'
+import { AdminLayout, AdminProtectedRoute } from '@/components/admin-layout'
 import { LandingPage } from '@/pages/landing'
 import { LoginPage } from '@/pages/login'
 import { RegisterPage } from '@/pages/register'
@@ -10,6 +11,16 @@ import { TransferPage } from '@/pages/transfer'
 import { AccountPage } from '@/pages/account'
 import { CardPage } from '@/pages/card'
 import { HistoryPage } from '@/pages/history'
+import { AdminPage } from '@/pages/admin'
+import { AdminDashboardPage } from '@/pages/admin/dashboard'
+import { AdminUsersPage } from '@/pages/admin/users'
+import { AdminTransactionsPage } from '@/pages/admin/transactions'
+import { AdminProvidersPage } from '@/pages/admin/providers'
+import { AdminReceiptsPage } from '@/pages/admin/receipts'
+import { AdminNotificationsPage } from '@/pages/admin/notifications'
+import { AdminReportsPage } from '@/pages/admin/reports'
+import { AdminAuditLogsPage } from '@/pages/admin/audit-logs'
+import { AdminSettingsPage } from '@/pages/admin/settings'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -94,6 +105,79 @@ function AppRoutes() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
+
+        {/* Admin routes */}
+        <Route path="/admin" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/dashboard" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminDashboardPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminUsersPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/transactions" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminTransactionsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/providers" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminProvidersPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/receipts" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminReceiptsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/notifications" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminNotificationsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/reports" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminReportsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/audit-logs" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminAuditLogsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <AdminProtectedRoute>
+            <AdminLayout>
+              <AdminSettingsPage />
+            </AdminLayout>
+          </AdminProtectedRoute>
+        } />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
