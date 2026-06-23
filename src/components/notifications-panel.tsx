@@ -16,11 +16,12 @@ const TYPE_CONFIG: Record<AppNotification['type'], {
   bg: string
   color: string
 }> = {
-  receive: { icon: ArrowDownLeft,  bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]' },
-  send:    { icon: ArrowUpRight,   bg: 'bg-red-50',              color: 'text-red-500'       },
-  info:    { icon: Info,           bg: 'bg-blue-50',             color: 'text-blue-500'      },
-  alert:   { icon: AlertTriangle,  bg: 'bg-amber-50',            color: 'text-amber-500'     },
-  rate:    { icon: TrendingUp,     bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
+  receive:         { icon: ArrowDownLeft,  bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]' },
+  send:            { icon: ArrowUpRight,   bg: 'bg-red-50',              color: 'text-red-500'       },
+  info:            { icon: Info,           bg: 'bg-blue-50',             color: 'text-blue-500'      },
+  alert:           { icon: AlertTriangle,  bg: 'bg-amber-50',            color: 'text-amber-500'     },
+  rate:            { icon: TrendingUp,     bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
+  payment_request: { icon: ArrowUpRight,   bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
 }
 
 export function NotificationsPanel({

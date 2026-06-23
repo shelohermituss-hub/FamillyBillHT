@@ -1,28 +1,19 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  ArrowUpRight, ArrowDownLeft, Repeat, Plus, Eye, EyeOff,
-  MoreHorizontal, X, Share2, Copy, Check, QrCode, LayoutGrid,
+  ArrowUpRight, ArrowDownLeft, Repeat, Eye, EyeOff,
+  X, Share2, Copy, Check, QrCode,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
-import { formatCurrency, getCurrency, getRate } from '@/lib/currencies'
+import { getCurrency } from '@/lib/currencies'
 import { BILL_CATEGORIES } from '@/lib/haiti-providers'
-
-const ACCOUNT_CARD_STYLES: Record<string, { gradient: string; glowColor: string }> = {
-  HTG: { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed' },
-  USD: { gradient: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)', glowColor: '#10b981' },
-  EUR: { gradient: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #60a5fa 100%)', glowColor: '#3b82f6' },
-  CAD: { gradient: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 45%, #fb923c 100%)', glowColor: '#f97316' },
-  BRL: { gradient: 'linear-gradient(135deg, #831843 0%, #e11d48 45%, #fb7185 100%)', glowColor: '#f43f5e' },
-}
-const DEFAULT_CARD_STYLE = { gradient: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)', glowColor: '#7c3aed' }
 
 // ── Receive Modal ─────────────────────────────────────────────────────────────
 
 function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; user_code?: string } | null; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
-  const userCode = (profile as any)?.user_code as string | undefined
+  const userCode = profile?.user_code
   const name = profile?.full_name ?? 'Utilisateur'
 
   useEffect(() => {
@@ -64,8 +55,9 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
             <X className="w-4 h-4" style={{ color: '#6B7280' }} />
           </button>
         </div>
-        <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #1a0070 0%, #3b12cc 45%, #6d28d9 100%)' }}>
-          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-20" style={{ background: 'rgba(167,139,250,0.5)' }} />
+        <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5"
+          style={{ background: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)' }}>
+          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-20" style={{ background: 'rgba(52,211,153,0.5)' }} />
           <div className="relative z-10">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
               style={{ background: 'rgba(255,255,255,0.15)' }}>
@@ -95,63 +87,104 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
   )
 }
 
-// ── Mini card icon for wallet entries ─────────────────────────────────────────
+// ── USD Wallet Card ───────────────────────────────────────────────────────────
 
-function MiniCardIcon({ currency }: { currency: string }) {
-  const cs = ACCOUNT_CARD_STYLES[currency] ?? DEFAULT_CARD_STYLE
-  return (
-    <div className="relative rounded-xl overflow-hidden shrink-0" style={{ width: 52, height: 34, background: cs.gradient }}>
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 60%)' }} />
-      {/* chip */}
-      <div className="absolute bottom-1.5 left-2 w-5 h-3.5 rounded-sm"
-        style={{ background: 'rgba(255,220,100,0.6)', border: '0.5px solid rgba(255,255,255,0.3)' }} />
-      <p className="absolute top-1 right-2 font-bold text-white" style={{ fontSize: 7, letterSpacing: '0.05em' }}>{currency}</p>
-    </div>
-  )
-}
-
-// ── Bill category card ────────────────────────────────────────────────────────
-
-function BillCategoryCard({ cat }: { cat: typeof BILL_CATEGORIES[0] }) {
+function UsdWalletCard({ account, visible }: { account: CurrencyAccount | null; visible: boolean }) {
   const navigate = useNavigate()
+  const balance = account?.balance ?? 0
+  const lastChars = account ? account.id.replace(/-/g, '').slice(-8).toUpperCase() : '————'
+  const maskedId  = lastChars.slice(0, 4) + ' ' + lastChars.slice(4)
+
   return (
     <button
-      onClick={() => navigate(`/bills?category=${cat.id}`)}
-      className="flex flex-col items-center gap-2 cursor-pointer group"
+      onClick={() => navigate('/wallet')}
+      className="relative w-full overflow-hidden cursor-pointer"
+      style={{
+        borderRadius: 24,
+        background: 'linear-gradient(135deg, #064e3b 0%, #059669 45%, #34d399 100%)',
+        boxShadow: '0 8px 32px rgba(5,150,105,0.35)',
+        minHeight: 172,
+      }}
     >
-      <div
-        className="w-14 h-14 rounded-2xl flex items-center justify-center tr group-hover:scale-105 overflow-hidden shrink-0"
-        style={{ background: cat.bg ?? '#F3F4F6', border: '1.5px solid #F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-      >
-        {cat.icon
-          ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain" onError={e => { (e.currentTarget as HTMLElement).style.display = 'none' }} />
-          : <span style={{ fontSize: 24 }}>{cat.emoji}</span>}
+      {/* decorative circles */}
+      <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20"
+        style={{ background: 'rgba(255,255,255,0.4)' }} />
+      <div className="absolute -bottom-10 -left-6 w-32 h-32 rounded-full opacity-10"
+        style={{ background: 'rgba(255,255,255,0.4)' }} />
+
+      <div className="relative z-10 p-5 flex flex-col h-full text-left">
+        {/* Top row */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.18)' }}>
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                <path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+                <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+                <circle cx="16.5" cy="13" r="1.5" fill="white" stroke="none"/>
+              </svg>
+            </div>
+            <span className="text-white/80 text-sm font-semibold">Portefeuille USD</span>
+          </div>
+          {/* Mastercard-style circles */}
+          <div className="flex -space-x-2">
+            <div className="w-8 h-8 rounded-full opacity-80" style={{ background: '#FF5F00' }} />
+            <div className="w-8 h-8 rounded-full opacity-70" style={{ background: '#FFB300' }} />
+          </div>
+        </div>
+
+        {/* Balance */}
+        <div className="mb-4">
+          <p className="text-white/50 text-[11px] font-semibold uppercase tracking-widest mb-1">Solde disponible</p>
+          <p className="text-white font-extrabold tabular-nums" style={{ fontSize: 32, lineHeight: 1, letterSpacing: '-0.03em' }}>
+            {visible
+              ? `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : '$•••••••'}
+          </p>
+        </div>
+
+        {/* Bottom row */}
+        <div className="flex items-center justify-between mt-auto">
+          <div>
+            <p className="text-white/40 text-[10px] uppercase tracking-widest">ID compte</p>
+            <p className="text-white font-mono font-semibold text-sm tracking-widest">{maskedId}</p>
+          </div>
+          <div className="px-2.5 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.15)' }}>
+            <span className="text-white text-xs font-bold">USD</span>
+          </div>
+        </div>
       </div>
-      <span className="text-center leading-tight font-semibold" style={{ fontSize: 10, color: '#374151', maxWidth: 56 }}>{cat.label}</span>
     </button>
   )
 }
 
-// ── Rate tile ─────────────────────────────────────────────────────────────────
+// ── Bill Category Grid ────────────────────────────────────────────────────────
 
-function RateTile({ from, to, base }: { from: string; to: string; base: string }) {
-  const rate = getRate(to, from)
-  const curr = getCurrency(to)
-  const change = (Math.random() * 3 - 1.5).toFixed(1) // simulated
-  const positive = parseFloat(change) >= 0
+function BillGrid() {
+  const navigate = useNavigate()
   return (
-    <div className="shrink-0 rounded-2xl p-3 min-w-[110px]" style={{ background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-bold" style={{ color: '#111' }}>{to}</p>
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-          style={{ background: positive ? '#D1FAE5' : '#FEE2E2', color: positive ? '#059669' : '#DC2626' }}>
-          {positive ? '+' : ''}{change}%
-        </span>
-      </div>
-      <p className="font-mono text-xs" style={{ color: '#9CA3AF' }}>
-        {curr?.symbol}{rate.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-      </p>
-      <p className="text-[10px] mt-0.5" style={{ color: '#D1D5DB' }}>per {base}</p>
+    <div className="grid grid-cols-3 gap-3">
+      {BILL_CATEGORIES.map(cat => (
+        <button
+          key={cat.id}
+          onClick={() => navigate(`/bills?category=${cat.id}`)}
+          className="flex flex-col items-center gap-2 p-3 rounded-2xl cursor-pointer tr hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}
+        >
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden"
+            style={{ background: cat.bg ?? '#F3F4F6' }}
+          >
+            {cat.icon
+              ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain"
+                  onError={e => { (e.currentTarget as HTMLElement).style.display = 'none' }} />
+              : <span style={{ fontSize: 22 }}>{cat.emoji}</span>}
+          </div>
+          <span className="text-center leading-tight font-semibold" style={{ fontSize: 11, color: '#374151' }}>
+            {cat.label}
+          </span>
+        </button>
+      ))}
     </div>
   )
 }
@@ -161,7 +194,7 @@ function RateTile({ from, to, base }: { from: string; to: string; base: string }
 export function DashboardPage() {
   const { user, profile } = useAuth()
   const navigate = useNavigate()
-  const [accounts, setAccounts] = useState<CurrencyAccount[]>([])
+  const [usdAccount, setUsdAccount] = useState<CurrencyAccount | null>(null)
   const [transactions, setTx] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [visible, setVisible] = useState(true)
@@ -170,51 +203,32 @@ export function DashboardPage() {
   const load = useCallback(async () => {
     if (!user) return
     const [a, t] = await Promise.all([
-      supabase.from('currency_accounts').select('*').eq('user_id', user.id).order('is_main', { ascending: false }),
+      supabase.from('currency_accounts').select('*').eq('user_id', user.id).eq('currency', 'USD').maybeSingle(),
       supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
     ])
-    if (a.data) setAccounts(a.data)
+    if (a.data) setUsdAccount(a.data)
     if (t.data) setTx(t.data)
     setLoading(false)
   }, [user])
 
   useEffect(() => { load() }, [load])
 
-  const sorted = [...accounts].sort((a, b) => {
-    if (a.currency === 'HTG') return -1
-    if (b.currency === 'HTG') return 1
-    if (a.currency === 'USD') return -1
-    if (b.currency === 'USD') return 1
-    return b.balance - a.balance
-  })
-
-  const totalUSD = accounts.reduce((s, a) => s + a.balance * getRate(a.currency, 'USD'), 0)
-
   const firstName = profile?.full_name?.split(' ')[0] ?? 'là'
-  const avatarUrl = (profile as any)?.avatar_url as string | undefined
+  const avatarUrl = profile?.avatar_url
   const initials = (profile?.full_name ?? 'U').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
-
-  // Exchange rate pairs to show
-  const RATE_PAIRS = [
-    { from: 'USD', to: 'EUR', base: 'USD' },
-    { from: 'USD', to: 'HTG', base: 'USD' },
-    { from: 'USD', to: 'CAD', base: 'USD' },
-    { from: 'USD', to: 'BRL', base: 'USD' },
-  ]
 
   const greetHour = new Date().getHours()
   const greetWord = greetHour < 12 ? 'Bonjour' : greetHour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8" style={{ background: '#F3F4F6' }}>
+    <div className="min-h-screen pb-28 md:pb-8 overflow-x-hidden" style={{ background: '#F3F4F6', maxWidth: '100vw' }}>
       {showReceive && <ReceiveModal profile={profile} onClose={() => setShowReceive(false)} />}
 
-      {/* ── Balance section (white card) ── */}
+      {/* ── Header card (white) ── */}
       <div className="bg-white px-5 pt-5 pb-6" style={{ borderBottom: '1px solid #F3F4F6' }}>
-        {/* Header row */}
+        {/* Greeting row */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            {/* Avatar */}
             <div
               className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden cursor-pointer"
               style={avatarUrl ? {} : { background: 'var(--lime)', color: '#fff' }}
@@ -231,35 +245,26 @@ export function DashboardPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to="/history">
-              <div className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer hover:bg-gray-50"
-                style={{ background: '#F9FAFB' }}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                </svg>
-              </div>
-            </Link>
-            <button
-              className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer hover:bg-gray-50"
-              style={{ background: '#F9FAFB' }}
-              onClick={() => navigate('/wallet')}
-            >
-              <LayoutGrid className="w-4 h-4" style={{ color: '#9CA3AF' }} />
-            </button>
-          </div>
+          <Link to="/history">
+            <div className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer hover:bg-gray-50"
+              style={{ background: '#F9FAFB' }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </div>
+          </Link>
         </div>
 
         {/* Balance */}
-        <p className="text-xs font-medium mb-1.5" style={{ color: '#9CA3AF' }}>Total Account Balance</p>
+        <p className="text-xs font-medium mb-1.5" style={{ color: '#9CA3AF' }}>Solde USD</p>
         <div className="flex items-center gap-2 mb-5">
           {loading ? (
             <div className="h-10 w-44 rounded-xl animate-pulse bg-gray-100" />
           ) : (
             <p className="font-extrabold tabular-nums" style={{ fontSize: 'clamp(26px, 8vw, 40px)', color: '#111', letterSpacing: '-0.03em', lineHeight: 1 }}>
               {visible
-                ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                ? `$${(usdAccount?.balance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : '$•••••'}
             </p>
           )}
@@ -269,7 +274,7 @@ export function DashboardPage() {
             style={{ background: '#F3F4F6' }}
           >
             {visible
-              ? <Eye className="w-4 h-4" style={{ color: '#9CA3AF' }} />
+              ? <Eye    className="w-4 h-4" style={{ color: '#9CA3AF' }} />
               : <EyeOff className="w-4 h-4" style={{ color: '#9CA3AF' }} />}
           </button>
         </div>
@@ -278,138 +283,46 @@ export function DashboardPage() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => navigate('/transfer')}
-            className="flex items-center gap-1.5 px-4 h-11 rounded-full text-sm font-semibold text-white cursor-pointer tr hover:opacity-90 active:scale-97 shrink-0"
-            style={{ background: 'var(--lime)', boxShadow: '0 4px 16px rgba(26,86,219,0.3)' }}
+            className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold text-white cursor-pointer tr hover:opacity-90 active:scale-97 shrink-0"
+            style={{ background: 'var(--lime)', boxShadow: '0 4px 16px rgba(159,232,112,0.4)' }}
           >
             <ArrowUpRight className="w-4 h-4" />
-            Transfert
+            Envoyer
           </button>
           <button
             onClick={() => setShowReceive(true)}
-            className="flex items-center gap-1.5 px-4 h-11 rounded-full text-sm font-semibold cursor-pointer tr hover:bg-gray-50 active:scale-97 shrink-0"
+            className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold cursor-pointer tr hover:bg-gray-50 active:scale-97 shrink-0"
             style={{ border: '1.5px solid #E5E7EB', color: '#374151' }}
           >
             <ArrowDownLeft className="w-4 h-4" />
             Recevoir
           </button>
-          <button
-            onClick={() => navigate('/bills')}
-            className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer tr hover:bg-gray-50 shrink-0"
-            style={{ border: '1.5px solid #E5E7EB' }}
-          >
-            <LayoutGrid className="w-4 h-4" style={{ color: '#374151' }} />
-          </button>
         </div>
       </div>
 
-      {/* ── Content area ── */}
-      <div className="max-w-2xl mx-auto">
+      {/* ── Content ── */}
+      <div className="max-w-2xl mx-auto px-4 space-y-4 pt-4">
+
+        {/* ── USD Wallet Card ── */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Mon Portefeuille</h2>
+          </div>
+          {loading
+            ? <div className="h-44 rounded-3xl animate-pulse bg-gray-200" />
+            : <UsdWalletCard account={usdAccount} visible={visible} />}
+        </div>
 
         {/* ── Payer vos factures ── */}
-        <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-1">
+        <div>
+          <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Payer vos factures</h2>
-            <Link to="/bills" className="text-xs font-bold tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
-              Tout voir →
-            </Link>
           </div>
-          <div className="px-4 pb-4 pt-3 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))' }}>
-            {BILL_CATEGORIES.map(cat => (
-              <BillCategoryCard key={cat.id} cat={cat} />
-            ))}
-          </div>
-        </div>
-
-        {/* ── Wallet card ── */}
-        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-3">
-            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Portefeuille</h2>
-            <button
-              onClick={() => navigate('/wallet')}
-              className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer tr hover:opacity-80"
-              style={{ background: 'var(--lime)' }}
-            >
-              <Plus className="w-4 h-4 text-white" />
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="space-y-0 divide-y divide-gray-50">
-              {[1, 2].map(i => (
-                <div key={i} className="flex items-center gap-4 px-4 py-3.5">
-                  <div className="w-[52px] h-[34px] rounded-xl bg-gray-100 animate-pulse shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 bg-gray-100 rounded animate-pulse w-32" />
-                    <div className="h-4 bg-gray-100 rounded animate-pulse w-24" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : sorted.length === 0 ? (
-            <div className="px-4 pb-6 text-center">
-              <p className="text-sm py-4" style={{ color: '#9CA3AF' }}>Aucun compte devise. Ajoutez-en un.</p>
-              <button onClick={() => navigate('/wallet')} className="btn-lime px-4 py-2 rounded-xl text-sm cursor-pointer">
-                Ajouter
-              </button>
-            </div>
-          ) : (
-            <div className="divide-y" style={{ borderColor: '#F9FAFB' }}>
-              {sorted.map(acc => {
-                const curr = getCurrency(acc.currency)
-                const usdVal = acc.balance * getRate(acc.currency, 'USD')
-                return (
-                  <button
-                    key={acc.id}
-                    onClick={() => navigate('/wallet')}
-                    className="w-full flex items-center gap-4 px-4 py-3.5 tr hover:bg-gray-50 cursor-pointer text-left"
-                  >
-                    <MiniCardIcon currency={acc.currency} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{curr?.name ?? acc.currency}</p>
-                        <p className="text-xs font-mono ml-2 shrink-0" style={{ color: '#9CA3AF' }}>
-                          ****{acc.id.slice(-4).toUpperCase()}
-                        </p>
-                      </div>
-                      <p className="text-sm font-bold tabular-nums" style={{ color: '#374151' }}>
-                        {visible
-                          ? formatCurrency(acc.balance, acc.currency)
-                          : `${curr?.symbol ?? ''} ••••••`}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-xs tabular-nums" style={{ color: '#9CA3AF' }}>
-                        {visible ? `≈ $${usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '≈ $••••'}
-                      </p>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-          {/* View all link */}
-          <div className="px-4 py-3 border-t" style={{ borderColor: '#F9FAFB' }}>
-            <button onClick={() => navigate('/wallet')} className="w-full text-center text-sm font-semibold cursor-pointer tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
-              Voir toutes les devises →
-            </button>
-          </div>
-        </div>
-
-        {/* ── Exchange Rate ── */}
-        <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-3">
-            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Taux de Change</h2>
-            <button className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer tr hover:bg-gray-50">
-              <MoreHorizontal className="w-4 h-4" style={{ color: '#9CA3AF' }} />
-            </button>
-          </div>
-          <div className="px-4 pb-4 flex gap-2.5 overflow-x-auto scrollbar-hide">
-            {RATE_PAIRS.map(p => <RateTile key={p.to} from={p.from} to={p.to} base={p.base} />)}
-          </div>
+          <BillGrid />
         </div>
 
         {/* ── Recent transactions ── */}
-        <div className="mx-4 mt-4 mb-4 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+        <div className="rounded-2xl overflow-hidden mb-4" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
           <div className="flex items-center justify-between px-4 pt-4 pb-3">
             <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Activité récente</h2>
             <Link to="/history" className="text-sm font-semibold tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
@@ -440,23 +353,23 @@ export function DashboardPage() {
           ) : (
             <div className="px-4 pb-4 divide-y" style={{ borderColor: '#F9FAFB' }}>
               {transactions.slice(0, 5).map(tx => {
-                const isSend = tx.type === 'send' || tx.type === 'withdraw' || tx.type === 'bill_payment'
+                const isSend    = tx.type === 'send' || tx.type === 'withdraw' || tx.type === 'bill_payment'
                 const isReceive = tx.type === 'receive' || tx.type === 'deposit'
-                const curr = getCurrency(tx.currency)
-                const label = tx.type === 'convert'
+                const curr      = getCurrency(tx.currency)
+                const label     = tx.type === 'convert'
                   ? `${tx.currency} → ${tx.target_currency}`
                   : (tx.recipient_name ?? (tx.type === 'bill_payment' ? 'Facture' : tx.type === 'deposit' ? 'Dépôt' : 'Transfert'))
-                const iconBg = isSend ? '#FEE2E2' : isReceive ? '#D1FAE5' : '#EDE9FE'
+                const iconBg    = isSend ? '#FEE2E2' : isReceive ? '#D1FAE5' : '#EDE9FE'
                 const iconColor = isSend ? '#EF4444' : isReceive ? '#059669' : '#7C3AED'
-                const amountColor = isSend ? '#EF4444' : isReceive ? '#059669' : '#374151'
+                const amtColor  = isSend ? '#EF4444' : isReceive ? '#059669' : '#374151'
                 return (
                   <div key={tx.id} className="flex items-center gap-3 py-3 first:pt-0">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: iconBg }}>
                       {isSend
-                        ? <ArrowUpRight className="w-4 h-4" style={{ color: iconColor }} />
+                        ? <ArrowUpRight   className="w-4 h-4" style={{ color: iconColor }} />
                         : isReceive
                           ? <ArrowDownLeft className="w-4 h-4" style={{ color: iconColor }} />
-                          : <Repeat className="w-4 h-4" style={{ color: iconColor }} />}
+                          : <Repeat        className="w-4 h-4" style={{ color: iconColor }} />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{label}</p>
@@ -465,7 +378,7 @@ export function DashboardPage() {
                         {' · '}{tx.currency}
                       </p>
                     </div>
-                    <p className="text-sm font-bold tabular-nums shrink-0" style={{ color: amountColor }}>
+                    <p className="text-sm font-bold tabular-nums shrink-0" style={{ color: amtColor }}>
                       {isSend ? '−' : isReceive ? '+' : ''}{curr?.symbol}{tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
                     </p>
                   </div>

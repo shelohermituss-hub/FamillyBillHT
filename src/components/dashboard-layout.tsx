@@ -13,31 +13,12 @@ function NavIconHome({ className, style }: IconProps) {
     </svg>
   )
 }
-function NavIconPay({ className, style }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-      <rect x="2" y="5" width="20" height="14" rx="3"/>
-      <path d="M2 10h20"/>
-      <path d="M6 15h3M17 15h1"/>
-    </svg>
-  )
-}
 function NavIconWallet({ className, style }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
       <path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
       <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
       <circle cx="16.5" cy="13" r="1.5" fill="currentColor" stroke="none"/>
-    </svg>
-  )
-}
-function NavIconFamily({ className, style }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-      <circle cx="8.5" cy="7" r="3"/>
-      <circle cx="15.5" cy="7" r="3"/>
-      <path d="M2 21v-1.5A5.5 5.5 0 017.5 14h2"/>
-      <path d="M14 14h2.5A5.5 5.5 0 0122 19.5V21"/>
     </svg>
   )
 }
@@ -58,9 +39,7 @@ import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { icon: NavIconHome,   label: 'Accueil',  href: '/dashboard' },
-  { icon: NavIconPay,    label: 'Payer',    href: '/bills'     },
   { icon: NavIconWallet, label: 'Wallet',   href: '/wallet'    },
-  { icon: NavIconFamily, label: 'Famille',  href: '/family'    },
   { icon: NavIconStats,  label: 'Stats',    href: '/history'   },
 ]
 

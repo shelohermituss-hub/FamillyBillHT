@@ -18,6 +18,8 @@ export type WiseUser = {
   avatar_url?: string
   verified: boolean
   user_code?: string
+  phone?: string
+  country?: string
   created_at: string
 }
 

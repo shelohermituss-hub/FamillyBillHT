@@ -2,9 +2,12 @@ import { createContext, useContext, useState, type ReactNode } from 'react'
 
 export type AppNotification = {
   id: string
-  type: 'receive' | 'send' | 'info' | 'alert' | 'rate'
+  type: 'receive' | 'send' | 'info' | 'alert' | 'rate' | 'payment_request'
   title: string
   body: string
+  amount?: number
+  from?: string
+  avatarInitials?: string
   time: Date
   read: boolean
 }
@@ -27,36 +30,12 @@ const NotificationsContext = createContext<NotificationsCtx>({
 
 const INITIAL: AppNotification[] = [
   {
-    id: '1',
-    type: 'receive',
-    title: 'Virement reçu',
-    body: 'Vous avez reçu $120.00 USD de Jean Pierre.',
-    time: new Date(Date.now() - 1000 * 60 * 15),
-    read: false,
-  },
-  {
-    id: '2',
-    type: 'rate',
-    title: 'Taux favorable',
-    body: 'Le taux HTG/USD est au plus haut depuis 7 jours.',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    read: false,
-  },
-  {
-    id: '3',
+    id: 'welcome',
     type: 'info',
-    title: 'Compte EUR activé',
-    body: 'Votre compte Euro est prêt à recevoir des virements SEPA.',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    read: true,
-  },
-  {
-    id: '4',
-    type: 'alert',
-    title: 'Nouvelle connexion détectée',
-    body: 'Une connexion depuis un nouvel appareil a été effectuée.',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 48),
-    read: true,
+    title: 'Bienvenue sur FamillyBill HT',
+    body: 'Votre compte est prêt. Envoyez et recevez de l\'argent en quelques secondes.',
+    time: new Date(),
+    read: false,
   },
 ]
 

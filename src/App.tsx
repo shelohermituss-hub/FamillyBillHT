@@ -18,6 +18,8 @@ import { ProfilePage } from '@/pages/profile'
 import { BillsPage } from '@/pages/bills'
 import { WalletPage } from '@/pages/wallet'
 import { FamilyPage } from '@/pages/family'
+import { SupportPage } from '@/pages/support'
+import { NotFoundPage } from '@/pages/not-found'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -136,7 +138,14 @@ function AppRoutes() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/support" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <SupportPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )
