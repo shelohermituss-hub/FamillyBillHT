@@ -199,21 +199,21 @@ function ProviderStep({
   )
 }
 
-// ── HTG → USD conversion block (mirrors transfer page) ────────────────────────
-function ConversionBlock({ htgAmount }: { htgAmount: number }) {
-  if (htgAmount <= 0) return null
+// ── USD → HTG conversion block ────────────────────────────────────────────────
+function ConversionBlock({ usdAmount }: { usdAmount: number }) {
+  if (usdAmount <= 0) return null
 
-  const HTG_USD_RATE = getRate('HTG', 'USD')           // ≈ 0.00743
+  const USD_HTG_RATE = getRate('USD', 'HTG')
   const feeRate      = getFeeRate('HTG', 'USD')
-  const fee          = htgAmount * feeRate
-  const usdEquiv     = (htgAmount - fee) * HTG_USD_RATE
+  const fee          = usdAmount * feeRate
+  const htgEquiv     = (usdAmount - fee) * USD_HTG_RATE
 
   return (
     <div className="space-y-2 pt-3 border-t border-[var(--border)]">
       <div className="flex items-center justify-between text-sm">
         <span className="text-[var(--ink-60)]">Frais de service</span>
         <span className="font-semibold" style={{ color: 'var(--lime)' }}>
-          − G {fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          − ${fee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
       <div className="flex items-center justify-between text-sm">
@@ -222,13 +222,13 @@ function ConversionBlock({ htgAmount }: { htgAmount: number }) {
           <Info className="w-3.5 h-3.5" />
         </div>
         <span className="font-medium text-[var(--ink)]">
-          1 HTG = {HTG_USD_RATE.toFixed(4)} USD
+          1 USD = {USD_HTG_RATE.toFixed(2)} HTG
         </span>
       </div>
       <div className="flex items-center justify-between text-sm">
-        <span className="text-[var(--ink-60)]">Équivalent USD</span>
+        <span className="text-[var(--ink-60)]">Équivalent HTG</span>
         <span className="font-semibold text-[var(--ink)]">
-          ≈ ${usdEquiv.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          ≈ G {htgEquiv.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'var(--lime-light)', color: 'var(--ink)' }}>
@@ -255,10 +255,10 @@ function DetailsStep({
   onAmountChange: (val: string) => void
   onNext: () => void
 }) {
-  const htgAmount = parseFloat(amount) || 0
+  const usdAmount = parseFloat(amount) || 0
   const canProceed =
     provider.fields.filter(f => f.required).every(f => fieldValues[f.id]?.trim()) &&
-    htgAmount > 0
+    usdAmount > 0
 
   return (
     <div className="space-y-5 animate-fade-in-up">
@@ -285,7 +285,8 @@ function DetailsStep({
               <select
                 value={fieldValues[field.id] ?? ''}
                 onChange={e => onFieldChange(field.id, e.target.value)}
-                className="w-full h-11 rounded-xl border border-[var(--border)] px-3 text-sm bg-[var(--card-bg)] text-[var(--ink)] cursor-pointer focus:outline-none focus:border-[var(--ink-30)]"
+                className="w-full h-11 rounded-xl border border-[var(--border)] px-3 bg-[var(--card-bg)] text-[var(--ink)] cursor-pointer focus:outline-none focus:border-[var(--ink-30)]"
+                style={{ fontSize: '16px' }}
               >
                 <option value="">Sélectionner...</option>
                 {field.options?.map(opt => (
@@ -300,6 +301,7 @@ function DetailsStep({
                 placeholder={field.placeholder}
                 maxLength={field.maxLength}
                 className="h-11 rounded-xl"
+                style={{ fontSize: '16px' }}
               />
             )}
             {field.hint && (
@@ -308,7 +310,7 @@ function DetailsStep({
           </div>
         ))}
 
-        {/* Amount block — mirrors transfer page step 1 */}
+        {/* Amount block */}
         <div className="space-y-3 pt-2 border-t border-[var(--border)]">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Vous payez</p>
           <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
@@ -316,17 +318,19 @@ function DetailsStep({
               type="number"
               value={amount}
               onChange={e => onAmountChange(e.target.value)}
-              placeholder="0"
-              min="1"
+              placeholder="0.00"
+              min="0.01"
+              step="0.01"
               className="border-0 shadow-none text-3xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent text-[var(--ink)]"
+              style={{ fontSize: '16px' }}
             />
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm shrink-0" style={{ background: 'var(--lime)', color: '#ffffff' }}>
-              <span>🇭🇹</span> HTG
+              $ USD
             </div>
           </div>
 
-          {/* HTG → USD conversion summary — same as transfer page */}
-          <ConversionBlock htgAmount={htgAmount} />
+          {/* USD → HTG conversion estimate */}
+          <ConversionBlock usdAmount={usdAmount} />
         </div>
       </div>
 
@@ -360,11 +364,11 @@ function ReviewStep({
   error: string
   onConfirm: () => void
 }) {
-  const htgAmount = parseFloat(amount) || 0
-  const HTG_USD_RATE = getRate('HTG', 'USD')
+  const usdAmount = parseFloat(amount) || 0
+  const USD_HTG_RATE = getRate('USD', 'HTG')
   const feeRate = getFeeRate('HTG', 'USD')
-  const fee = htgAmount * feeRate
-  const usdEquiv = (htgAmount - fee) * HTG_USD_RATE
+  const fee = usdAmount * feeRate
+  const htgEquiv = (usdAmount - fee) * USD_HTG_RATE
 
   const rows = provider.fields
     .filter(f => fieldValues[f.id])
@@ -398,28 +402,28 @@ function ReviewStep({
             <span className="text-sm font-medium text-[var(--ink)] text-right break-all">{row.value}</span>
           </div>
         ))}
-        {/* Same breakdown as transfer page */}
+        {/* Amount breakdown */}
         <div className="flex justify-between items-center px-4 py-3 text-sm">
           <span className="text-[var(--ink-60)]">Vous payez</span>
-          <span className="font-semibold text-[var(--ink)]">🇭🇹 G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
+          <span className="font-semibold text-[var(--ink)]">${usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
         </div>
         <div className="flex justify-between items-center px-4 py-3 text-sm">
           <span className="text-[var(--ink-60)]">Frais de service</span>
           <span className="font-semibold" style={{ color: 'var(--lime)' }}>
-            − G {fee.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            − ${fee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
         <div className="flex justify-between items-center px-4 py-3 text-sm">
           <span className="text-[var(--ink-60)]">Taux de change</span>
-          <span className="font-medium text-[var(--ink)]">1 HTG = {HTG_USD_RATE.toFixed(4)} USD</span>
+          <span className="font-medium text-[var(--ink)]">1 USD = {USD_HTG_RATE.toFixed(2)} HTG</span>
         </div>
         <div className="flex justify-between items-center px-4 py-3.5" style={{ background: 'var(--lime-light)' }}>
-          <span className="text-sm font-semibold text-[var(--ink)]">Total HTG</span>
-          <span className="text-lg font-bold text-[var(--ink)]">G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
+          <span className="text-sm font-semibold text-[var(--ink)]">Total USD</span>
+          <span className="text-lg font-bold text-[var(--ink)]">${usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
         </div>
         <div className="flex justify-between items-center px-4 py-3 text-sm">
-          <span className="text-[var(--ink-60)]">Équivalent USD</span>
-          <span className="font-semibold text-[var(--ink-60)]">≈ ${usdEquiv.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span className="text-[var(--ink-60)]">Équivalent HTG</span>
+          <span className="font-semibold text-[var(--ink-60)]">≈ G {htgEquiv.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       </div>
 
@@ -459,7 +463,7 @@ function PaymentMethodStep({
   const { user } = useAuth()
   const [selected, setSelected] = useState<PayMethod>('wallet')
   const [walletBalance, setWalletBalance] = useState<number | null>(null)
-  const htgAmount = parseFloat(amount) || 0
+  const usdAmount = parseFloat(amount) || 0
 
   useEffect(() => {
     if (!user) return
@@ -467,12 +471,13 @@ function PaymentMethodStep({
       .from('currency_accounts')
       .select('balance')
       .eq('user_id', user.id)
+      .eq('currency', 'USD')
       .eq('is_main', true)
       .maybeSingle()
       .then(({ data }) => { if (data) setWalletBalance(data.balance) })
   }, [user])
 
-  const walletInsufficient = walletBalance !== null && walletBalance < htgAmount
+  const walletInsufficient = walletBalance !== null && walletBalance < usdAmount
 
   return (
     <div className="space-y-5 animate-fade-in-up">
@@ -486,7 +491,7 @@ function PaymentMethodStep({
         style={{ background: 'var(--lime-light)', border: '1px solid var(--lime)20' }}>
         <span className="text-sm font-semibold text-[var(--ink)]">Total à payer</span>
         <span className="text-lg font-bold text-[var(--ink)]">
-          G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+          ${usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
         </span>
       </div>
 
@@ -509,7 +514,7 @@ function PaymentMethodStep({
             <p className="font-semibold text-sm text-[var(--ink)]">Solde du portefeuille</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>
               {walletBalance !== null
-                ? `G ${walletBalance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} disponible`
+                ? `$${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD disponible`
                 : 'Chargement…'}
               {walletInsufficient && ' — Solde insuffisant'}
             </p>
@@ -558,7 +563,7 @@ function PaymentMethodStep({
       >
         {submitting
           ? <><Loader2 className="w-4 h-4 animate-spin" />Traitement...</>
-          : <>Payer — G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</>}
+          : <>Payer — ${usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</>}
       </button>
     </div>
   )
@@ -577,8 +582,8 @@ function SuccessStep({
   onNew: () => void
 }) {
   const navigate = useNavigate()
-  const htgAmount = parseFloat(amount) || 0
-  const usdEquiv = htgAmount * getRate('HTG', 'USD')
+  const usdAmount = parseFloat(amount) || 0
+  const htgEquiv = usdAmount * getRate('USD', 'HTG')
 
   return (
     <div className="card-flat p-8 text-center space-y-6 animate-scale-in">
@@ -612,12 +617,12 @@ function SuccessStep({
           <span className="font-semibold text-[var(--ink)]">{provider.name}</span>
         </div>
         <div className="flex justify-between px-4 py-3 text-sm">
-          <span className="text-[var(--ink-60)]">Montant HTG</span>
-          <span className="font-bold text-[var(--ink)]">G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
+          <span className="text-[var(--ink-60)]">Montant USD</span>
+          <span className="font-bold text-[var(--ink)]">${usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
         </div>
         <div className="flex justify-between px-4 py-3 text-sm">
-          <span className="text-[var(--ink-60)]">Équivalent USD</span>
-          <span className="font-medium text-[var(--ink-60)]">≈ ${usdEquiv.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span className="text-[var(--ink-60)]">Équivalent HTG</span>
+          <span className="font-medium text-[var(--ink-60)]">≈ G {htgEquiv.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div className="flex justify-between px-4 py-3 text-sm">
           <span className="text-[var(--ink-60)]">Statut</span>
@@ -703,16 +708,18 @@ export function BillsPage() {
       || fieldValues['moncash_number']
       || selectedProvider.name
 
+    const usdAmt = parseFloat(amount)
+    const htgAmt = usdAmt * getRate('USD', 'HTG')
     const { data, error } = await supabase.from('transactions').insert({
       user_id: user.id,
       type: 'send',
       status: selectedProvider.instant ? 'completed' : 'processing',
-      amount: parseFloat(amount),
-      currency: 'HTG',
-      target_amount: parseFloat(amount),
+      amount: usdAmt,
+      currency: 'USD',
+      target_amount: htgAmt,
       target_currency: 'HTG',
-      exchange_rate: 1,
-      fee: parseFloat(amount) * getFeeRate('HTG', 'USD'),
+      exchange_rate: getRate('USD', 'HTG'),
+      fee: usdAmt * getFeeRate('HTG', 'USD'),
       recipient_name: recipientName,
       note: `Paiement ${selectedProvider.name} via ${method === 'wallet' ? 'portefeuille' : 'carte'} — ${Object.entries(fieldValues)
         .filter(([, v]) => v)
@@ -732,8 +739,8 @@ export function BillsPage() {
         user_id: user.id,
         type: 'bill_paid',
         title: `Facture payée — ${selectedProvider.name}`,
-        body: `Paiement de G ${parseFloat(amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} à ${selectedProvider.name} effectué.`,
-        data: { tx_id: data.id, provider: selectedProvider.id, amount: parseFloat(amount) },
+        body: `Paiement de $${usdAmt.toFixed(2)} USD à ${selectedProvider.name} effectué.`,
+        data: { tx_id: data.id, provider: selectedProvider.id, amount: usdAmt },
       })
     }
     setSubmitting(false)

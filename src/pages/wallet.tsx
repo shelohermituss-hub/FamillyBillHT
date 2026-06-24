@@ -1589,7 +1589,7 @@ export function WalletPage() {
     const { data } = await supabase
       .from('currency_accounts').select('*')
       .eq('user_id', user.id).order('is_main', { ascending: false })
-    if (data) setAccounts(data)
+    if (data) setAccounts(data.filter(a => a.currency === 'USD'))
     setLoadingAcc(false)
   }
 
