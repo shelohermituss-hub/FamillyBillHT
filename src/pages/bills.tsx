@@ -286,7 +286,6 @@ function DetailsStep({
                 value={fieldValues[field.id] ?? ''}
                 onChange={e => onFieldChange(field.id, e.target.value)}
                 className="w-full h-11 rounded-xl border border-[var(--border)] px-3 bg-[var(--card-bg)] text-[var(--ink)] cursor-pointer focus:outline-none focus:border-[var(--ink-30)]"
-                style={{ fontSize: '16px' }}
               >
                 <option value="">Sélectionner...</option>
                 {field.options?.map(opt => (
@@ -301,7 +300,6 @@ function DetailsStep({
                 placeholder={field.placeholder}
                 maxLength={field.maxLength}
                 className="h-11 rounded-xl"
-                style={{ fontSize: '16px' }}
               />
             )}
             {field.hint && (
@@ -322,7 +320,6 @@ function DetailsStep({
               min="0.01"
               step="0.01"
               className="border-0 shadow-none text-3xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent text-[var(--ink)]"
-              style={{ fontSize: '16px' }}
             />
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm shrink-0" style={{ background: 'var(--lime)', color: '#ffffff' }}>
               $ USD
