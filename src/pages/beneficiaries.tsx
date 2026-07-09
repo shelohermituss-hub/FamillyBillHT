@@ -493,7 +493,7 @@ export function BeneficiariesPage() {
   const others = filtered.filter(b => !b.is_favorite)
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8" style={{ background: 'var(--surface)' }}>
+    <div style={{ background: 'var(--surface)' }}>
 
       {/* Sticky header */}
       <div className="sticky top-0 z-30 px-4 pt-5 pb-3" style={{ background: 'var(--surface)' }}>

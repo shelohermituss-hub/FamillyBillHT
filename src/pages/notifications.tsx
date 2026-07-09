@@ -188,7 +188,7 @@ export function NotificationsPage() {
     : notifications
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--surface)' }}>
+    <div style={{ background: 'var(--surface)' }}>
 
       {/* Sticky header */}
       <div

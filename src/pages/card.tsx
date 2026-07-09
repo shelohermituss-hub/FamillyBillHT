@@ -87,7 +87,7 @@ export function CardPage() {
   if (loading) return (
     <>
       <div className="fixed inset-0 -z-10" style={{ background: '#0a0a14' }} />
-      <div className="min-h-screen pb-36 flex flex-col items-center justify-center gap-4">
+      <div className="py-32 flex flex-col items-center justify-center gap-4">
         <div className="w-10 h-10 rounded-2xl animate-pulse" style={{ background: 'rgba(255,255,255,0.08)' }} />
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Chargement...</p>
       </div>
@@ -98,7 +98,7 @@ export function CardPage() {
   if (accounts.length === 0) return (
     <>
       <div className="fixed inset-0 -z-10" style={{ background: '#0a0a14' }} />
-      <div className="min-h-screen pb-36 flex flex-col items-center justify-center gap-4 px-8">
+      <div className="py-32 flex flex-col items-center justify-center gap-4 px-8">
         <p className="text-white font-bold text-lg">Aucun compte</p>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, textAlign: 'center' }}>
           Ajoutez un compte devise pour voir vos cartes.
@@ -125,7 +125,7 @@ export function CardPage() {
       <div className="fixed top-0 left-1/4 w-96 h-96 rounded-full -z-10 blur-[120px]" style={{ background: `${activeStyle2.glowColor}1a` }} />
       <div className="fixed bottom-20 right-0 w-72 h-72 rounded-full -z-10 blur-[100px]" style={{ background: `${activeStyle2.glowColor}1a` }} />
 
-      <div className="min-h-screen pb-36" style={{ background: 'transparent' }}>
+      <div style={{ background: 'transparent' }}>
 
         {/* ── Header ── */}
         <div className="px-5 pt-7 pb-4 flex items-center justify-between">

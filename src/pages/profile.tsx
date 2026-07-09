@@ -796,7 +796,7 @@ export function ProfilePage() {
   async function handleSignOut() { await signOut(); navigate('/') }
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: '#F5F5F7', maxWidth: '100vw' }}>
+    <div className="overflow-x-hidden" style={{ background: '#F5F5F7' }}>
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
       {showShare && <ShareModal name={profile?.full_name ?? 'Utilisateur'} userCode={displayCode} onClose={() => setShowShare(false)} />}
       {showStatements && <StatementsModal onClose={() => setShowStatements(false)} />}
@@ -914,7 +914,7 @@ export function ProfilePage() {
         <PersonalDetailsScreen
           onBack={back}
           onSettings={() => push('settings')}
-          onHelp={() => {}}
+          onHelp={() => navigate('/support')}
           onSignOut={handleSignOut}
         />
       )}

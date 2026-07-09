@@ -560,7 +560,7 @@ export function TransferPage() {
   // HUB
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='hub') return (
-    <div className="min-h-screen bg-white pb-28 overflow-x-hidden" style={{maxWidth:'100vw'}}>
+    <div className="bg-white overflow-x-hidden">
       <div className="px-4 pt-2">
         {/* Header */}
         <div className="flex items-center justify-between pt-2 pb-4">

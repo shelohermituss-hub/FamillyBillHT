@@ -236,7 +236,7 @@ export function SupportPage() {
   )
 
   return (
-    <div className="min-h-screen bg-white pb-28">
+    <div className="bg-white">
       <div className="flex items-center gap-3 px-4 pt-4 pb-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer" style={{ background: '#F2F2F7' }}>
           <ChevronLeft className="w-5 h-5" style={{ color: '#1C1C1E' }}/>

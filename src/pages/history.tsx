@@ -287,7 +287,24 @@ function TransferDetailsView({ tx, onClose }: { tx: Transaction; onClose: () => 
 
           {/* Get Receipt */}
           <button className="w-full h-12 rounded-2xl text-sm font-semibold cursor-pointer flex items-center justify-center gap-2"
-            style={{ background: '#9fe870', color: '#0e0f0c' }}>
+            style={{ background: '#9fe870', color: '#0e0f0c' }}
+            onClick={() => {
+              const text = [
+                'FamillyBill HT — Reçu',
+                `Montant : ${curr?.symbol}${tx.amount.toFixed(2)} ${curr?.code}`,
+                tx.target_amount != null && toCurr ? `Reçu : ${toCurr.symbol}${tx.target_amount.toFixed(2)} ${toCurr.code}` : null,
+                tx.recipient_name ? `Bénéficiaire : ${tx.recipient_name}` : null,
+                tx.reference ? `Référence : ${tx.reference}` : null,
+                `Frais : ${tx.fee ? `${curr?.symbol ?? ''}${tx.fee.toFixed(2)}` : 'Aucun'}`,
+                `Statut : ${tx.status === 'completed' ? 'Complété' : tx.status === 'pending' ? 'En attente' : tx.status}`,
+                `Date : ${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
+              ].filter(Boolean).join('\n')
+              if (navigator.share) {
+                navigator.share({ title: 'Reçu FamillyBill HT', text })
+              } else {
+                navigator.clipboard.writeText(text)
+              }
+            }}>
             Obtenir le reçu
           </button>
         </div>
@@ -595,7 +612,7 @@ export function HistoryPage() {
   }, [user])
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 overflow-x-hidden" style={{ background: '#F9FAFB', maxWidth: '100vw' }}>
+    <div className="overflow-x-hidden" style={{ background: '#F9FAFB' }}>
 
       {/* Sticky header */}
       <div className="sticky top-0 z-30 px-4 pt-5 pb-3" style={{ background: '#F9FAFB' }}>

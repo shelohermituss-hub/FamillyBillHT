@@ -235,7 +235,7 @@ export function DashboardPage() {
   const greetWord = greetHour < 12 ? 'Bonjour' : greetHour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 overflow-x-hidden" style={{ background: '#F3F4F6', maxWidth: '100vw' }}>
+    <div className="overflow-x-hidden" style={{ background: '#F3F4F6' }}>
       {showReceive && <ReceiveModal profile={profile} onClose={() => setShowReceive(false)} />}
 
       {/* ── Header card (white) ── */}
@@ -259,7 +259,7 @@ export function DashboardPage() {
               </p>
             </div>
           </div>
-          <Link to="/history">
+          <Link to="/notifications">
             <div className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer hover:bg-gray-50"
               style={{ background: '#F9FAFB' }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

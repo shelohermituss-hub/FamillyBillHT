@@ -1479,14 +1479,14 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F3F3F6' }}>
+      <div className="py-32 flex items-center justify-center" style={{ background: '#F3F3F6' }}>
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1A56DB' }} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: '#F3F3F6' }}>
+    <div style={{ background: '#F3F3F6' }}>
       {/* Card */}
       <div className="px-5 pt-6 pb-4">
         {mainAcc ? (
@@ -1651,7 +1651,7 @@ export function WalletPage() {
   }
 
   if (!user) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F3F3F6' }}>
+    <div className="py-32 flex items-center justify-center" style={{ background: '#F3F3F6' }}>
       <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1A56DB' }} />
     </div>
   )
