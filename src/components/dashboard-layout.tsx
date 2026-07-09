@@ -161,7 +161,7 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
             <button
               key={label}
               onClick={() => go(href)}
-              className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-gray-50"
+              className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-gray-50 active:bg-gray-100"
             >
               <Icon className="w-[20px] h-[20px] shrink-0" style={{ color: '#6B7280' }} />
               <span className="flex-1 text-[15px] font-semibold text-left" style={{ color: '#111827' }}>
@@ -174,7 +174,7 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
           {/* Administration */}
           <button
             onClick={() => go('/admin')}
-            className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-gray-50"
+            className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-gray-50 active:bg-gray-100"
           >
             <ShieldCheck className="w-[20px] h-[20px] shrink-0" style={{ color: '#6B7280' }} />
             <span className="flex-1 text-[15px] font-semibold text-left" style={{ color: '#111827' }}>
@@ -393,17 +393,18 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 to={item.href}
-                className="flex-1 flex flex-col items-center gap-1 cursor-pointer"
+                className="flex-1 flex flex-col items-center gap-1 cursor-pointer active:scale-90"
+                style={{ transition: 'transform 100ms ease' }}
               >
                 <div
-                  className="w-11 h-9 flex items-center justify-center rounded-xl tr"
+                  className="w-11 h-9 flex items-center justify-center rounded-xl"
                   style={{
                     background: active ? 'var(--lime)' : 'transparent',
-                    transition: 'background 200ms ease',
+                    transition: 'background 200ms cubic-bezier(0.34,1.56,0.64,1), transform 200ms cubic-bezier(0.34,1.56,0.64,1)',
+                    transform: active ? 'scale(1.08)' : 'scale(1)',
                   }}
                 >
                   <item.icon
-                    className="tr"
                     style={{
                       width: 19,
                       height: 19,

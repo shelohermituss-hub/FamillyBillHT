@@ -112,7 +112,7 @@ function UsdWalletCard({ account, visible }: { account: CurrencyAccount | null; 
   return (
     <button
       onClick={() => navigate('/wallet')}
-      className="relative w-full overflow-hidden cursor-pointer"
+      className="relative w-full overflow-hidden cursor-pointer card-press"
       style={{
         borderRadius: 24,
         background: cs.gradient,
@@ -182,8 +182,8 @@ function BillGrid() {
         <button
           key={cat.id}
           onClick={() => navigate(`/bills?category=${cat.id}`)}
-          className="flex flex-col items-center gap-2 p-3 rounded-2xl cursor-pointer tr hover:scale-[1.02] active:scale-[0.98]"
-          style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}
+          className="flex flex-col items-center gap-2 p-3 rounded-2xl cursor-pointer card-press hover:shadow-md"
+          style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 1px 6px rgba(0,0,0,0.04)', transition: 'transform 150ms ease, box-shadow 200ms ease' }}
         >
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden"
@@ -297,15 +297,15 @@ export function DashboardPage() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => navigate('/transfer')}
-            className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold text-white cursor-pointer tr hover:opacity-90 active:scale-97 shrink-0"
-            style={{ background: 'var(--lime)', boxShadow: '0 4px 16px rgba(159,232,112,0.4)' }}
+            className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold text-white cursor-pointer btn-press hover:opacity-90 shrink-0"
+            style={{ background: 'var(--lime)', boxShadow: '0 4px 16px rgba(26,86,219,0.35)' }}
           >
             <ArrowUpRight className="w-4 h-4" />
             Envoyer
           </button>
           <button
             onClick={() => setShowReceive(true)}
-            className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold cursor-pointer tr hover:bg-gray-50 active:scale-97 shrink-0"
+            className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold cursor-pointer btn-press hover:bg-gray-50 shrink-0"
             style={{ border: '1.5px solid #E5E7EB', color: '#374151' }}
           >
             <ArrowDownLeft className="w-4 h-4" />

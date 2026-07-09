@@ -507,7 +507,7 @@ export function TransferPage() {
             <button className="font-semibold cursor-pointer" style={{color:ACCENT}}>Renvoyer</button>
           </div>
           <button onClick={()=>pin.length===4&&checkPin(pin)} disabled={pin.length<4}
-            className="w-full h-12 rounded-2xl text-sm font-bold cursor-pointer disabled:opacity-40 mb-3"
+            className="w-full h-12 rounded-2xl text-sm font-bold cursor-pointer disabled:opacity-40 mb-3 btn-press"
             style={{background:ACCENT,color:'white'}}>
             Continuer
           </button>
@@ -642,7 +642,7 @@ export function TransferPage() {
             { icon:QrCode,    label:'Scan QR',                     action:()=>push('wallet-id')      },
           ].map(({icon:Icon,label,action})=>(
             <button key={label} onClick={action}
-              className="flex items-center gap-3 px-4 h-14 rounded-2xl cursor-pointer hover:bg-gray-50 tr"
+              className="flex items-center gap-3 px-4 h-14 rounded-2xl cursor-pointer hover:bg-gray-50 card-press"
               style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
               <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{background:'white',boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
                 <Icon className="w-4 h-4" style={{color:'#1C1C1E'}}/>
@@ -720,7 +720,7 @@ export function TransferPage() {
         </div>
         <div className="px-4 pb-8 pt-2">
           <button onClick={openPin} disabled={!canContinue}
-            className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40"
+            className="w-full h-13 rounded-2xl font-bold text-sm cursor-pointer disabled:opacity-40 btn-press"
             style={{background:ACCENT,color:'white',height:52}}>
             Continuer
           </button>
@@ -815,7 +815,7 @@ export function TransferPage() {
         <div className="px-5 pt-4 pb-10">
           {transferError&&<p className="text-xs text-red-500 mb-3 text-center">{transferError}</p>}
           <button onClick={()=>doTransfer('send-success')} disabled={processing}
-            className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 btn-press"
             style={{background:ACCENT,color:'white',height:52}}>
             {processing?<Loader2 className="w-4 h-4 animate-spin"/>:<><Send className="w-4 h-4"/>Transfer</>}
           </button>
@@ -834,8 +834,10 @@ export function TransferPage() {
       <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
         <Hdr title="Send Money" onBack={reset}/>
         <div className="px-5 pt-2 pb-10">
-          <WalletSuccessIllustration/>
-          <p className="text-xl font-bold text-center mt-1 mb-5" style={{color:ACCENT}}>
+          <div className="animate-bounce-in">
+            <WalletSuccessIllustration/>
+          </div>
+          <p className="text-xl font-bold text-center mt-1 mb-5 animate-slide-up" style={{color:ACCENT,animationDelay:'120ms'}}>
             Congratulations Payment Success!!
           </p>
           <div className="border-t border-gray-100">
@@ -943,7 +945,7 @@ export function TransferPage() {
         <div className="mt-6">
           {transferError&&<p className="text-xs text-red-500 mb-3 text-center">{transferError}</p>}
           <button onClick={()=>doTransfer('bank-success')} disabled={processing}
-            className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            className="w-full h-13 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 btn-press"
             style={{background:ACCENT,color:'white',height:52}}>
             {processing?<Loader2 className="w-4 h-4 animate-spin"/>:<><Send className="w-4 h-4"/>Transfer</>}
           </button>
@@ -960,9 +962,11 @@ export function TransferPage() {
     <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
       <Hdr title="Confirm Transfer" onBack={reset}/>
       <div className="px-5 pt-2 pb-10 text-center">
-        <WalletSuccessIllustration/>
-        <p className="text-xl font-bold mt-1" style={{color:'#1C1C1E'}}>Transfer Successful!</p>
-        <p className="text-sm mt-1 mb-5" style={{color:'#8E8E93'}}>Your money has been transferred</p>
+        <div className="animate-bounce-in">
+          <WalletSuccessIllustration/>
+        </div>
+        <p className="text-xl font-bold mt-1 animate-slide-up" style={{color:'#1C1C1E',animationDelay:'120ms'}}>Transfer Successful!</p>
+        <p className="text-sm mt-1 mb-5 animate-slide-up" style={{color:'#8E8E93',animationDelay:'180ms'}}>Your money has been transferred</p>
         {/* Bank account card */}
         <div className="flex items-center gap-3 px-4 py-4 rounded-2xl mb-3 text-left" style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{background:'#F2F2F7'}}>
