@@ -119,89 +119,85 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 
       {/* Floating card — positioned below header, right-aligned */}
       <div
-        className="fixed z-50 rounded-3xl overflow-hidden"
+        className="fixed z-50 rounded-[28px] overflow-hidden"
         style={{
-          top: 62,
-          right: 10,
-          width: 150,
+          top: 58,
+          right: 8,
+          width: 'calc(75vw)',
+          maxWidth: 280,
           background: '#ffffff',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.18), 0 2px 12px rgba(0,0,0,0.08)',
-          animation: 'slideDown 180ms cubic-bezier(0.16,1,0.3,1) forwards',
+          boxShadow: '0 12px 48px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.06)',
+          animation: 'slideDown 200ms cubic-bezier(0.16,1,0.3,1) forwards',
         }}
       >
         {/* User info */}
         <div
-          className="px-5 py-5 flex items-center gap-4"
-          style={{ borderBottom: '1px solid #F3F4F6' }}
+          className="px-5 py-5 flex items-center gap-3"
+          style={{ borderBottom: '1px solid #F0F0F0' }}
         >
-          {/* Circular avatar */}
           <div
-            className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-lg font-bold shrink-0"
+            className="w-[52px] h-[52px] rounded-full overflow-hidden flex items-center justify-center text-base font-bold shrink-0"
             style={avatarUrl
               ? { border: '2px solid #E5E7EB' }
               : { background: 'var(--lime)', color: '#fff' }}
           >
             {avatarUrl
               ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-              : (initials || <User className="w-6 h-6" />)}
+              : (initials || <User className="w-5 h-5" />)}
           </div>
-
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-[17px] leading-tight truncate" style={{ color: '#111827' }}>
+            <p className="font-bold text-[15px] leading-tight truncate" style={{ color: '#111827' }}>
               {profile?.full_name ?? 'Utilisateur'}
             </p>
-            <p className="text-sm truncate mt-0.5" style={{ color: '#9CA3AF' }}>
+            <p className="text-[13px] truncate mt-0.5" style={{ color: '#9CA3AF' }}>
               {(profile as any)?.email ?? ''}
             </p>
           </div>
         </div>
 
         {/* Menu items */}
-        <div className="py-1">
+        <div className="py-1.5">
           {MENU_ITEMS.map(({ icon: Icon, label, href }) => (
             <button
               key={label}
               onClick={() => go(href)}
-              className="w-full flex items-center gap-4 px-5 py-4 cursor-pointer tr hover:bg-gray-50"
+              className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-gray-50"
             >
-              <Icon className="w-5 h-5 shrink-0" style={{ color: '#6B7280' }} />
-              <span className="flex-1 text-[16px] font-semibold text-left" style={{ color: '#111827' }}>
+              <Icon className="w-[20px] h-[20px] shrink-0" style={{ color: '#6B7280' }} />
+              <span className="flex-1 text-[15px] font-semibold text-left" style={{ color: '#111827' }}>
                 {label}
               </span>
-              <ChevronRight className="w-4 h-4 shrink-0" style={{ color: '#D1D5DB' }} />
+              <ChevronRight className="w-[16px] h-[16px] shrink-0" style={{ color: '#D1D5DB' }} />
             </button>
           ))}
 
           {/* Administration */}
           <button
             onClick={() => go('/admin')}
-            className="w-full flex items-center gap-4 px-5 py-4 cursor-pointer tr hover:bg-gray-50"
+            className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-gray-50"
           >
-            <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: '#6B7280' }} />
-            <span className="flex-1 text-[16px] font-semibold text-left" style={{ color: '#111827' }}>
+            <ShieldCheck className="w-[20px] h-[20px] shrink-0" style={{ color: '#6B7280' }} />
+            <span className="flex-1 text-[15px] font-semibold text-left" style={{ color: '#111827' }}>
               Administration
             </span>
-            <span
-              className="text-[10px] font-bold px-2.5 py-1 rounded-full mr-1"
-              style={{ background: 'var(--lime)', color: '#fff' }}
-            >
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0"
+              style={{ background: 'var(--lime)', color: '#fff' }}>
               ADMIN
             </span>
-            <ChevronRight className="w-4 h-4 shrink-0" style={{ color: '#D1D5DB' }} />
           </button>
         </div>
 
         {/* Separator */}
-        <div style={{ height: 1, background: '#F3F4F6', margin: '0 20px' }} />
+        <div style={{ height: 1, background: '#F0F0F0', margin: '0 16px' }} />
 
         {/* Logout */}
-        <div className="py-1">
+        <div className="py-1.5">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-4 px-5 py-4 cursor-pointer tr hover:bg-red-50"
+            className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-red-50"
           >
-            <LogOut className="w-5 h-5 shrink-0" style={{ color: '#EF4444' }} />
-            <span className="text-[16px] font-semibold" style={{ color: '#EF4444' }}>
+            <LogOut className="w-[20px] h-[20px] shrink-0" style={{ color: '#EF4444' }} />
+            <span className="text-[15px] font-semibold" style={{ color: '#EF4444' }}>
               Déconnexion
             </span>
           </button>
