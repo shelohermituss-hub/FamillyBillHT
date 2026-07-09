@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, Bell, User, ChevronRight, Settings, X, ShieldCheck, BarChart2 } from 'lucide-react'
+import { LogOut, Bell, User, ChevronRight, Settings, ShieldCheck, BarChart2 } from 'lucide-react'
 
 type IconProps = { className?: string; style?: React.CSSProperties }
 
@@ -86,7 +86,7 @@ function isActive(href: string, path: string) {
   return path === href || path.startsWith(href + '/')
 }
 
-// ── Profile Drawer ─────────────────────────────────────────────────────────────
+// ── Profile Dropdown ──────────────────────────────────────────────────────────
 function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
@@ -107,110 +107,78 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
   if (!open) return null
 
   const MENU_ITEMS = [
-    {
-      icon: (
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: '#F3F4F6' }}>
-          <User className="w-5 h-5" style={{ color: '#6B7280' }} />
-        </div>
-      ),
-      label: 'Mon profil',
-      href: '/profile',
-    },
-    {
-      icon: (
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: '#F3F4F6' }}>
-          <BarChart2 className="w-5 h-5" style={{ color: '#6B7280' }} />
-        </div>
-      ),
-      label: 'Historique',
-      href: '/history',
-    },
-    {
-      icon: (
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: '#F3F4F6' }}>
-          <Settings className="w-5 h-5" style={{ color: '#6B7280' }} />
-        </div>
-      ),
-      label: 'Paramètres',
-      href: '/profile',
-    },
+    { icon: User,       label: 'Mon profil',   href: '/profile' },
+    { icon: BarChart2,  label: 'Historique',   href: '/history' },
+    { icon: Settings,   label: 'Paramètres',   href: '/profile' },
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+    <>
+      {/* Backdrop — invisible, closes on tap */}
+      <div className="fixed inset-0 z-40" onClick={onClose} />
 
-      {/* Sheet */}
+      {/* Floating card — positioned below header, right-aligned */}
       <div
-        className="relative w-full rounded-t-3xl animate-fade-in-up"
-        style={{ background: '#ffffff', boxShadow: '0 -8px 40px rgba(0,0,0,0.15)' }}
+        className="fixed z-50 rounded-3xl overflow-hidden"
+        style={{
+          top: 62,
+          left: 10,
+          right: 10,
+          background: '#ffffff',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.18), 0 2px 12px rgba(0,0,0,0.08)',
+          animation: 'slideDown 180ms cubic-bezier(0.16,1,0.3,1) forwards',
+        }}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full" style={{ background: '#E5E7EB' }} />
-        </div>
-
         {/* User info */}
-        <div className="px-5 pt-4 pb-5 flex items-center gap-4"
-          style={{ borderBottom: '1px solid #F3F4F6' }}>
+        <div
+          className="px-5 py-5 flex items-center gap-4"
+          style={{ borderBottom: '1px solid #F3F4F6' }}
+        >
           {/* Circular avatar */}
           <div
-            className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-base font-bold shrink-0"
-            style={avatarUrl ? { border: '2px solid #E5E7EB' } : { background: 'var(--lime)', color: '#fff' }}
+            className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-lg font-bold shrink-0"
+            style={avatarUrl
+              ? { border: '2px solid #E5E7EB' }
+              : { background: 'var(--lime)', color: '#fff' }}
           >
             {avatarUrl
               ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-              : (initials || <User className="w-5 h-5" />)}
+              : (initials || <User className="w-6 h-6" />)}
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-base leading-tight truncate" style={{ color: '#111827' }}>
+            <p className="font-bold text-[17px] leading-tight truncate" style={{ color: '#111827' }}>
               {profile?.full_name ?? 'Utilisateur'}
             </p>
             <p className="text-sm truncate mt-0.5" style={{ color: '#9CA3AF' }}>
               {(profile as any)?.email ?? ''}
             </p>
           </div>
-
-          <button
-            onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer shrink-0"
-            style={{ background: '#F3F4F6' }}
-          >
-            <X className="w-4 h-4" style={{ color: '#6B7280' }} />
-          </button>
         </div>
 
         {/* Menu items */}
-        <div className="px-4 py-2">
-          {MENU_ITEMS.map(({ icon, label, href }) => (
+        <div className="py-1">
+          {MENU_ITEMS.map(({ icon: Icon, label, href }) => (
             <button
               key={label}
               onClick={() => go(href)}
-              className="w-full flex items-center gap-4 px-2 py-3.5 rounded-2xl cursor-pointer tr hover:bg-gray-50"
+              className="w-full flex items-center gap-4 px-5 py-4 cursor-pointer tr hover:bg-gray-50"
             >
-              {icon}
-              <span className="flex-1 text-base font-semibold text-left" style={{ color: '#111827' }}>
+              <Icon className="w-5 h-5 shrink-0" style={{ color: '#6B7280' }} />
+              <span className="flex-1 text-[16px] font-semibold text-left" style={{ color: '#111827' }}>
                 {label}
               </span>
-              <ChevronRight className="w-5 h-5" style={{ color: '#D1D5DB' }} />
+              <ChevronRight className="w-4 h-4 shrink-0" style={{ color: '#D1D5DB' }} />
             </button>
           ))}
 
           {/* Administration */}
           <button
             onClick={() => go('/admin')}
-            className="w-full flex items-center gap-4 px-2 py-3.5 rounded-2xl cursor-pointer tr hover:bg-gray-50"
+            className="w-full flex items-center gap-4 px-5 py-4 cursor-pointer tr hover:bg-gray-50"
           >
-            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(159,232,112,0.15)' }}>
-              <ShieldCheck className="w-5 h-5" style={{ color: 'var(--lime)' }} />
-            </div>
-            <span className="flex-1 text-base font-semibold text-left" style={{ color: '#111827' }}>
+            <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: '#6B7280' }} />
+            <span className="flex-1 text-[16px] font-semibold text-left" style={{ color: '#111827' }}>
               Administration
             </span>
             <span
@@ -219,33 +187,27 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
             >
               ADMIN
             </span>
-            <ChevronRight className="w-5 h-5" style={{ color: '#D1D5DB' }} />
+            <ChevronRight className="w-4 h-4 shrink-0" style={{ color: '#D1D5DB' }} />
           </button>
         </div>
 
         {/* Separator */}
-        <div className="mx-5 my-1" style={{ borderTop: '1px solid #F3F4F6' }} />
+        <div style={{ height: 1, background: '#F3F4F6', margin: '0 20px' }} />
 
         {/* Logout */}
-        <div className="px-4 pb-4 pt-1">
+        <div className="py-1">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-4 px-2 py-3.5 rounded-2xl cursor-pointer tr hover:bg-red-50"
+            className="w-full flex items-center gap-4 px-5 py-4 cursor-pointer tr hover:bg-red-50"
           >
-            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: '#FEF2F2' }}>
-              <LogOut className="w-5 h-5" style={{ color: '#EF4444' }} />
-            </div>
-            <span className="text-base font-semibold" style={{ color: '#EF4444' }}>
+            <LogOut className="w-5 h-5 shrink-0" style={{ color: '#EF4444' }} />
+            <span className="text-[16px] font-semibold" style={{ color: '#EF4444' }}>
               Déconnexion
             </span>
           </button>
         </div>
-
-        {/* Safe area */}
-        <div style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }} />
       </div>
-    </div>
+    </>
   )
 }
 
