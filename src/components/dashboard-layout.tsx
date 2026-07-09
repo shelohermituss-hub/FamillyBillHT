@@ -126,7 +126,8 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
           width: 'calc(75vw)',
           maxWidth: 280,
           background: '#ffffff',
-          boxShadow: '0 12px 48px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.06)',
+          border: '1px solid rgba(0,0,0,0.08)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.10)',
           animation: 'slideDown 200ms cubic-bezier(0.16,1,0.3,1) forwards',
         }}
       >

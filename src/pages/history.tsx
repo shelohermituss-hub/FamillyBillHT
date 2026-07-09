@@ -124,7 +124,7 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
     <div className="fixed inset-0 z-80 flex items-end justify-center" style={{ zIndex: 80 }}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-t-3xl overflow-hidden animate-fade-in-up"
-        style={{ background: '#fff', boxShadow: '0 -4px 40px rgba(0,0,0,0.18)', maxHeight: '85vh', overflowY: 'auto' }}>
+        style={{ background: '#fff', borderTop: '2px solid var(--border)', maxHeight: '85vh', overflowY: 'auto' }}>
 
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -385,7 +385,7 @@ function StatsTab({ accounts, transactions, loading }: {
 
       {/* Balance + Spending */}
       <div className="grid grid-cols-2 gap-3 px-4">
-        <div className="rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        <div className="rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
           <p className="text-xs mb-1" style={{ color: '#9CA3AF' }}>Total Balance</p>
           {loading
             ? <div className="h-7 w-28 rounded-lg bg-gray-100 animate-pulse" />
@@ -393,7 +393,7 @@ function StatsTab({ accounts, transactions, loading }: {
                 ${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>}
         </div>
-        <div className="rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        <div className="rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
           <p className="text-xs mb-1" style={{ color: '#9CA3AF' }}>Total Dépensé</p>
           {loading
             ? <div className="h-7 w-28 rounded-lg bg-gray-100 animate-pulse" />
@@ -404,7 +404,7 @@ function StatsTab({ accounts, transactions, loading }: {
       </div>
 
       {/* Area chart */}
-      <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-bold" style={{ color: '#111' }}>Dépenses mensuelles</p>
           <p className="text-xs" style={{ color: '#9CA3AF' }}>6 derniers mois · USD</p>
@@ -482,7 +482,7 @@ function HistoryTab({ accounts, transactions, loading }: {
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
         <p className="text-xs mb-1 capitalize" style={{ color: '#9CA3AF' }}>Reçu en {currentMonthName}</p>
         {loading
           ? <div className="h-8 w-36 rounded-lg bg-gray-100 animate-pulse" />
@@ -506,7 +506,7 @@ function HistoryTab({ accounts, transactions, loading }: {
 
       {/* Account bar chart */}
       {barData.length > 0 && (
-        <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
           <p className="text-xs font-semibold mb-3" style={{ color: '#374151' }}>Dépenses par compte</p>
           <ResponsiveContainer width="100%" height={100}>
             <BarChart data={barData} barSize={28} margin={{ top: 4, right: 0, left: -24, bottom: 0 }}>
@@ -553,7 +553,7 @@ function HistoryTab({ accounts, transactions, loading }: {
                         setShowTransferDetails(tx.type === 'send' || tx.type === 'receive')
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left cursor-pointer tr"
-                      style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                      style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
                       <TxBrandIcon tx={tx} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{txLabel(tx)}</p>
@@ -624,7 +624,7 @@ export function HistoryPage() {
             onClick={() => setTab('stats')}
             className="flex-1 h-9 rounded-lg text-sm font-semibold cursor-pointer tr"
             style={tab === 'stats'
-              ? { background: '#fff', color: '#111', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }
+              ? { background: '#fff', color: '#111', border: '1px solid var(--border)' }
               : { color: '#9CA3AF' }}>
             Statistiques
           </button>
@@ -632,7 +632,7 @@ export function HistoryPage() {
             onClick={() => setTab('history')}
             className="flex-1 h-9 rounded-lg text-sm font-semibold cursor-pointer tr"
             style={tab === 'history'
-              ? { background: '#fff', color: '#111', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }
+              ? { background: '#fff', color: '#111', border: '1px solid var(--border)' }
               : { color: '#9CA3AF' }}>
             Historique
           </button>

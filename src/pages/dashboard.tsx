@@ -43,8 +43,8 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm rounded-t-3xl md:rounded-3xl overflow-hidden animate-fade-in-up"
-        style={{ background: '#ffffff', boxShadow: '0 -4px 40px rgba(0,0,0,0.15)' }}>
+      <div className="relative w-full max-w-sm rounded-t-3xl md:rounded-3xl overflow-hidden animate-fade-in-up shadow-float-lg"
+        style={{ background: '#ffffff' }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-4">
           <div>
             <h2 className="text-lg font-semibold" style={{ color: '#111' }}>Recevoir de l'argent</h2>
@@ -116,7 +116,6 @@ function UsdWalletCard({ account, visible }: { account: CurrencyAccount | null; 
       style={{
         borderRadius: 24,
         background: cs.gradient,
-        boxShadow: `0 8px 32px ${cs.glow}55`,
         minHeight: 172,
       }}
     >
@@ -182,8 +181,8 @@ function BillGrid() {
         <button
           key={cat.id}
           onClick={() => navigate(`/bills?category=${cat.id}`)}
-          className="flex flex-col items-center gap-2 p-3 rounded-2xl cursor-pointer card-press hover:shadow-md"
-          style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 1px 6px rgba(0,0,0,0.04)', transition: 'transform 150ms ease, box-shadow 200ms ease' }}
+          className="flex flex-col items-center gap-2 p-3 rounded-2xl cursor-pointer card-press hover:border-blue-200"
+          style={{ background: '#fff', border: '1px solid #EBEBF0', transition: 'transform 150ms ease, border-color 150ms ease' }}
         >
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden"
@@ -298,7 +297,7 @@ export function DashboardPage() {
           <button
             onClick={() => navigate('/transfer')}
             className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold text-white cursor-pointer btn-press hover:opacity-90 shrink-0"
-            style={{ background: 'var(--lime)', boxShadow: '0 4px 16px rgba(26,86,219,0.35)' }}
+            style={{ background: 'var(--lime)' }}
           >
             <ArrowUpRight className="w-4 h-4" />
             Envoyer
@@ -336,7 +335,7 @@ export function DashboardPage() {
         </div>
 
         {/* ── Recent transactions ── */}
-        <div className="rounded-2xl overflow-hidden mb-4" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+        <div className="rounded-2xl overflow-hidden mb-4" style={{ background: '#fff', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-4 pt-4 pb-3">
             <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Activité récente</h2>
             <Link to="/history" className="text-sm font-semibold tr hover:opacity-70" style={{ color: 'var(--lime)' }}>

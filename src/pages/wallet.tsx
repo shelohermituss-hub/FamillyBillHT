@@ -87,7 +87,7 @@ function CardFront({ acc, user, visible = true, height = 210 }: {
 
   return (
     <div className="relative rounded-[1.75rem] overflow-hidden w-full select-none"
-      style={{ background: cs.gradient, boxShadow: `0 12px 40px ${cs.glow}55`, height }}>
+      style={{ background: cs.gradient, height }}>
       <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.14) 0%,transparent 60%)' }} />
       <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl" style={{ background: cs.accent }} />
       <div className="relative h-full flex flex-col justify-between p-5">
@@ -160,7 +160,7 @@ function CardBack({ acc, height = 210 }: { acc: CurrencyAccount; height?: number
   const exp = getCardExpiry(acc)
   return (
     <div className="relative rounded-[1.75rem] overflow-hidden w-full select-none"
-      style={{ background: cs.gradient, boxShadow: `0 12px 40px ${cs.glow}55`, height }}>
+      style={{ background: cs.gradient, height }}>
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.28)' }} />
       <div className="absolute left-0 right-0" style={{ top: 44, height: 44, background: 'rgba(0,0,0,0.82)' }} />
       <div className="absolute left-5 right-5" style={{ top: 100 }}>
@@ -868,10 +868,9 @@ function ThemePickerScreen({ acc, user, onBack, onApply }: {
               style={{
                 width: 54, height: 54, borderRadius: '50%',
                 background: s.gradient,
-                boxShadow: selected === s.id
-                  ? `0 0 0 3px #fff, 0 0 0 6px ${s.glow}`
-                  : '0 2px 10px rgba(0,0,0,0.18)',
-                transition: 'box-shadow 0.18s ease',
+                outline: selected === s.id ? `3px solid ${s.glow}` : '3px solid transparent',
+                outlineOffset: 2,
+                transition: 'outline-color 0.18s ease',
               }}>
               {selected === s.id && (
                 <Check className="w-5 h-5 text-white" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }} />
@@ -1336,7 +1335,7 @@ function AddWalletScreen({ user, onBack, onNext }: {
         <div className="px-4 pt-4 space-y-4">
           {/* Card preview */}
           <div className="relative rounded-[1.75rem] overflow-hidden w-full select-none"
-            style={{ background: cs.gradient, boxShadow: `0 12px 40px ${cs.glow}55`, height: 200 }}>
+            style={{ background: cs.gradient, height: 200 }}>
             <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.14) 0%,transparent 60%)' }} />
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl" style={{ background: cs.accent }} />
             <div className="relative h-full flex flex-col justify-between p-5">
@@ -1406,7 +1405,7 @@ function AddWalletScreen({ user, onBack, onNext }: {
                   {CARD_STYLES.map(s => (
                     <button key={s.id} onClick={() => setStyleId(s.id)}
                       className="flex-1 h-10 rounded-xl cursor-pointer tr active:scale-95 flex items-center justify-center"
-                      style={{ background: s.gradient, boxShadow: styleId === s.id ? `0 0 0 2.5px #fff,0 0 0 5px ${s.glow}` : 'none' }}>
+                      style={{ background: s.gradient, outline: styleId === s.id ? `3px solid ${s.glow}` : '3px solid transparent', outlineOffset: 2 }}>
                       {styleId === s.id && <Check className="w-4 h-4 text-white" />}
                     </button>
                   ))}
@@ -1545,7 +1544,7 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
       {/* Settings menu */}
       {mainAcc && (
         <div className="px-5">
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', boxShadow: '0 1px 8px rgba(13,27,75,0.06)' }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
             <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #F3F3F6' }}>
               <p className="font-bold text-base" style={{ color: '#0D1B4B' }}>Portefeuille Settings</p>
             </div>

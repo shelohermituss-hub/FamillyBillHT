@@ -87,7 +87,7 @@ function RowItem({
 function GroupCard({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn('mx-4 rounded-2xl overflow-hidden', className)}
-      style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+      style={{ background: '#fff', border: '1px solid var(--border)' }}>
       {children}
     </div>
   )
@@ -127,7 +127,7 @@ function ManageNotifsScreen({ onBack }: { onBack: () => void }) {
       <SubHeader title="Notifications" onBack={onBack} />
       <div className="px-4 pt-6 pb-4">
         <h2 className="text-xl font-bold mb-5" style={{ color: '#111' }}>Manage Notifications</h2>
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
           {NOTIF_SETTINGS.map(({ key, label, Icon }, i) => (
             <div key={key}
               className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
@@ -189,7 +189,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
       <div className="px-4 pt-6 space-y-5">
         <h2 className="text-xl font-bold" style={{ color: '#111' }}>General</h2>
 
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
           {/* Dark Theme */}
           <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
             style={{ borderBottom: '1px solid #F9FAFB' }}
@@ -893,7 +893,7 @@ export function ProfilePage() {
           {/* Statements link */}
           <button onClick={() => setShowStatements(true)}
             className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl cursor-pointer tr"
-            style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            style={{ background: '#fff', border: '1px solid var(--border)' }}>
             <IconWrap Icon={Download} />
             <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Relevés de compte (CSV)</span>
             <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
@@ -902,7 +902,7 @@ export function ProfilePage() {
           {/* Sign out */}
           <button onClick={handleSignOut}
             className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl cursor-pointer tr"
-            style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            style={{ background: '#fff', border: '1px solid var(--border)' }}>
             <IconWrap Icon={LogOut} color="#EF4444" bg="#FEF2F2" />
             <span className="flex-1 text-left text-sm font-semibold" style={{ color: '#EF4444' }}>Déconnexion</span>
           </button>

@@ -74,7 +74,7 @@ export function NotificationsPanel({
         className="absolute right-0 top-0 bottom-0 w-full max-w-sm flex flex-col"
         style={{
           background: 'var(--card-bg)',
-          boxShadow: '-8px 0 40px rgba(14,15,12,0.18)',
+          borderLeft: '1px solid var(--border)',
           animation: 'slideInRight 0.25s cubic-bezier(0.32,0.72,0,1)',
         }}
       >

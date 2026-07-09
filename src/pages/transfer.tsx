@@ -456,7 +456,7 @@ export function TransferPage() {
   const WalletSheet = ({ onSelect, current }: { onSelect:(a:CurrencyAccount)=>void; current:CurrencyAccount|null }) => (
     <div className="fixed inset-0 z-[75] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={()=>setWalletPickerOpen(false)}/>
-      <div className="relative bg-white rounded-t-3xl pb-8" style={{boxShadow:'0 -8px 30px rgba(0,0,0,0.12)'}}>
+      <div className="relative bg-white rounded-t-3xl pb-8" style={{borderTop:'2px solid var(--border)'}}>
         <div className="flex justify-center pt-3 pb-4"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
         <p className="text-base font-bold text-center mb-2 px-4" style={{color:'#1C1C1E'}}>Choisir le portefeuille</p>
         <div className="max-h-72 overflow-y-auto divide-y divide-gray-100">
@@ -486,7 +486,7 @@ export function TransferPage() {
   const PinSheet = () => (
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={()=>{setPinSheetOpen(false);setPin('')}}/>
-      <div className="relative bg-white rounded-t-3xl" style={{boxShadow:'0 -8px 30px rgba(0,0,0,0.18)'}}>
+      <div className="relative bg-white rounded-t-3xl" style={{borderTop:'2px solid var(--border)'}}>
         <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
           {selectedContact
@@ -644,7 +644,7 @@ export function TransferPage() {
             <button key={label} onClick={action}
               className="flex items-center gap-3 px-4 h-14 rounded-2xl cursor-pointer hover:bg-gray-50 card-press"
               style={{background:'#F8F8FA',border:'1px solid #F0F0F5'}}>
-              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{background:'white',boxShadow:'0 1px 4px rgba(0,0,0,0.08)'}}>
+              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{background:'#EBEBF0'}}>
                 <Icon className="w-4 h-4" style={{color:'#1C1C1E'}}/>
               </div>
               <span className="text-sm font-medium text-left leading-tight" style={{color:'#1C1C1E'}}>{label}</span>
@@ -1304,7 +1304,7 @@ export function TransferPage() {
     const betweenWalletSheet = (
       <div className="fixed inset-0 z-[75] flex flex-col justify-end">
         <div className="absolute inset-0 bg-black/40" onClick={()=>setWalletPickerOpen(false)}/>
-        <div className="relative bg-white rounded-t-3xl pb-8" style={{boxShadow:'0 -8px 30px rgba(0,0,0,0.12)'}}>
+        <div className="relative bg-white rounded-t-3xl pb-8" style={{borderTop:'2px solid var(--border)'}}>
           <div className="flex justify-center pt-3 pb-4"><div className="w-10 h-1 rounded-full bg-gray-200"/></div>
           <p className="text-base font-bold text-center mb-2 px-4" style={{color:'#1C1C1E'}}>
             {betweenPickerFor==='from' ? 'Portefeuille source' : 'Portefeuille destination'}

@@ -229,7 +229,7 @@ function AddBeneficiaryDrawer({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
       <div
         className="relative w-full rounded-t-3xl overflow-hidden animate-fade-in-up"
-        style={{ background: '#ffffff', boxShadow: '0 -8px 40px rgba(0,0,0,0.18)', maxHeight: '92vh', overflowY: 'auto' }}
+        style={{ background: '#ffffff', borderTop: '2px solid var(--border)', maxHeight: '92vh', overflowY: 'auto' }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">

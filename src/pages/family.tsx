@@ -53,7 +53,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-t-3xl md:rounded-3xl p-6 animate-fade-in-up"
-        style={{ background: 'var(--card-bg)', boxShadow: '0 -4px 40px rgba(14,15,12,0.15)' }}>
+        style={{ background: 'var(--card-bg)', borderTop: '2px solid var(--border)' }}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold text-[var(--ink)]">{title}</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--surface)] tr cursor-pointer">
@@ -100,7 +100,7 @@ function CreateWalletModal({ onClose, onCreate }: { onClose: () => void; onCreat
     <Modal title="Créer un portefeuille familial" onClose={onClose}>
       <div className="space-y-4">
         <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-2"
-          style={{ background: 'var(--lime)', boxShadow: '0 4px 20px rgba(26,86,219,0.4)' }}>
+          style={{ background: 'var(--lime)' }}>
           <Users className="w-7 h-7" style={{ color: '#ffffff' }} />
         </div>
         <p className="text-sm text-[var(--ink-60)] text-center">
@@ -341,7 +341,7 @@ function WalletView({ wallet }: { wallet: FamilyWallet }) {
 
       {/* Wallet card */}
       <div className="relative overflow-hidden rounded-3xl p-6"
-        style={{ background: 'var(--ink)', boxShadow: '0 8px 40px rgba(14,15,12,0.22)' }}>
+        style={{ background: 'var(--ink)' }}>
         <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-10" style={{ background: 'var(--lime)' }} />
         <div className="absolute -bottom-12 -left-6 w-44 h-44 rounded-full opacity-5" style={{ background: 'var(--lime)' }} />
 
