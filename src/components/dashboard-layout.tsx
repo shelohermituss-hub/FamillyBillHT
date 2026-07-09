@@ -123,7 +123,7 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
         style={{
           top: 62,
           right: 10,
-          width: 300,
+          width: 150,
           background: '#ffffff',
           boxShadow: '0 8px 40px rgba(0,0,0,0.18), 0 2px 12px rgba(0,0,0,0.08)',
           animation: 'slideDown 180ms cubic-bezier(0.16,1,0.3,1) forwards',
