@@ -8,6 +8,7 @@ import {
   X, Download,
 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
+import { useTheme } from '@/components/theme-provider'
 import { useAuth } from '@/lib/auth-context'
 import { useNotifications } from '@/lib/notifications-context'
 import { supabase, type Transaction } from '@/lib/supabase'
@@ -151,7 +152,8 @@ function ManageNotifsScreen({ onBack }: { onBack: () => void }) {
 // ── Settings screen ───────────────────────────────────────────────────────────
 
 function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => void; onNotifs: () => void; onChangePassword: () => void }) {
-  const [darkTheme, setDarkTheme] = useState(() => localStorage.getItem('fb-dark-theme') === 'true')
+  const { theme, setTheme } = useTheme()
+  const darkTheme = theme === 'dark'
   const [showBalance, setShowBalance] = useState(() => localStorage.getItem('fb-show-balance-terminal') !== 'false')
   const [showLang, setShowLang] = useState(false)
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('fb-lang') ?? 'Français')
@@ -162,9 +164,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
   const LANGUAGES = ['Français', 'English', 'Kreyòl ayisyen', 'Español', 'Português']
 
   function toggleDark() {
-    const next = !darkTheme
-    setDarkTheme(next)
-    localStorage.setItem('fb-dark-theme', String(next))
+    setTheme(darkTheme ? 'light' : 'dark')
   }
 
   function toggleBalance() {

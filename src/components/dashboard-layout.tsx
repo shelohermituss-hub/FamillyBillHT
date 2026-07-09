@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, Bell, User, ChevronRight, Settings, ShieldCheck, BarChart2 } from 'lucide-react'
+import { LogOut, Bell, User, ChevronRight, Settings, ShieldCheck, BarChart2, Moon, Sun } from 'lucide-react'
+import { useTheme } from '@/components/theme-provider'
 
 type IconProps = { className?: string; style?: React.CSSProperties }
 
@@ -119,27 +120,26 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 
       {/* Floating card — positioned below header, right-aligned */}
       <div
-        className="fixed z-50 rounded-[28px] overflow-hidden"
+        className="fixed z-50 rounded-[28px] overflow-hidden shadow-float"
         style={{
           top: 58,
           right: 8,
           width: 'calc(75vw)',
           maxWidth: 280,
-          background: '#ffffff',
-          border: '1px solid rgba(0,0,0,0.08)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.10)',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border)',
           animation: 'slideDown 200ms cubic-bezier(0.16,1,0.3,1) forwards',
         }}
       >
         {/* User info */}
         <div
           className="px-5 py-5 flex items-center gap-3"
-          style={{ borderBottom: '1px solid #F0F0F0' }}
+          style={{ borderBottom: '1px solid var(--border)' }}
         >
           <div
             className="w-[52px] h-[52px] rounded-full overflow-hidden flex items-center justify-center text-base font-bold shrink-0"
             style={avatarUrl
-              ? { border: '2px solid #E5E7EB' }
+              ? { border: '2px solid var(--border)' }
               : { background: 'var(--lime)', color: '#fff' }}
           >
             {avatarUrl
@@ -147,10 +147,10 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
               : (initials || <User className="w-5 h-5" />)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-[15px] leading-tight truncate" style={{ color: '#111827' }}>
+            <p className="font-bold text-[15px] leading-tight truncate" style={{ color: 'var(--ink)' }}>
               {profile?.full_name ?? 'Utilisateur'}
             </p>
-            <p className="text-[13px] truncate mt-0.5" style={{ color: '#9CA3AF' }}>
+            <p className="text-[13px] truncate mt-0.5" style={{ color: 'var(--ink-60)' }}>
               {(profile as any)?.email ?? ''}
             </p>
           </div>
@@ -162,23 +162,23 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
             <button
               key={label}
               onClick={() => go(href)}
-              className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-gray-50 active:bg-gray-100"
+              className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-[var(--surface)] active:bg-[var(--surface-2)]"
             >
-              <Icon className="w-[20px] h-[20px] shrink-0" style={{ color: '#6B7280' }} />
-              <span className="flex-1 text-[15px] font-semibold text-left" style={{ color: '#111827' }}>
+              <Icon className="w-[20px] h-[20px] shrink-0" style={{ color: 'var(--ink-60)' }} />
+              <span className="flex-1 text-[15px] font-semibold text-left" style={{ color: 'var(--ink)' }}>
                 {label}
               </span>
-              <ChevronRight className="w-[16px] h-[16px] shrink-0" style={{ color: '#D1D5DB' }} />
+              <ChevronRight className="w-[16px] h-[16px] shrink-0" style={{ color: 'var(--ink-30)' }} />
             </button>
           ))}
 
           {/* Administration */}
           <button
             onClick={() => go('/admin')}
-            className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-gray-50 active:bg-gray-100"
+            className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-[var(--surface)] active:bg-[var(--surface-2)]"
           >
-            <ShieldCheck className="w-[20px] h-[20px] shrink-0" style={{ color: '#6B7280' }} />
-            <span className="flex-1 text-[15px] font-semibold text-left" style={{ color: '#111827' }}>
+            <ShieldCheck className="w-[20px] h-[20px] shrink-0" style={{ color: 'var(--ink-60)' }} />
+            <span className="flex-1 text-[15px] font-semibold text-left" style={{ color: 'var(--ink)' }}>
               Administration
             </span>
             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0"
@@ -189,13 +189,13 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
         </div>
 
         {/* Separator */}
-        <div style={{ height: 1, background: '#F0F0F0', margin: '0 16px' }} />
+        <div style={{ height: 1, background: 'var(--border)', margin: '0 16px' }} />
 
         {/* Logout */}
         <div className="py-1.5">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-red-50"
+            className="w-full flex items-center gap-3.5 px-5 py-3.5 cursor-pointer tr hover:bg-red-50 dark:hover:bg-red-950/20"
           >
             <LogOut className="w-[20px] h-[20px] shrink-0" style={{ color: '#EF4444' }} />
             <span className="text-[15px] font-semibold" style={{ color: '#EF4444' }}>
@@ -212,14 +212,28 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 function HeaderActions({ onProfileOpen }: { onProfileOpen: () => void }) {
   const { unreadCount } = useNotifications()
   const { profile } = useAuth()
+  const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
 
   const initials = (profile?.full_name ?? 'U')
     .split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
   const avatarUrl = (profile as any)?.avatar_url as string | undefined
+  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
   return (
     <div className="flex items-center gap-2">
+      {/* Dark / Light toggle */}
+      <button
+        onClick={() => setTheme(isDark ? 'light' : 'dark')}
+        aria-label="Basculer le thème"
+        className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer"
+        style={{ background: 'var(--surface-2)', color: 'var(--ink-60)' }}
+      >
+        {isDark
+          ? <Sun className="w-[17px] h-[17px]" />
+          : <Moon className="w-[17px] h-[17px]" />}
+      </button>
+
       <button
         onClick={() => navigate('/notifications')}
         aria-label="Notifications"
@@ -349,7 +363,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <header
         className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 px-4 flex items-center justify-between"
         style={{
-          background: 'rgba(243,243,246,0.92)',
+          background: 'var(--header-bg)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: '1px solid var(--border)',
@@ -380,7 +394,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-40"
         style={{
-          background: 'rgba(255,255,255,0.97)',
+          background: 'var(--nav-bg)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderTop: '1px solid var(--border)',
