@@ -208,25 +208,25 @@ function PinPad({ value, onChange, onBiometric }: {
         {rows.map(row => row.map(({ n, s }) => (
           <button key={n} onClick={() => press(n)}
             className="h-16 rounded-2xl flex flex-col items-center justify-center gap-0.5 cursor-pointer tr active:scale-95"
-            style={{ background: '#F3F3F6' }}>
+            style={{ background: 'var(--surface-2)' }}>
             <span className="font-bold text-xl" style={{ color: '#0D1B4B' }}>{n}</span>
             {s && <span style={{ fontSize: 7, color: 'rgba(13,27,75,0.4)', letterSpacing: '0.12em', fontWeight: 600 }}>{s}</span>}
           </button>
         )))}
         <button onClick={onBiometric}
           className="h-16 rounded-2xl flex items-center justify-center cursor-pointer tr active:scale-95"
-          style={{ background: '#F3F3F6' }}>
+          style={{ background: 'var(--surface-2)' }}>
           <Fingerprint className="w-6 h-6" style={{ color: 'rgba(13,27,75,0.45)' }} />
         </button>
         <button onClick={() => press('0')}
           className="h-16 rounded-2xl flex flex-col items-center justify-center gap-0.5 cursor-pointer tr active:scale-95"
-          style={{ background: '#F3F3F6' }}>
+          style={{ background: 'var(--surface-2)' }}>
           <span className="font-bold text-xl" style={{ color: '#0D1B4B' }}>0</span>
           <span style={{ fontSize: 7, color: 'rgba(13,27,75,0.4)', letterSpacing: '0.12em', fontWeight: 600 }}>+</span>
         </button>
         <button onClick={del}
           className="h-16 rounded-2xl flex items-center justify-center cursor-pointer tr active:scale-95"
-          style={{ background: '#F3F3F6' }}>
+          style={{ background: 'var(--surface-2)' }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0D1B4B" strokeWidth="2">
             <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
             <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
@@ -256,13 +256,13 @@ function ScreenOverlay({ children, onBack, title }: {
 }) {
   return (
     <div className="fixed inset-x-0 bottom-0 flex flex-col animate-slide-right"
-      style={{ top: 56, zIndex: 35, background: '#F3F3F6' }}>
+      style={{ top: 56, zIndex: 35, background: 'var(--surface-2)' }}>
       {/* Mini header with back button */}
       <div className="flex items-center gap-3 px-4 py-3 shrink-0"
-        style={{ background: '#fff', borderBottom: '1px solid #F3F3F6' }}>
+        style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--border)' }}>
         <button onClick={onBack}
           className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr shrink-0"
-          style={{ background: '#F3F3F6' }}>
+          style={{ background: 'var(--surface-2)' }}>
           <ChevronLeft className="w-5 h-5" style={{ color: '#0D1B4B' }} />
         </button>
         <h1 className="font-bold text-base flex-1 truncate" style={{ color: '#0D1B4B', letterSpacing: '-0.02em' }}>{title}</h1>
@@ -294,13 +294,13 @@ function WalletPinModal({ acc, user, onSuccess, onCancel }: {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-end" style={{ zIndex: 70 }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-lg rounded-t-3xl animate-fade-in-up overflow-hidden" style={{ background: '#fff' }}>
+      <div className="relative w-full max-w-lg rounded-t-3xl animate-fade-in-up overflow-hidden" style={{ background: 'var(--card-bg)' }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div>
             <p className="font-bold text-base" style={{ color: '#0D1B4B' }}>Code PIN requis</p>
             <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.5)' }}>Portefeuille {acc.currency}</p>
           </div>
-          <button onClick={onCancel} className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr" style={{ background: '#F3F3F6' }}>
+          <button onClick={onCancel} className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr" style={{ background: 'var(--surface-2)' }}>
             <X className="w-4 h-4" style={{ color: '#0D1B4B' }} />
           </button>
         </div>
@@ -318,7 +318,7 @@ function BlockConfirmModal({ acc, onCancel, onConfirm }: {
   return (
     <div className="fixed inset-0 flex items-end justify-center" style={{ zIndex: 70 }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-lg rounded-t-3xl p-6 space-y-5 animate-fade-in-up" style={{ background: '#fff' }}>
+      <div className="relative w-full max-w-lg rounded-t-3xl p-6 space-y-5 animate-fade-in-up" style={{ background: 'var(--card-bg)' }}>
         <div className="flex flex-col items-center text-center gap-3">
           <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: '#FEF2F2' }}>
             <AlertTriangle className="w-8 h-8" style={{ color: '#DC2626' }} />
@@ -331,7 +331,7 @@ function BlockConfirmModal({ acc, onCancel, onConfirm }: {
         <div className="flex gap-3">
           <button onClick={onCancel}
             className="flex-1 h-12 rounded-2xl font-semibold text-sm cursor-pointer tr border"
-            style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: '#fff' }}>
+            style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: 'var(--card-bg)' }}>
             Annuler
           </button>
           <button onClick={onConfirm}
@@ -384,7 +384,7 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
     onSuccess()
   }
 
-  const overlayStyle: React.CSSProperties = { top: 56, zIndex: 70, background: '#fff' }
+  const overlayStyle: React.CSSProperties = { top: 56, zIndex: 70, background: 'var(--card-bg)' }
 
   // ── Done screen ──
   if (step === 'done') {
@@ -431,33 +431,33 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
         {showCvvSheet && selectedCard && (
           <div className="fixed inset-0 flex items-end" style={{ zIndex: 75 }}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCvvSheet(false)} />
-            <div className="relative w-full rounded-t-3xl p-5 space-y-5 animate-fade-in-up" style={{ background: '#fff' }}>
+            <div className="relative w-full rounded-t-3xl p-5 space-y-5 animate-fade-in-up" style={{ background: 'var(--card-bg)' }}>
               <div className="w-10 h-1 rounded-full mx-auto" style={{ background: '#E5E7EB' }} />
               {/* Card preview */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl" style={{ background: '#F9FAFB' }}>
+              <div className="flex items-center gap-4 p-4 rounded-2xl" style={{ background: 'var(--surface)' }}>
                 <MastercardLogo />
                 <div>
-                  <p className="font-semibold text-sm" style={{ color: '#111' }}>{selectedCard.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Numéro de carte ****{selectedCard.last4}</p>
+                  <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>{selectedCard.name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Numéro de carte ****{selectedCard.last4}</p>
                 </div>
               </div>
               {/* CVV input */}
               <div>
-                <p className="text-sm font-medium mb-2" style={{ color: '#374151' }}>Numéro de sécurité</p>
+                <p className="text-sm font-medium mb-2" style={{ color: 'var(--ink-60)' }}>Numéro de sécurité</p>
                 <div className="flex items-center gap-3 px-4 py-4 rounded-2xl tr"
-                  style={{ background: '#F9FAFB', border: `1.5px solid ${cvv ? '#4338ca' : '#E5E7EB'}` }}>
-                  <CreditCard className="w-5 h-5 shrink-0" style={{ color: '#9CA3AF' }} />
+                  style={{ background: 'var(--surface)', border: `1.5px solid ${cvv ? '#4338ca' : '#E5E7EB'}` }}>
+                  <CreditCard className="w-5 h-5 shrink-0" style={{ color: 'var(--ink-60)' }} />
                   <input type="number" maxLength={4} value={cvv}
                     onChange={e => setCvv(e.target.value.slice(0, 4))}
                     className="flex-1 bg-transparent outline-none font-mono tracking-[0.25em] text-base"
-                    style={{ color: '#111' }} autoFocus
+                    style={{ color: 'var(--ink)' }} autoFocus
                     onKeyDown={e => { if (e.key === 'Enter' && cvv) processPayment() }} />
                 </div>
               </div>
               {/* Fees note */}
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full border flex items-center justify-center shrink-0" style={{ borderColor: '#9CA3AF' }}>
-                  <span style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 700 }}>i</span>
+                  <span style={{ fontSize: 10, color: 'var(--ink-60)', fontWeight: 700 }}>i</span>
                 </div>
                 <p className="text-sm" style={{ color: '#6B7280' }}>Frais inclus</p>
               </div>
@@ -476,45 +476,45 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
         )}
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-4 shrink-0" style={{ borderBottom: '1px solid #F3F4F6' }}>
+        <div className="flex items-center gap-3 px-4 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
           <button onClick={() => setStep('amount-method')}
             className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr shrink-0"
-            style={{ background: '#F3F4F6' }}>
-            <ChevronLeft className="w-5 h-5" style={{ color: '#111' }} />
+            style={{ background: 'var(--surface-2)' }}>
+            <ChevronLeft className="w-5 h-5" style={{ color: 'var(--ink)' }} />
           </button>
-          <h1 className="font-bold text-lg flex-1" style={{ color: '#111' }}>Payer par carte</h1>
-          <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F3F4F6' }}>
-            <Calendar className="w-4 h-4" style={{ color: '#374151' }} />
+          <h1 className="font-bold text-lg flex-1" style={{ color: 'var(--ink)' }}>Payer par carte</h1>
+          <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: 'var(--surface-2)' }}>
+            <Calendar className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
           </button>
         </div>
 
         {/* Cards list */}
         <div className="flex-1 overflow-y-auto px-4 py-5 pb-28 space-y-3" style={{ WebkitOverflowScrolling: 'touch' as const }}>
-          <p className="text-xs font-semibold mb-4" style={{ color: '#9CA3AF', letterSpacing: '0.06em' }}>CARTES SAUVEGARDÉES</p>
+          <p className="text-xs font-semibold mb-4" style={{ color: 'var(--ink-60)', letterSpacing: '0.06em' }}>CARTES SAUVEGARDÉES</p>
           {MOCK_SAVED_CARDS.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 gap-2">
               <CreditCard className="w-10 h-10" style={{ color: '#D1D5DB' }} />
-              <p className="text-sm font-medium" style={{ color: '#9CA3AF' }}>Aucune carte sauvegardée</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink-60)' }}>Aucune carte sauvegardée</p>
             </div>
           )}
           {MOCK_SAVED_CARDS.map(card => (
             <button key={card.id} onClick={() => { setSelectedCard(card); setCvv(''); setShowCvvSheet(true) }}
               className="w-full flex items-center gap-4 p-4 rounded-2xl cursor-pointer tr"
-              style={{ background: '#F9FAFB' }}>
+              style={{ background: 'var(--surface)' }}>
               <MastercardLogo />
               <div className="flex-1 text-left">
-                <p className="font-semibold text-sm" style={{ color: '#111' }}>{card.name}</p>
-                <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Numéro de carte ****{card.last4}</p>
+                <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>{card.name}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Numéro de carte ****{card.last4}</p>
               </div>
-              <ChevronRight className="w-4 h-4" style={{ color: '#9CA3AF' }} />
+              <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
             </button>
           ))}
-          <button className="w-full flex items-center gap-4 p-4 rounded-2xl cursor-pointer tr" style={{ background: '#F9FAFB' }}>
+          <button className="w-full flex items-center gap-4 p-4 rounded-2xl cursor-pointer tr" style={{ background: 'var(--surface)' }}>
             <div className="w-10 h-10 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: '#D1D5DB' }}>
-              <Plus className="w-5 h-5" style={{ color: '#374151' }} />
+              <Plus className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
             </div>
-            <span className="flex-1 text-left font-semibold text-sm" style={{ color: '#111' }}>Utiliser une nouvelle carte</span>
-            <ChevronRight className="w-4 h-4" style={{ color: '#9CA3AF' }} />
+            <span className="flex-1 text-left font-semibold text-sm" style={{ color: 'var(--ink)' }}>Utiliser une nouvelle carte</span>
+            <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
           </button>
         </div>
       </div>
@@ -529,13 +529,13 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
       </div>
     )},
     { id: 'card' as const, label: 'Carte de crédit ou débit', sub: 'Visa, Mastercard, etc.', icon: (
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F3F4F6' }}>
-        <CreditCard className="w-5 h-5" style={{ color: '#374151' }} />
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
+        <CreditCard className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
       </div>
     )},
     { id: 'bank' as const, label: 'Compte bancaire', sub: 'Virement bancaire direct', icon: (
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F3F4F6' }}>
-        <Building2 className="w-5 h-5" style={{ color: '#374151' }} />
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
+        <Building2 className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
       </div>
     )},
   ]
@@ -543,17 +543,17 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
   return (
     <div className="fixed inset-x-0 bottom-0 flex flex-col" style={overlayStyle}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-4 shrink-0" style={{ borderBottom: '1px solid #F3F4F6' }}>
+      <div className="flex items-center gap-3 px-4 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
         <button onClick={onClose}
           className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr shrink-0"
-          style={{ background: '#F3F4F6' }}>
-          <ChevronLeft className="w-5 h-5" style={{ color: '#111' }} />
+          style={{ background: 'var(--surface-2)' }}>
+          <ChevronLeft className="w-5 h-5" style={{ color: 'var(--ink)' }} />
         </button>
-        <h1 className="font-bold text-base flex-1" style={{ color: '#111', letterSpacing: '-0.01em' }}>
+        <h1 className="font-bold text-base flex-1" style={{ color: 'var(--ink)', letterSpacing: '-0.01em' }}>
           Ajouter de l'argent à votre compte
         </h1>
       </div>
-      <p className="px-5 pt-3 text-sm text-center" style={{ color: '#9CA3AF' }}>
+      <p className="px-5 pt-3 text-sm text-center" style={{ color: 'var(--ink-60)' }}>
         Complétez le processus d'activation : ajoutez des fonds pour accéder aux détails de votre compte
       </p>
 
@@ -563,7 +563,7 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
           {/* Wallet selector */}
           {accounts.length > 1 && (
             <div>
-              <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF', letterSpacing: '0.06em' }}>PORTEFEUILLE CIBLE</p>
+              <p className="text-xs font-semibold mb-2" style={{ color: 'var(--ink-60)', letterSpacing: '0.06em' }}>PORTEFEUILLE CIBLE</p>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {accounts.map(acc => {
                   const f = CURRENCY_FLAGS[acc.currency]
@@ -583,9 +583,9 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
 
           {/* Amount input */}
           <div>
-            <p className="text-sm font-medium mb-2" style={{ color: '#374151' }}>Ajouter</p>
+            <p className="text-sm font-medium mb-2" style={{ color: 'var(--ink-60)' }}>Ajouter</p>
             <div className="flex items-center gap-3 px-4 py-4 rounded-2xl"
-              style={{ background: '#F9FAFB', border: '1.5px solid #E5E7EB' }}>
+              style={{ background: 'var(--surface)', border: '1.5px solid #E5E7EB' }}>
               <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
                 placeholder="0.00" autoFocus
                 className="flex-1 text-xl font-semibold bg-transparent outline-none tabular-nums"
@@ -596,17 +596,17 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
                     style={{ border: '1px solid #E5E7EB' }}
                     onError={e => (e.currentTarget.style.display = 'none')} />
                 )}
-                <span className="font-bold text-sm" style={{ color: '#111' }}>{targetAcc.currency}</span>
+                <span className="font-bold text-sm" style={{ color: 'var(--ink)' }}>{targetAcc.currency}</span>
               </div>
             </div>
             {usdEq && (
-              <p className="text-xs mt-2 px-1" style={{ color: '#9CA3AF' }}>
+              <p className="text-xs mt-2 px-1" style={{ color: 'var(--ink-60)' }}>
                 ≈ ${usdEq} USD au taux actuel
               </p>
             )}
             {/* If adding to non-primary currency, show wallet's currency conversion */}
             {hasAmt && targetAcc.currency !== 'HTG' && (
-              <p className="text-xs mt-1 px-1" style={{ color: '#9CA3AF' }}>
+              <p className="text-xs mt-1 px-1" style={{ color: 'var(--ink-60)' }}>
                 ≈ {getCurrency('HTG')?.symbol} {(num * getRate(targetAcc.currency, 'HTG')).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} HTG
               </p>
             )}
@@ -614,7 +614,7 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
 
           {/* Payment methods */}
           <div>
-            <p className="font-bold text-base mb-4" style={{ color: '#111' }}>Payer avec</p>
+            <p className="font-bold text-base mb-4" style={{ color: 'var(--ink)' }}>Payer avec</p>
             <div className="space-y-3">
               {payMethods.map(({ id, label, sub, icon }) => {
                 const active = method === id
@@ -624,8 +624,8 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
                     style={{ background: active ? '#EEF2FF' : '#F9FAFB', border: `1.5px solid ${active ? '#4338ca' : 'transparent'}` }}>
                     {icon}
                     <div className="flex-1 text-left">
-                      <p className="font-medium text-sm" style={{ color: '#111' }}>{label}</p>
-                      <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>{sub}</p>
+                      <p className="font-medium text-sm" style={{ color: 'var(--ink)' }}>{label}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>{sub}</p>
                     </div>
                     <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 tr"
                       style={{ borderColor: active ? '#4338ca' : '#D1D5DB', background: active ? '#4338ca' : '#fff' }}>
@@ -642,7 +642,7 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
       </div>
 
       {/* Sticky CTA */}
-      <div className="shrink-0 px-4 py-4 pb-6" style={{ borderTop: '1px solid #F3F4F6', background: '#fff' }}>
+      <div className="shrink-0 px-4 py-4 pb-6" style={{ borderTop: '1px solid #F3F4F6', background: 'var(--card-bg)' }}>
         <button
           onClick={() => method === 'card' ? setStep('select-card') : processPayment()}
           disabled={!canNext || loading}
@@ -694,7 +694,7 @@ function DetailsScreen({ acc, user, onBack }: { acc: CurrencyAccount; user: User
     <ScreenOverlay title="Détails du portefeuille" onBack={onBack}>
       <div className="px-4 pt-4 space-y-4">
         <CardFront acc={acc} user={user} visible={showNum} />
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
           {[
             { label: 'Titulaire',              value: name, mask: false, toggle: null },
             { label: 'Numéro de portefeuille', value: num,  mask: !showNum, toggle: () => setShowNum(v => !v) },
@@ -711,7 +711,7 @@ function DetailsScreen({ acc, user, onBack }: { acc: CurrencyAccount; user: User
                 </p>
               </div>
               {toggle && (
-                <button onClick={toggle} className="ml-3 w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr shrink-0" style={{ background: '#F3F3F6' }}>
+                <button onClick={toggle} className="ml-3 w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr shrink-0" style={{ background: 'var(--surface-2)' }}>
                   {mask ? <EyeOff className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.5)' }} /> : <Eye className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.5)' }} />}
                 </button>
               )}
@@ -759,7 +759,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
           </button>
           <button onClick={onCardBack}
             className="flex-1 h-11 rounded-2xl font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer tr active:scale-[0.97]"
-            style={{ background: '#F3F3F6', color: '#0D1B4B' }}>
+            style={{ background: 'var(--surface-2)', color: '#0D1B4B' }}>
             <RefreshCw className="w-4 h-4" />
             Vue arrière
           </button>
@@ -771,15 +771,15 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
           </button>
         </div>
         {/* Toggles */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
-          <div className="flex items-center px-4 py-4 gap-3" style={{ borderBottom: '1px solid #F3F3F6' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
+          <div className="flex items-center px-4 py-4 gap-3" style={{ borderBottom: '1px solid var(--border)' }}>
             <div className="flex-1">
               <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Paiements en ligne</p>
               <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Autoriser les achats internet</p>
             </div>
             <Toggle on={online} onChange={v => { setOnline(v); persist('online', v) }} />
           </div>
-          <div style={{ borderBottom: '1px solid #F3F3F6' }}>
+          <div style={{ borderBottom: '1px solid var(--border)' }}>
             <div className="flex items-center px-4 py-4 gap-3">
               <div className="flex-1">
                 <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Activer la limite</p>
@@ -809,7 +809,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
           </div>
         </div>
         {/* Quick links */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
           {[
             { label: 'Thème de carte',       action: onThemePicker },
             { label: 'Modifier le code PIN', action: onChangePIN },
@@ -912,7 +912,7 @@ function CardBackScreen({ acc, onBack, onBlock }: {
           </button>
           <button onClick={onBack}
             className="flex-1 h-11 rounded-2xl font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer tr active:scale-[0.97]"
-            style={{ background: '#F3F3F6', color: '#0D1B4B' }}>
+            style={{ background: 'var(--surface-2)', color: '#0D1B4B' }}>
             <ChevronLeft className="w-4 h-4" />Retour
           </button>
           <button onClick={() => setShowBlock(true)}
@@ -922,7 +922,7 @@ function CardBackScreen({ acc, onBack, onBlock }: {
           </button>
         </div>
         {/* Month limit card */}
-        <div className="rounded-2xl p-4" style={{ background: '#fff' }}>
+        <div className="rounded-2xl p-4" style={{ background: 'var(--card-bg)' }}>
           <p className="text-xs font-semibold mb-3" style={{ color: 'rgba(13,27,75,0.45)', letterSpacing: '0.08em' }}>LIMITE MENSUELLE</p>
           <div className="flex items-end justify-between mb-3">
             <div>
@@ -940,12 +940,12 @@ function CardBackScreen({ acc, onBack, onBlock }: {
               </p>
             </div>
           </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: '#F3F3F6' }}>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--surface-2)' }}>
             <div className="h-full rounded-full" style={{ width: '30%', background: cs.gradient }} />
           </div>
         </div>
         {/* Settings list */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
           {[
             { icon: Key,  label: 'Code PIN',      desc: 'Modifier votre code secret', action: () => {} },
             { icon: Bell, label: 'Notifications', desc: 'Alertes de transaction',     action: () => {} },
@@ -953,7 +953,7 @@ function CardBackScreen({ acc, onBack, onBlock }: {
             <button key={label} onClick={action}
               className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr"
               style={{ borderBottom: i < 1 ? '1px solid #F3F3F6' : 'none' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F3F3F6' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
                 <Icon className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
               </div>
               <div className="flex-1 text-left">
@@ -987,10 +987,10 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
       <ScreenOverlay title="Tous les paramètres" onBack={onBack}>
         <div className="px-4 pt-4 space-y-4">
           <CardBack acc={acc} height={170} />
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
             {/* Code PIN */}
             <button onClick={onChangePIN}
-              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid #F3F3F6' }}>
+              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EEF3FF' }}>
                 <Key className="w-5 h-5" style={{ color: '#1A56DB' }} />
               </div>
@@ -1002,7 +1002,7 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
             </button>
             {/* Bloquer */}
             <button onClick={() => setShowBlock(true)}
-              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid #F3F3F6' }}>
+              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#FEF2F2' }}>
                 <AlertTriangle className="w-5 h-5" style={{ color: '#DC2626' }} />
               </div>
@@ -1013,8 +1013,8 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </button>
             {/* Notifications */}
-            <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: '1px solid #F3F3F6' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F3F3F6' }}>
+            <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
                 <Bell className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
               </div>
               <div className="flex-1">
@@ -1025,8 +1025,8 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
             </div>
             {/* Paiements */}
             <button onClick={() => navigate('/history')}
-              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid #F3F3F6' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F3F3F6' }}>
+              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
                 <ArrowDownLeft className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
               </div>
               <div className="flex-1 text-left">
@@ -1037,8 +1037,8 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
             </button>
             {/* Paramètre de carte */}
             <button onClick={onSettings}
-              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid #F3F3F6' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F3F3F6' }}>
+              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
                 <Shield className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
               </div>
               <div className="flex-1 text-left">
@@ -1049,8 +1049,8 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
             </button>
             {/* Remplacer */}
             <button onClick={() => setToast('Demande de remplacement envoyée !')}
-              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid #F3F3F6' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F3F3F6' }}>
+              className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
                 <RefreshCw className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
               </div>
               <div className="flex-1 text-left">
@@ -1207,24 +1207,24 @@ function WalletHistoryScreen({ acc, user, onBack }: {
           <div className="space-y-3">
             {[1,2,3,4].map(i => (
               <div key={i} className="flex items-center gap-3 animate-pulse">
-                <div className="w-10 h-10 rounded-xl shrink-0" style={{ background: '#F3F3F6' }} />
+                <div className="w-10 h-10 rounded-xl shrink-0" style={{ background: 'var(--surface-2)' }} />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 rounded-lg w-32" style={{ background: '#F3F3F6' }} />
-                  <div className="h-2.5 rounded-lg w-20" style={{ background: '#F3F3F6' }} />
+                  <div className="h-3 rounded-lg w-32" style={{ background: 'var(--surface-2)' }} />
+                  <div className="h-2.5 rounded-lg w-20" style={{ background: 'var(--surface-2)' }} />
                 </div>
-                <div className="h-4 rounded-lg w-16" style={{ background: '#F3F3F6' }} />
+                <div className="h-4 rounded-lg w-16" style={{ background: 'var(--surface-2)' }} />
               </div>
             ))}
           </div>
         ) : txs.length === 0 ? (
           <div className="text-center py-16 space-y-3">
-            <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center" style={{ background: '#F3F3F6' }}>
+            <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center" style={{ background: 'var(--surface-2)' }}>
               <Clock className="w-8 h-8" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </div>
             <p className="text-sm font-medium" style={{ color: 'rgba(13,27,75,0.4)' }}>Aucune transaction pour ce portefeuille</p>
           </div>
         ) : (
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
             {txs.map((tx, i) => {
               const sign  = typeSign[tx.type]  ?? ''
               const color = typeColor[tx.type] ?? '#374151'
@@ -1274,7 +1274,7 @@ function DeleteWalletModal({ acc, onCancel, onConfirm }: {
   return (
     <div className="fixed inset-0 flex items-end justify-center" style={{ zIndex: 70 }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-lg rounded-t-3xl p-6 space-y-5 animate-fade-in-up" style={{ background: '#fff' }}>
+      <div className="relative w-full max-w-lg rounded-t-3xl p-6 space-y-5 animate-fade-in-up" style={{ background: 'var(--card-bg)' }}>
         <div className="flex flex-col items-center text-center gap-3">
           <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: '#FEF2F2' }}>
             <Trash2 className="w-8 h-8" style={{ color: '#DC2626' }} />
@@ -1290,7 +1290,7 @@ function DeleteWalletModal({ acc, onCancel, onConfirm }: {
         <div className="flex gap-3">
           <button onClick={onCancel} disabled={loading}
             className="flex-1 h-12 rounded-2xl font-semibold text-sm cursor-pointer tr border"
-            style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: '#fff' }}>
+            style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: 'var(--card-bg)' }}>
             Annuler
           </button>
           <button onClick={confirm} disabled={loading}
@@ -1368,17 +1368,17 @@ function AddWalletScreen({ user, onBack, onNext }: {
 
           {step === 'form' ? (
             <>
-              <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
-                <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #F3F3F6' }}>
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
+                <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
                   <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.45)' }}>Numéro (auto)</p>
                   <p className="font-mono font-semibold text-sm" style={{ color: '#0D1B4B' }}>{autoNum}</p>
                 </div>
-                <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #F3F3F6' }}>
+                <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
                   <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.45)' }}>Titulaire</p>
                   <input value={holderName} onChange={e => setHolderName(e.target.value)} placeholder="Votre nom complet"
                     className="w-full font-semibold text-sm bg-transparent outline-none" style={{ color: '#0D1B4B' }} />
                 </div>
-                <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #F3F3F6' }}>
+                <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
                   <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.45)' }}>Devise</p>
                   <select value={currency} onChange={e => { setCurrency(e.target.value); setStyleId(CURRENCY_DEFAULT_STYLE[e.target.value] ?? 'purple') }}
                     className="w-full font-semibold text-sm bg-transparent outline-none cursor-pointer" style={{ color: '#0D1B4B' }}>
@@ -1415,7 +1415,7 @@ function AddWalletScreen({ user, onBack, onNext }: {
               <div className="flex gap-3">
                 <button onClick={() => setToast('Fonctionnalité disponible bientôt !')}
                   className="flex-1 h-12 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer tr border"
-                  style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: '#fff' }}>
+                  style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: 'var(--card-bg)' }}>
                   <ScanLine className="w-4 h-4" />Scanner
                 </button>
                 <button onClick={() => holderName.trim() && setStep('verify')} disabled={!holderName.trim()}
@@ -1427,14 +1427,14 @@ function AddWalletScreen({ user, onBack, onNext }: {
             </>
           ) : (
             <>
-              <div className="rounded-2xl overflow-hidden" style={{ background: '#fff' }}>
-                <div className="px-4 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #F3F3F6' }}>
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
+                <div className="px-4 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
                   <div>
                     <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Titulaire</p>
                     <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>{holderName}</p>
                   </div>
                 </div>
-                <div className="px-4 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #F3F3F6' }}>
+                <div className="px-4 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
                   <div>
                     <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Devise</p>
                     <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>{curr?.flag} {currency} — {curr?.name}</p>
@@ -1478,14 +1478,14 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
 
   if (loading) {
     return (
-      <div className="py-32 flex items-center justify-center" style={{ background: '#F3F3F6' }}>
+      <div className="py-32 flex items-center justify-center" style={{ background: 'var(--surface-2)' }}>
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1A56DB' }} />
       </div>
     )
   }
 
   return (
-    <div style={{ background: '#F3F3F6' }}>
+    <div style={{ background: 'var(--surface-2)' }}>
       {/* Card */}
       <div className="px-5 pt-6 pb-4">
         {mainAcc ? (
@@ -1530,12 +1530,12 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
           </button>
           <button onClick={() => onRecharge(mainAcc)}
             className="flex-1 h-11 rounded-full font-semibold text-sm cursor-pointer tr active:scale-[0.97]"
-            style={{ background: '#fff', color: '#0D1B4B', border: '1.5px solid #DDE1F0' }}>
+            style={{ background: 'var(--card-bg)', color: '#0D1B4B', border: '1.5px solid #DDE1F0' }}>
             Recharger
           </button>
           <button
             className="flex-1 h-11 rounded-full font-semibold text-sm cursor-pointer tr active:scale-[0.97]"
-            style={{ background: '#fff', color: '#0D1B4B', border: '1.5px solid #DDE1F0' }}>
+            style={{ background: 'var(--card-bg)', color: '#0D1B4B', border: '1.5px solid #DDE1F0' }}>
             Payer
           </button>
         </div>
@@ -1544,8 +1544,8 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
       {/* Settings menu */}
       {mainAcc && (
         <div className="px-5">
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
-            <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #F3F3F6' }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
+            <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
               <p className="font-bold text-base" style={{ color: '#0D1B4B' }}>Portefeuille Settings</p>
             </div>
             {([
@@ -1650,7 +1650,7 @@ export function WalletPage() {
   }
 
   if (!user) return (
-    <div className="py-32 flex items-center justify-center" style={{ background: '#F3F3F6' }}>
+    <div className="py-32 flex items-center justify-center" style={{ background: 'var(--surface-2)' }}>
       <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1A56DB' }} />
     </div>
   )
@@ -1676,7 +1676,7 @@ export function WalletPage() {
       )}
       {saving && (
         <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'rgba(13,27,75,0.4)', zIndex: 80 }}>
-          <div className="rounded-2xl p-6 flex flex-col items-center gap-4" style={{ background: '#fff' }}>
+          <div className="rounded-2xl p-6 flex flex-col items-center gap-4" style={{ background: 'var(--card-bg)' }}>
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1A56DB' }} />
             <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Création en cours…</p>
           </div>

@@ -44,15 +44,15 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-sm rounded-t-3xl md:rounded-3xl overflow-hidden animate-fade-in-up shadow-float-lg"
-        style={{ background: '#ffffff' }}>
+        style={{ background: 'var(--card-bg)' }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-4">
           <div>
-            <h2 className="text-lg font-semibold" style={{ color: '#111' }}>Recevoir de l'argent</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Partagez votre ID pour recevoir des paiements</p>
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>Recevoir de l'argent</h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Partagez votre ID pour recevoir des paiements</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr"
-            style={{ background: '#F3F4F6' }}>
-            <X className="w-4 h-4" style={{ color: '#6B7280' }} />
+            style={{ background: 'var(--surface-2)' }}>
+            <X className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
           </button>
         </div>
         <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5"
@@ -72,8 +72,8 @@ function ReceiveModal({ profile, onClose }: { profile: { full_name?: string; use
         </div>
         <div className="px-5 pb-6 grid grid-cols-2 gap-3">
           <button onClick={copy}
-            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border cursor-pointer tr hover:bg-gray-50"
-            style={{ borderColor: '#E5E7EB', color: '#374151' }}>
+            className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border cursor-pointer tr hover:bg-[var(--surface)]"
+            style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}>
             {copied ? <Check className="w-4 h-4" style={{ color: 'var(--lime)' }} /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copié !' : 'Copier'}
           </button>
@@ -181,19 +181,23 @@ function BillGrid() {
         <button
           key={cat.id}
           onClick={() => navigate(`/bills?category=${cat.id}`)}
-          className="flex flex-col items-center gap-2 p-3 rounded-2xl cursor-pointer card-press hover:border-blue-200"
-          style={{ background: '#fff', border: '1px solid #EBEBF0', transition: 'transform 150ms ease, border-color 150ms ease' }}
+          className="flex flex-col items-center gap-2 p-3 rounded-2xl cursor-pointer card-press"
+          style={{
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border)',
+            transition: 'transform 150ms ease, border-color 150ms ease',
+          }}
         >
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden"
-            style={{ background: cat.bg ?? '#F3F4F6' }}
+            style={{ background: cat.bg ?? 'var(--surface-2)' }}
           >
             {cat.icon
               ? <img src={cat.icon} alt={cat.label} className="w-full h-full object-contain"
                   onError={e => { (e.currentTarget as HTMLElement).style.display = 'none' }} />
               : <span style={{ fontSize: 22 }}>{cat.emoji}</span>}
           </div>
-          <span className="text-center leading-tight font-semibold" style={{ fontSize: 11, color: '#374151' }}>
+          <span className="text-center leading-tight font-semibold" style={{ fontSize: 11, color: 'var(--ink-60)' }}>
             {cat.label}
           </span>
         </button>
@@ -234,11 +238,11 @@ export function DashboardPage() {
   const greetWord = greetHour < 12 ? 'Bonjour' : greetHour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
   return (
-    <div className="overflow-x-hidden" style={{ background: '#F3F4F6' }}>
+    <div className="overflow-x-hidden" style={{ background: 'var(--surface)' }}>
       {showReceive && <ReceiveModal profile={profile} onClose={() => setShowReceive(false)} />}
 
-      {/* ── Header card (white) ── */}
-      <div className="bg-white px-5 pt-5 pb-6" style={{ borderBottom: '1px solid #F3F4F6' }}>
+      {/* ── Header card ── */}
+      <div className="px-5 pt-5 pb-6" style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--border)' }}>
         {/* Greeting row */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -252,16 +256,17 @@ export function DashboardPage() {
                 : initials}
             </div>
             <div>
-              <p className="text-sm" style={{ color: '#9CA3AF' }}>
+              <p className="text-sm" style={{ color: 'var(--ink-60)' }}>
                 {greetWord},{' '}
-                <span className="font-bold" style={{ color: '#111' }}>{firstName}</span>
+                <span className="font-bold" style={{ color: 'var(--ink)' }}>{firstName}</span>
               </p>
             </div>
           </div>
           <Link to="/notifications">
-            <div className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer hover:bg-gray-50"
-              style={{ background: '#F9FAFB' }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="w-9 h-9 flex items-center justify-center rounded-xl tr cursor-pointer hover:bg-[var(--surface)]"
+              style={{ background: 'var(--surface-2)' }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                style={{ stroke: 'var(--ink-60)' }}>
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
@@ -270,12 +275,12 @@ export function DashboardPage() {
         </div>
 
         {/* Balance */}
-        <p className="text-xs font-medium mb-1.5" style={{ color: '#9CA3AF' }}>Solde USD</p>
+        <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--ink-60)' }}>Solde USD</p>
         <div className="flex items-center gap-2 mb-5">
           {loading ? (
-            <div className="h-10 w-44 rounded-xl animate-pulse bg-gray-100" />
+            <div className="h-10 w-44 rounded-xl animate-pulse" style={{ background: 'var(--surface-2)' }} />
           ) : (
-            <p className="font-extrabold tabular-nums" style={{ fontSize: 'clamp(26px, 8vw, 40px)', color: '#111', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <p className="font-extrabold tabular-nums" style={{ fontSize: 'clamp(26px, 8vw, 40px)', color: 'var(--ink)', letterSpacing: '-0.03em', lineHeight: 1 }}>
               {visible
                 ? `$${(usdAccount?.balance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : '$•••••'}
@@ -284,11 +289,11 @@ export function DashboardPage() {
           <button
             onClick={() => setVisible(v => !v)}
             className="w-8 h-8 flex items-center justify-center rounded-full tr cursor-pointer shrink-0"
-            style={{ background: '#F3F4F6' }}
+            style={{ background: 'var(--surface-2)' }}
           >
             {visible
-              ? <Eye    className="w-4 h-4" style={{ color: '#9CA3AF' }} />
-              : <EyeOff className="w-4 h-4" style={{ color: '#9CA3AF' }} />}
+              ? <Eye    className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
+              : <EyeOff className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />}
           </button>
         </div>
 
@@ -304,8 +309,8 @@ export function DashboardPage() {
           </button>
           <button
             onClick={() => setShowReceive(true)}
-            className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold cursor-pointer btn-press hover:bg-gray-50 shrink-0"
-            style={{ border: '1.5px solid #E5E7EB', color: '#374151' }}
+            className="flex items-center gap-1.5 px-5 h-11 rounded-full text-sm font-semibold cursor-pointer btn-press hover:bg-[var(--surface)] shrink-0"
+            style={{ border: '1.5px solid var(--border)', color: 'var(--ink)' }}
           >
             <ArrowDownLeft className="w-4 h-4" />
             Recevoir
@@ -319,25 +324,25 @@ export function DashboardPage() {
         {/* ── USD Wallet Card ── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Mon Portefeuille</h2>
+            <h2 className="font-bold text-base" style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}>Mon Portefeuille</h2>
           </div>
           {loading
-            ? <div className="h-44 rounded-3xl animate-pulse bg-gray-200" />
+            ? <div className="h-44 rounded-3xl animate-pulse" style={{ background: 'var(--surface-2)' }} />
             : <UsdWalletCard account={usdAccount} visible={visible} />}
         </div>
 
         {/* ── Payer vos factures ── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Payer vos factures</h2>
+            <h2 className="font-bold text-base" style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}>Payer vos factures</h2>
           </div>
           <BillGrid />
         </div>
 
         {/* ── Recent transactions ── */}
-        <div className="rounded-2xl overflow-hidden mb-4" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+        <div className="rounded-2xl overflow-hidden mb-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-4 pt-4 pb-3">
-            <h2 className="font-bold text-base" style={{ color: '#111', letterSpacing: '-0.02em' }}>Activité récente</h2>
+            <h2 className="font-bold text-base" style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}>Activité récente</h2>
             <Link to="/history" className="text-sm font-semibold tr hover:opacity-70" style={{ color: 'var(--lime)' }}>
               Tout voir →
             </Link>
@@ -347,24 +352,24 @@ export function DashboardPage() {
             <div className="px-4 pb-4 space-y-3">
               {[1, 2, 3].map(i => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+                  <div className="w-10 h-10 rounded-xl animate-pulse shrink-0" style={{ background: 'var(--surface-2)' }} />
                   <div className="flex-1 space-y-2">
-                    <div className="h-3 bg-gray-100 rounded animate-pulse w-36" />
-                    <div className="h-3 bg-gray-100 rounded animate-pulse w-20" />
+                    <div className="h-3 rounded animate-pulse w-36" style={{ background: 'var(--surface-2)' }} />
+                    <div className="h-3 rounded animate-pulse w-20" style={{ background: 'var(--surface-2)' }} />
                   </div>
-                  <div className="h-4 w-16 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-4 w-16 rounded animate-pulse" style={{ background: 'var(--surface-2)' }} />
                 </div>
               ))}
             </div>
           ) : transactions.length === 0 ? (
             <div className="px-4 pb-6 text-center">
-              <p className="text-sm py-4" style={{ color: '#9CA3AF' }}>Aucune transaction pour l'instant.</p>
+              <p className="text-sm py-4" style={{ color: 'var(--ink-60)' }}>Aucune transaction pour l'instant.</p>
               <button onClick={() => navigate('/transfer')} className="btn-lime px-4 py-2 rounded-xl text-sm cursor-pointer">
                 Envoyer des fonds
               </button>
             </div>
           ) : (
-            <div className="px-4 pb-4 divide-y" style={{ borderColor: '#F9FAFB' }}>
+            <div className="px-4 pb-4 divide-y divide-[var(--border)]">
               {transactions.slice(0, 5).map(tx => {
                 const isSend    = tx.type === 'send' || tx.type === 'withdraw' || tx.type === 'bill_payment'
                 const isReceive = tx.type === 'receive' || tx.type === 'deposit'
@@ -372,9 +377,9 @@ export function DashboardPage() {
                 const label     = tx.type === 'convert'
                   ? `${tx.currency} → ${tx.target_currency}`
                   : (tx.recipient_name ?? (tx.type === 'bill_payment' ? 'Facture' : tx.type === 'deposit' ? 'Dépôt' : 'Transfert'))
-                const iconBg    = isSend ? '#FEE2E2' : isReceive ? '#D1FAE5' : '#EDE9FE'
+                const iconBg    = isSend ? 'rgba(239,68,68,0.12)' : isReceive ? 'rgba(16,185,129,0.12)' : 'rgba(124,58,237,0.12)'
                 const iconColor = isSend ? '#EF4444' : isReceive ? '#059669' : '#7C3AED'
-                const amtColor  = isSend ? '#EF4444' : isReceive ? '#059669' : '#374151'
+                const amtColor  = isSend ? '#EF4444' : isReceive ? '#059669' : 'var(--ink-60)'
                 return (
                   <div key={tx.id} className="flex items-center gap-3 py-3 first:pt-0">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: iconBg }}>
@@ -385,8 +390,8 @@ export function DashboardPage() {
                           : <Repeat        className="w-4 h-4" style={{ color: iconColor }} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{label}</p>
-                      <p className="text-xs" style={{ color: '#9CA3AF' }}>
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>{label}</p>
+                      <p className="text-xs" style={{ color: 'var(--ink-60)' }}>
                         {new Date(tx.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                         {' · '}{tx.currency}
                       </p>

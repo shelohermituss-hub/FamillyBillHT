@@ -29,7 +29,7 @@ type Screen =
 
 function SubScreen({ children }: { children: ReactNode }) {
   return (
-    <div className="fixed inset-0 overflow-y-auto overflow-x-hidden" style={{ zIndex: 60, background: '#F5F5F7' }}>
+    <div className="fixed inset-0 overflow-y-auto overflow-x-hidden" style={{ zIndex: 60, background: 'var(--surface)' }}>
       <div className="min-h-full pb-12">{children}</div>
     </div>
   )
@@ -39,14 +39,14 @@ function SubHeader({
   title, onBack, right,
 }: { title: string; onBack: () => void; right?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-4 h-14 bg-white sticky top-0 z-10"
-      style={{ borderBottom: '1px solid #F3F4F6' }}>
+    <div className="flex items-center justify-between px-4 h-14 sticky top-0 z-10"
+      style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--border)' }}>
       <button onClick={onBack}
         className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr"
-        style={{ background: '#F3F4F6' }}>
-        <ChevronLeft className="w-5 h-5" style={{ color: '#374151' }} />
+        style={{ background: 'var(--surface-2)' }}>
+        <ChevronLeft className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
       </button>
-      <h1 className="text-base font-bold" style={{ color: '#111', letterSpacing: '-0.02em' }}>{title}</h1>
+      <h1 className="text-base font-bold" style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}>{title}</h1>
       <div className="w-9 h-9 flex items-center justify-center">
         {right}
       </div>
@@ -77,9 +77,9 @@ function RowItem({
   return (
     <button onClick={onPress}
       className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50 text-left"
-      style={{ borderBottom: last ? 'none' : '1px solid #F9FAFB' }}>
+      style={{ borderBottom: last ? 'none' : '1px solid var(--border)' }}>
       <IconWrap Icon={Icon} />
-      <span className="flex-1 text-sm font-medium" style={{ color: '#111' }}>{label}</span>
+      <span className="flex-1 text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</span>
       {right !== undefined ? right : <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />}
     </button>
   )
@@ -88,7 +88,7 @@ function RowItem({
 function GroupCard({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn('mx-4 rounded-2xl overflow-hidden', className)}
-      style={{ background: '#fff', border: '1px solid var(--border)' }}>
+      style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
       {children}
     </div>
   )
@@ -127,15 +127,15 @@ function ManageNotifsScreen({ onBack }: { onBack: () => void }) {
     <SubScreen>
       <SubHeader title="Notifications" onBack={onBack} />
       <div className="px-4 pt-6 pb-4">
-        <h2 className="text-xl font-bold mb-5" style={{ color: '#111' }}>Manage Notifications</h2>
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+        <h2 className="text-xl font-bold mb-5" style={{ color: 'var(--ink)' }}>Manage Notifications</h2>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
           {NOTIF_SETTINGS.map(({ key, label, Icon }, i) => (
             <div key={key}
               className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
-              style={{ borderBottom: i < NOTIF_SETTINGS.length - 1 ? '1px solid #F9FAFB' : 'none' }}
+              style={{ borderBottom: i < NOTIF_SETTINGS.length - 1 ? '1px solid var(--border)' : 'none' }}
               onClick={() => toggle(key)}>
               <IconWrap Icon={Icon} />
-              <span className="flex-1 text-sm font-medium" style={{ color: '#111' }}>{label}</span>
+              <span className="flex-1 text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</span>
               <Switch
                 checked={values[key]}
                 onCheckedChange={() => toggle(key)}
@@ -181,21 +181,21 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
   return (
     <SubScreen>
       <SubHeader title="Paramètres" onBack={onBack} right={
-        <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F3F4F6' }}>
-          <Bell className="w-4 h-4" style={{ color: '#374151' }} />
+        <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: 'var(--surface-2)' }}>
+          <Bell className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
         </button>
       } />
 
       <div className="px-4 pt-6 space-y-5">
-        <h2 className="text-xl font-bold" style={{ color: '#111' }}>General</h2>
+        <h2 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>General</h2>
 
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
           {/* Dark Theme */}
           <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
             onClick={toggleDark}>
             <IconWrap Icon={Eye} />
-            <span className="flex-1 text-sm font-medium" style={{ color: '#111' }}>Dark Theme</span>
+            <span className="flex-1 text-sm font-medium" style={{ color: 'var(--ink)' }}>Dark Theme</span>
             <Switch checked={darkTheme} onCheckedChange={toggleDark} onClick={e => e.stopPropagation()} />
           </div>
 
@@ -203,17 +203,17 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
           <div>
             <button
               className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
-              style={{ borderBottom: '1px solid #F9FAFB' }}
+              style={{ borderBottom: '1px solid var(--border)' }}
               onClick={() => setShowLang(v => !v)}>
               <IconWrap Icon={Languages} />
               <div className="flex-1 text-left">
-                <span className="text-sm font-medium" style={{ color: '#111' }}>Languages</span>
-                <p className="text-xs" style={{ color: '#9CA3AF' }}>{selectedLang}</p>
+                <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>Languages</span>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>{selectedLang}</p>
               </div>
               <ChevronRight className={cn("w-4 h-4 tr", showLang && "rotate-90")} style={{ color: '#C7C7CC' }} />
             </button>
             {showLang && (
-              <div style={{ background: '#F9FAFB', borderBottom: '1px solid #F9FAFB' }}>
+              <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
                 {LANGUAGES.map(lang => (
                   <button key={lang} onClick={() => { setSelectedLang(lang); localStorage.setItem('fb-lang', lang); setShowLang(false) }}
                     className="w-full flex items-center justify-between px-6 py-2.5 text-sm cursor-pointer tr hover:bg-gray-50"
@@ -228,53 +228,53 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
 
           {/* Notifications */}
           <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
             onClick={onNotifs}>
             <IconWrap Icon={Bell} />
-            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Notifications</span>
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Notifications</span>
             <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
           </button>
 
           {/* Security */}
           <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
-            style={{ borderBottom: '1px solid #F9FAFB' }}>
+            style={{ borderBottom: '1px solid var(--border)' }}>
             <IconWrap Icon={ShieldCheck} />
-            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Security</span>
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Security</span>
             <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
           </button>
 
           {/* Contacts */}
           <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
-            style={{ borderBottom: '1px solid #F9FAFB' }}>
+            style={{ borderBottom: '1px solid var(--border)' }}>
             <IconWrap Icon={User} />
-            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Contacts</span>
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Contacts</span>
             <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
           </button>
 
           {/* Face ID And Pin */}
           <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
             onClick={() => navigate('/wallet')}>
             <IconWrap Icon={Fingerprint} />
-            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Face ID And Pin</span>
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Face ID And Pin</span>
             <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
           </button>
 
           {/* Change Password */}
           <button className="w-full flex items-center gap-4 px-4 py-3.5 cursor-pointer tr hover:bg-gray-50"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
             onClick={onChangePassword}>
             <IconWrap Icon={Key} />
-            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Changer le mot de passe</span>
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Changer le mot de passe</span>
             <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
           </button>
 
           {/* Show Balance In Terminal */}
           <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
             onClick={toggleBalance}>
             <IconWrap Icon={Eye} />
-            <span className="flex-1 text-sm font-medium" style={{ color: '#111' }}>Show Balance In Terminal</span>
+            <span className="flex-1 text-sm font-medium" style={{ color: 'var(--ink)' }}>Show Balance In Terminal</span>
             <Switch checked={showBalance} onCheckedChange={toggleBalance} onClick={e => e.stopPropagation()} />
           </div>
 
@@ -291,15 +291,15 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
       {/* Delete confirm modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 flex items-center justify-center px-6" style={{ zIndex: 70, background: 'rgba(0,0,0,0.4)' }}>
-          <div className="w-full max-w-sm rounded-3xl p-6" style={{ background: '#fff' }}>
-            <h3 className="text-lg font-bold mb-2" style={{ color: '#111' }}>Supprimer le compte ?</h3>
-            <p className="text-sm mb-6" style={{ color: '#9CA3AF' }}>
+          <div className="w-full max-w-sm rounded-3xl p-6" style={{ background: 'var(--card-bg)' }}>
+            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--ink)' }}>Supprimer le compte ?</h3>
+            <p className="text-sm mb-6" style={{ color: 'var(--ink-60)' }}>
               Cette action est irréversible. Toutes vos données seront supprimées.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 h-12 rounded-2xl text-sm font-semibold cursor-pointer"
-                style={{ background: '#F3F4F6', color: '#374151' }}>
+                style={{ background: 'var(--surface-2)', color: 'var(--ink-60)' }}>
                 Annuler
               </button>
               <button onClick={handleDeleteAccount}
@@ -332,22 +332,22 @@ function PrivacyScreen({ onBack }: { onBack: () => void }) {
       <div className="px-4 pt-6 space-y-4">
         <GroupCard>
           <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
             onClick={() => toggle('fb-2fa', !twoFA, setTwoFA)}>
             <IconWrap Icon={ShieldCheck} />
             <div className="flex-1">
-              <p className="text-sm font-medium" style={{ color: '#111' }}>Double authentification (2FA)</p>
-              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Protection renforcée du compte</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>Double authentification (2FA)</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Protection renforcée du compte</p>
             </div>
             <Switch checked={twoFA} onCheckedChange={v => toggle('fb-2fa', v, setTwoFA)} onClick={e => e.stopPropagation()} />
           </div>
           <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
             onClick={() => toggle('fb-biometric', !biometric, setBiometric)}>
             <IconWrap Icon={Fingerprint} />
             <div className="flex-1">
-              <p className="text-sm font-medium" style={{ color: '#111' }}>Biométrie</p>
-              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Face ID / Empreinte digitale</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>Biométrie</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Face ID / Empreinte digitale</p>
             </div>
             <Switch checked={biometric} onCheckedChange={v => toggle('fb-biometric', v, setBiometric)} onClick={e => e.stopPropagation()} />
           </div>
@@ -355,8 +355,8 @@ function PrivacyScreen({ onBack }: { onBack: () => void }) {
             onClick={() => toggle('fb-location', !location, setLocation)}>
             <IconWrap Icon={MapPin} />
             <div className="flex-1">
-              <p className="text-sm font-medium" style={{ color: '#111' }}>Localisation</p>
-              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Autorisations de géolocalisation</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>Localisation</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Autorisations de géolocalisation</p>
             </div>
             <Switch checked={location} onCheckedChange={v => toggle('fb-location', v, setLocation)} onClick={e => e.stopPropagation()} />
           </div>
@@ -394,16 +394,16 @@ function ChangePasswordScreen({ onBack }: { onBack: () => void }) {
             <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: '#D1FAE5' }}>
               <Check className="w-8 h-8" style={{ color: '#059669' }} />
             </div>
-            <p className="text-base font-semibold" style={{ color: '#111' }}>Mot de passe modifié !</p>
+            <p className="text-base font-semibold" style={{ color: 'var(--ink)' }}>Mot de passe modifié !</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <p className="text-sm" style={{ color: '#9CA3AF' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-60)' }}>
               Entrez votre nouveau mot de passe. Il doit contenir au moins 6 caractères.
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--ink-60)' }}>
                   Nouveau mot de passe
                 </label>
                 <input
@@ -412,12 +412,12 @@ function ChangePasswordScreen({ onBack }: { onBack: () => void }) {
                   onChange={e => setNewPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full h-12 rounded-2xl px-4 text-base border outline-none"
-                  style={{ borderColor: '#E5E7EB', background: '#fff', color: '#111' }}
+                  style={{ borderColor: '#E5E7EB', background: 'var(--card-bg)', color: 'var(--ink)' }}
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1" style={{ color: '#374151' }}>
+                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--ink-60)' }}>
                   Confirmer le mot de passe
                 </label>
                 <input
@@ -426,7 +426,7 @@ function ChangePasswordScreen({ onBack }: { onBack: () => void }) {
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full h-12 rounded-2xl px-4 text-base border outline-none"
-                  style={{ borderColor: '#E5E7EB', background: '#fff', color: '#111' }}
+                  style={{ borderColor: '#E5E7EB', background: 'var(--card-bg)', color: 'var(--ink)' }}
                   required
                 />
               </div>
@@ -513,14 +513,14 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
   return (
     <SubScreen>
       <SubHeader title="My Profile" onBack={onBack} right={
-        <button className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer" style={{ background: '#F3F4F6' }}>
-          <Bell className="w-4 h-4" style={{ color: '#374151' }} />
+        <button className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer" style={{ background: 'var(--surface-2)' }}>
+          <Bell className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
         </button>
       } />
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
       {/* Avatar */}
-      <div className="flex flex-col items-center pt-6 pb-5" style={{ background: '#fff' }}>
+      <div className="flex flex-col items-center pt-6 pb-5" style={{ background: 'var(--card-bg)' }}>
         <button
           onClick={() => fileInputRef.current?.click()}
           className="relative w-20 h-20 rounded-full overflow-hidden cursor-pointer group"
@@ -532,18 +532,18 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
             {uploadingAvatar ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
           </div>
         </button>
-        <p className="text-base font-bold mt-3" style={{ color: '#111' }}>{profile?.full_name ?? 'Utilisateur'}</p>
+        <p className="text-base font-bold mt-3" style={{ color: 'var(--ink)' }}>{profile?.full_name ?? 'Utilisateur'}</p>
 
         {/* Personal | Business tab */}
         <div className="flex rounded-full overflow-hidden mt-3 border" style={{ borderColor: '#E5E7EB' }}>
           <button onClick={() => setActiveTab('personal')}
             className="px-6 py-1.5 text-sm font-semibold cursor-pointer tr"
-            style={activeTab === 'personal' ? { background: '#fff', color: '#111' } : { background: '#F3F4F6', color: '#9CA3AF' }}>
+            style={activeTab === 'personal' ? { background: 'var(--card-bg)', color: 'var(--ink)' } : { background: 'var(--surface-2)', color: 'var(--ink-60)' }}>
             Personal
           </button>
           <button onClick={() => setActiveTab('business')}
             className="px-6 py-1.5 text-sm font-semibold cursor-pointer tr"
-            style={activeTab === 'business' ? { background: '#fff', color: '#111' } : { background: '#F3F4F6', color: '#9CA3AF' }}>
+            style={activeTab === 'business' ? { background: 'var(--card-bg)', color: 'var(--ink)' } : { background: 'var(--surface-2)', color: 'var(--ink-60)' }}>
             Business
           </button>
         </div>
@@ -559,21 +559,21 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
               onClick={() => key !== 'email' && setEditingField(editingField === key ? null : key)}>
               <IconWrap Icon={Icon} size={36} />
               <div className="flex-1 min-w-0">
-                <p className="text-xs" style={{ color: '#9CA3AF' }}>{label}</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>{label}</p>
                 {editingField === key && key === 'full_name' ? (
                   <input value={fullName} onChange={e => setFullName(e.target.value)}
-                    className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
+                    className="text-sm font-semibold outline-none w-full" style={{ color: 'var(--ink)' }}
                     autoFocus onBlur={saveField} />
                 ) : editingField === key && key === 'phone' ? (
                   <input value={phone} onChange={e => setPhone(e.target.value)}
-                    className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
+                    className="text-sm font-semibold outline-none w-full" style={{ color: 'var(--ink)' }}
                     autoFocus onBlur={saveField} />
                 ) : editingField === key && key === 'address' ? (
                   <input value={address} onChange={e => setAddress(e.target.value)}
-                    className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
+                    className="text-sm font-semibold outline-none w-full" style={{ color: 'var(--ink)' }}
                     autoFocus onBlur={saveField} />
                 ) : (
-                  <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{value}</p>
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>{value}</p>
                 )}
               </div>
               {saving && editingField === key
@@ -640,11 +640,11 @@ function StatementsModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 flex items-end justify-center" style={{ zIndex: 70, background: 'rgba(0,0,0,0.4)' }}>
-      <div className="w-full max-w-md rounded-t-3xl p-6 animate-fade-in-up" style={{ background: '#fff' }}>
+      <div className="w-full max-w-md rounded-t-3xl p-6 animate-fade-in-up" style={{ background: 'var(--card-bg)' }}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold" style={{ color: '#111' }}>Relevés de compte</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer" style={{ background: '#F3F4F6' }}>
-            <X className="w-4 h-4" style={{ color: '#374151' }} />
+          <h2 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>Relevés de compte</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer" style={{ background: 'var(--surface-2)' }}>
+            <X className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
           </button>
         </div>
         <button onClick={exportCSV}
@@ -655,7 +655,7 @@ function StatementsModal({ onClose }: { onClose: () => void }) {
         {loading ? (
           <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="h-12 rounded-xl bg-gray-100 animate-pulse" />)}</div>
         ) : txs.length === 0 ? (
-          <p className="text-sm text-center py-6" style={{ color: '#9CA3AF' }}>Aucune transaction.</p>
+          <p className="text-sm text-center py-6" style={{ color: 'var(--ink-60)' }}>Aucune transaction.</p>
         ) : (
           <div className="space-y-1 max-h-60 overflow-y-auto">
             {txs.map(tx => {
@@ -664,10 +664,10 @@ function StatementsModal({ onClose }: { onClose: () => void }) {
               return (
                 <div key={tx.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate" style={{ color: '#111' }}>
+                    <p className="text-xs font-semibold truncate" style={{ color: 'var(--ink)' }}>
                       {TYPE_LABEL[tx.type] ?? tx.type}{tx.recipient_name ? ` — ${tx.recipient_name}` : ''}
                     </p>
-                    <p className="text-[10px]" style={{ color: '#9CA3AF' }}>{new Date(tx.created_at).toLocaleDateString('fr-FR')}</p>
+                    <p className="text-[10px]" style={{ color: 'var(--ink-60)' }}>{new Date(tx.created_at).toLocaleDateString('fr-FR')}</p>
                   </div>
                   <p className="text-xs font-bold tabular-nums shrink-0" style={{ color: isSend ? '#EF4444' : '#22C55E' }}>
                     {isSend ? '−' : '+'}{curr?.symbol}{tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
@@ -701,11 +701,11 @@ function ShareModal({ name, userCode, onClose }: { name: string; userCode: strin
 
   return (
     <div className="fixed inset-0 flex items-end justify-center" style={{ zIndex: 70, background: 'rgba(0,0,0,0.5)' }}>
-      <div className="w-full max-w-sm rounded-t-3xl overflow-hidden animate-fade-in-up" style={{ background: '#fff' }}>
+      <div className="w-full max-w-sm rounded-t-3xl overflow-hidden animate-fade-in-up" style={{ background: 'var(--card-bg)' }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <h2 className="text-lg font-bold" style={{ color: '#111' }}>Partager mon profil</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer" style={{ background: '#F3F4F6' }}>
-            <X className="w-4 h-4" style={{ color: '#374151' }} />
+          <h2 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>Partager mon profil</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer" style={{ background: 'var(--surface-2)' }}>
+            <X className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
           </button>
         </div>
         <div className="mx-5 mb-5 relative overflow-hidden rounded-2xl p-5" style={{ background: '#4F46E5' }}>
@@ -722,7 +722,7 @@ function ShareModal({ name, userCode, onClose }: { name: string; userCode: strin
         <div className="px-5 pb-6 grid grid-cols-2 gap-3">
           <button onClick={copy}
             className="flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border cursor-pointer tr"
-            style={{ borderColor: '#E5E7EB', color: '#374151' }}>
+            style={{ borderColor: '#E5E7EB', color: 'var(--ink-60)' }}>
             {copied ? <Check className="w-4 h-4" style={{ color: '#22C55E' }} /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copié !' : 'Copier'}
           </button>
@@ -796,7 +796,7 @@ export function ProfilePage() {
   async function handleSignOut() { await signOut(); navigate('/') }
 
   return (
-    <div className="overflow-x-hidden" style={{ background: '#F5F5F7' }}>
+    <div className="overflow-x-hidden" style={{ background: 'var(--surface)' }}>
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
       {showShare && <ShareModal name={profile?.full_name ?? 'Utilisateur'} userCode={displayCode} onClose={() => setShowShare(false)} />}
       {showStatements && <StatementsModal onClose={() => setShowStatements(false)} />}
@@ -804,8 +804,8 @@ export function ProfilePage() {
       {/* ── Main Screen ── */}
       <div className="pb-28">
         {/* Profile header */}
-        <div className="pt-5 pb-6 flex flex-col items-center" style={{ background: '#F5F5F7' }}>
-          <p className="text-base font-bold mb-5" style={{ color: '#111', letterSpacing: '-0.02em' }}>Profile</p>
+        <div className="pt-5 pb-6 flex flex-col items-center" style={{ background: 'var(--surface)' }}>
+          <p className="text-base font-bold mb-5" style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}>Profile</p>
 
           {/* Avatar */}
           <button
@@ -820,7 +820,7 @@ export function ProfilePage() {
             </div>
           </button>
 
-          <p className="text-base font-bold" style={{ color: '#111' }}>{profile?.full_name ?? 'Utilisateur'}</p>
+          <p className="text-base font-bold" style={{ color: 'var(--ink)' }}>{profile?.full_name ?? 'Utilisateur'}</p>
 
           {/* Verified badge */}
           <div className="flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full"
@@ -893,16 +893,16 @@ export function ProfilePage() {
           {/* Statements link */}
           <button onClick={() => setShowStatements(true)}
             className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl cursor-pointer tr"
-            style={{ background: '#fff', border: '1px solid var(--border)' }}>
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
             <IconWrap Icon={Download} />
-            <span className="flex-1 text-left text-sm font-medium" style={{ color: '#111' }}>Relevés de compte (CSV)</span>
+            <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Relevés de compte (CSV)</span>
             <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
           </button>
 
           {/* Sign out */}
           <button onClick={handleSignOut}
             className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl cursor-pointer tr"
-            style={{ background: '#fff', border: '1px solid var(--border)' }}>
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
             <IconWrap Icon={LogOut} color="#EF4444" bg="#FEF2F2" />
             <span className="flex-1 text-left text-sm font-semibold" style={{ color: '#EF4444' }}>Déconnexion</span>
           </button>

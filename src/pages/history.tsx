@@ -124,7 +124,7 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
     <div className="fixed inset-0 z-80 flex items-end justify-center" style={{ zIndex: 80 }}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-t-3xl overflow-hidden animate-fade-in-up"
-        style={{ background: '#fff', borderTop: '2px solid var(--border)', maxHeight: '85vh', overflowY: 'auto' }}>
+        style={{ background: 'var(--card-bg)', borderTop: '2px solid var(--border)', maxHeight: '85vh', overflowY: 'auto' }}>
 
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -133,20 +133,20 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-2 pb-4">
-          <h2 className="text-base font-bold" style={{ color: '#111' }}>Détails de la transaction</h2>
+          <h2 className="text-base font-bold" style={{ color: 'var(--ink)' }}>Détails de la transaction</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer"
-            style={{ background: '#F3F4F6' }}>
+            style={{ background: 'var(--surface-2)' }}>
             <X className="w-4 h-4" style={{ color: '#6B7280' }} />
           </button>
         </div>
 
         {/* Amount block */}
         <div className="mx-5 mb-4 rounded-2xl p-5 flex items-center gap-4"
-          style={{ background: '#F9FAFB', border: '1px solid #F3F4F6' }}>
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <TxBrandIcon tx={tx} />
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#374151' }}>{txLabel(tx)}</p>
-            <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-60)' }}>{txLabel(tx)}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>
               {date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
               {' — '}
               {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
@@ -154,12 +154,12 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
           </div>
           <div className="ml-auto text-right">
             <p className="text-lg font-extrabold tabular-nums" style={{ color: amountColor }}>{amountStr}</p>
-            <p className="text-xs" style={{ color: '#9CA3AF' }}>{curr?.code}</p>
+            <p className="text-xs" style={{ color: 'var(--ink-60)' }}>{curr?.code}</p>
           </div>
         </div>
 
         {/* Payment info table */}
-        <div className="mx-5 mb-4 rounded-2xl overflow-hidden" style={{ border: '1px solid #F3F4F6' }}>
+        <div className="mx-5 mb-4 rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           {[
             { label: 'Type', value: tx.type === 'send' ? 'Envoi' : tx.type === 'receive' ? 'Réception' : tx.type === 'deposit' ? 'Dépôt' : tx.type === 'convert' ? 'Conversion' : tx.type === 'bill_payment' ? 'Facture' : 'Retrait' },
             { label: 'Catégorie', value: tx.type === 'bill_payment' ? 'Paiement facture' : tx.type === 'convert' ? 'Conversion devise' : 'Virement' },
@@ -170,8 +170,8 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
           ].filter(Boolean).map((row, i, arr) => (
             <div key={i} className="flex items-center justify-between px-4 py-3"
               style={{ borderBottom: i < arr.length - 1 ? '1px solid #F9FAFB' : 'none' }}>
-              <p className="text-sm" style={{ color: '#9CA3AF' }}>{row!.label}</p>
-              <p className="text-sm font-semibold" style={{ color: '#111' }}>{row!.value}</p>
+              <p className="text-sm" style={{ color: 'var(--ink-60)' }}>{row!.label}</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{row!.value}</p>
             </div>
           ))}
         </div>
@@ -186,13 +186,13 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
               setTimeout(() => setShareToast(null), 2500)
             }}
             className="h-11 rounded-2xl text-sm font-semibold cursor-pointer tr hover:opacity-80"
-            style={{ background: '#F3F4F6', color: '#374151' }}>
+            style={{ background: 'var(--surface-2)', color: 'var(--ink-60)' }}>
             Copier réf.
           </button>
           <button
             onClick={handleShare}
             className="h-11 rounded-2xl text-sm font-semibold cursor-pointer tr hover:opacity-80"
-            style={{ background: '#F3F4F6', color: '#374151' }}>
+            style={{ background: 'var(--surface-2)', color: 'var(--ink-60)' }}>
             Partager
           </button>
         </div>
@@ -207,7 +207,7 @@ function TxDetailSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }
           <button
             onClick={handleShare}
             className="w-full h-12 rounded-2xl text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 hover:opacity-80 tr"
-            style={{ background: '#F9FAFB', color: '#374151', border: '1px solid #F3F4F6' }}>
+            style={{ background: 'var(--surface)', color: 'var(--ink-60)', border: '1px solid var(--border)' }}>
             <Share2 className="w-4 h-4" /> Partager le reçu
           </button>
         </div>
@@ -233,14 +233,14 @@ function TransferDetailsView({ tx, onClose }: { tx: Transaction; onClose: () => 
   const date = new Date(tx.created_at)
 
   return (
-    <div className="fixed inset-x-0 bottom-0 flex flex-col" style={{ top: 56, zIndex: 90, background: '#F9FAFB' }}>
+    <div className="fixed inset-x-0 bottom-0 flex flex-col" style={{ top: 56, zIndex: 90, background: 'var(--surface)' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 h-14 shrink-0" style={{ background: '#fff', borderBottom: '1px solid #F3F4F6' }}>
+      <div className="flex items-center gap-3 px-4 h-14 shrink-0" style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--border)' }}>
         <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer"
-          style={{ background: '#F3F4F6' }}>
-          <ChevronLeft className="w-4 h-4" style={{ color: '#374151' }} />
+          style={{ background: 'var(--surface-2)' }}>
+          <ChevronLeft className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />
         </button>
-        <h2 className="text-base font-bold" style={{ color: '#111' }}>Détails du transfert</h2>
+        <h2 className="text-base font-bold" style={{ color: 'var(--ink)' }}>Détails du transfert</h2>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -268,7 +268,7 @@ function TransferDetailsView({ tx, onClose }: { tx: Transaction; onClose: () => 
           </div>
 
           {/* Info rows */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #F3F4F6' }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
             {[
               tx.recipient_name ? { label: 'Bénéficiaire', value: tx.recipient_name } : null,
               { label: 'Moyen de paiement', value: tx.currency + ' Wallet' },
@@ -279,8 +279,8 @@ function TransferDetailsView({ tx, onClose }: { tx: Transaction; onClose: () => 
             ].filter(Boolean).map((row, i, arr) => (
               <div key={i} className="flex items-center justify-between px-4 py-3.5"
                 style={{ borderBottom: i < arr.length - 1 ? '1px solid #F9FAFB' : 'none' }}>
-                <p className="text-sm" style={{ color: '#9CA3AF' }}>{row!.label}</p>
-                <p className="text-sm font-semibold" style={{ color: '#111', maxWidth: 200, textAlign: 'right' }}>{row!.value}</p>
+                <p className="text-sm" style={{ color: 'var(--ink-60)' }}>{row!.label}</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--ink)', maxWidth: 200, textAlign: 'right' }}>{row!.value}</p>
               </div>
             ))}
           </div>
@@ -352,8 +352,8 @@ function StatsTab({ accounts, transactions, loading }: {
       {/* Card carousel */}
       <div>
         <div className="flex items-center justify-between px-4 mb-3">
-          <p className="text-sm font-semibold" style={{ color: '#374151' }}>Mes comptes</p>
-          <p className="text-xs" style={{ color: '#9CA3AF' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--ink-60)' }}>Mes comptes</p>
+          <p className="text-xs" style={{ color: 'var(--ink-60)' }}>
             Mis à jour {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
           </p>
         </div>
@@ -385,16 +385,16 @@ function StatsTab({ accounts, transactions, loading }: {
 
       {/* Balance + Spending */}
       <div className="grid grid-cols-2 gap-3 px-4">
-        <div className="rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
-          <p className="text-xs mb-1" style={{ color: '#9CA3AF' }}>Total Balance</p>
+        <div className="rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)',  }}>
+          <p className="text-xs mb-1" style={{ color: 'var(--ink-60)' }}>Total Balance</p>
           {loading
             ? <div className="h-7 w-28 rounded-lg bg-gray-100 animate-pulse" />
-            : <p className="text-xl font-extrabold tabular-nums" style={{ color: '#111', letterSpacing: '-0.02em' }}>
+            : <p className="text-xl font-extrabold tabular-nums" style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}>
                 ${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>}
         </div>
-        <div className="rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
-          <p className="text-xs mb-1" style={{ color: '#9CA3AF' }}>Total Dépensé</p>
+        <div className="rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)',  }}>
+          <p className="text-xs mb-1" style={{ color: 'var(--ink-60)' }}>Total Dépensé</p>
           {loading
             ? <div className="h-7 w-28 rounded-lg bg-gray-100 animate-pulse" />
             : <p className="text-xl font-extrabold tabular-nums" style={{ color: '#F43F5E', letterSpacing: '-0.02em' }}>
@@ -404,10 +404,10 @@ function StatsTab({ accounts, transactions, loading }: {
       </div>
 
       {/* Area chart */}
-      <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
+      <div className="mx-4 rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)',  }}>
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-bold" style={{ color: '#111' }}>Dépenses mensuelles</p>
-          <p className="text-xs" style={{ color: '#9CA3AF' }}>6 derniers mois · USD</p>
+          <p className="text-sm font-bold" style={{ color: 'var(--ink)' }}>Dépenses mensuelles</p>
+          <p className="text-xs" style={{ color: 'var(--ink-60)' }}>6 derniers mois · USD</p>
         </div>
         {loading
           ? <Skeleton className="h-36 rounded-xl" />
@@ -428,7 +428,7 @@ function StatsTab({ accounts, transactions, loading }: {
                 <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false}
                   tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)} />
                 <Tooltip
-                  contentStyle={{ background: '#fff', border: '1px solid #F3F4F6', borderRadius: 12, fontSize: 11 }}
+                  contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 11 }}
                   cursor={{ stroke: '#F3F4F6', strokeWidth: 1 }}
                 />
                 <Area type="monotone" dataKey="dépenses" name="Dépenses" stroke="#F43F5E" strokeWidth={2} fill="url(#gradDep)" />
@@ -482,11 +482,11 @@ function HistoryTab({ accounts, transactions, loading }: {
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
-        <p className="text-xs mb-1 capitalize" style={{ color: '#9CA3AF' }}>Reçu en {currentMonthName}</p>
+      <div className="mx-4 rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)',  }}>
+        <p className="text-xs mb-1 capitalize" style={{ color: 'var(--ink-60)' }}>Reçu en {currentMonthName}</p>
         {loading
           ? <div className="h-8 w-36 rounded-lg bg-gray-100 animate-pulse" />
-          : <p className="text-2xl font-extrabold tabular-nums" style={{ color: '#111', letterSpacing: '-0.03em' }}>
+          : <p className="text-2xl font-extrabold tabular-nums" style={{ color: 'var(--ink)', letterSpacing: '-0.03em' }}>
               ${totalIn.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>}
       </div>
@@ -498,7 +498,7 @@ function HistoryTab({ accounts, transactions, loading }: {
             className="flex-1 h-9 rounded-xl text-sm font-semibold cursor-pointer tr"
             style={period === p
               ? { background: '#9fe870', color: '#0e0f0c' }
-              : { background: '#F3F4F6', color: '#9CA3AF' }}>
+              : { background: 'var(--surface-2)', color: 'var(--ink-60)' }}>
             {p}
           </button>
         ))}
@@ -506,15 +506,15 @@ function HistoryTab({ accounts, transactions, loading }: {
 
       {/* Account bar chart */}
       {barData.length > 0 && (
-        <div className="mx-4 rounded-2xl p-4" style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
-          <p className="text-xs font-semibold mb-3" style={{ color: '#374151' }}>Dépenses par compte</p>
+        <div className="mx-4 rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)',  }}>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'var(--ink-60)' }}>Dépenses par compte</p>
           <ResponsiveContainer width="100%" height={100}>
             <BarChart data={barData} barSize={28} margin={{ top: 4, right: 0, left: -24, bottom: 0 }}>
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false}
                 tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)} />
               <Tooltip
-                contentStyle={{ background: '#fff', border: '1px solid #F3F4F6', borderRadius: 12, fontSize: 11 }}
+                contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 11 }}
                 cursor={{ fill: '#F9FAFB' }}
               />
               <Bar dataKey="montant" name="Dépenses" radius={[6, 6, 0, 0]}
@@ -530,14 +530,14 @@ function HistoryTab({ accounts, transactions, loading }: {
         {loading ? (
           [1,2,3,4,5].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)
         ) : grouped.length === 0 ? (
-          <div className="rounded-2xl p-10 text-center" style={{ background: '#fff', border: '1px solid #F3F4F6' }}>
-            <p className="text-sm font-semibold" style={{ color: '#374151' }}>Aucune transaction</p>
-            <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>pour cette période</p>
+          <div className="rounded-2xl p-10 text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--ink-60)' }}>Aucune transaction</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--ink-60)' }}>pour cette période</p>
           </div>
         ) : (
           grouped.map(group => (
             <div key={group.label}>
-              <p className="text-xs font-bold mb-2" style={{ color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <p className="text-xs font-bold mb-2" style={{ color: 'var(--ink-60)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {group.label}
               </p>
               <div className="space-y-2">
@@ -553,18 +553,18 @@ function HistoryTab({ accounts, transactions, loading }: {
                         setShowTransferDetails(tx.type === 'send' || tx.type === 'receive')
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left cursor-pointer tr"
-                      style={{ background: '#fff', border: '1px solid #F3F4F6',  }}>
+                      style={{ background: 'var(--card-bg)', border: '1px solid var(--border)',  }}>
                       <TxBrandIcon tx={tx} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{txLabel(tx)}</p>
-                        <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>{txLabel(tx)}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>
                           {new Date(tx.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                           {tx.reference ? ` · ${tx.reference}` : ''}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold tabular-nums" style={{ color: amountColor }}>{amountStr}</p>
-                        <p className="text-xs" style={{ color: '#9CA3AF' }}>{curr?.code}</p>
+                        <p className="text-xs" style={{ color: 'var(--ink-60)' }}>{curr?.code}</p>
                       </div>
                     </button>
                   )
@@ -612,28 +612,28 @@ export function HistoryPage() {
   }, [user])
 
   return (
-    <div className="overflow-x-hidden" style={{ background: '#F9FAFB' }}>
+    <div className="overflow-x-hidden" style={{ background: 'var(--surface)' }}>
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 px-4 pt-5 pb-3" style={{ background: '#F9FAFB' }}>
-        <h1 className="text-xl font-extrabold mb-4" style={{ color: '#111', letterSpacing: '-0.03em' }}>Statistiques</h1>
+      <div className="sticky top-0 z-30 px-4 pt-5 pb-3" style={{ background: 'var(--surface)' }}>
+        <h1 className="text-xl font-extrabold mb-4" style={{ color: 'var(--ink)', letterSpacing: '-0.03em' }}>Statistiques</h1>
 
         {/* Tabs */}
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: '#F3F4F6' }}>
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--surface-2)' }}>
           <button
             onClick={() => setTab('stats')}
             className="flex-1 h-9 rounded-lg text-sm font-semibold cursor-pointer tr"
             style={tab === 'stats'
-              ? { background: '#fff', color: '#111', border: '1px solid var(--border)' }
-              : { color: '#9CA3AF' }}>
+              ? { background: 'var(--card-bg)', color: 'var(--ink)', border: '1px solid var(--border)' }
+              : { color: 'var(--ink-60)' }}>
             Statistiques
           </button>
           <button
             onClick={() => setTab('history')}
             className="flex-1 h-9 rounded-lg text-sm font-semibold cursor-pointer tr"
             style={tab === 'history'
-              ? { background: '#fff', color: '#111', border: '1px solid var(--border)' }
-              : { color: '#9CA3AF' }}>
+              ? { background: 'var(--card-bg)', color: 'var(--ink)', border: '1px solid var(--border)' }
+              : { color: 'var(--ink-60)' }}>
             Historique
           </button>
         </div>
