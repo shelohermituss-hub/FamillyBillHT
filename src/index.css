@@ -70,53 +70,59 @@
   --nav-bg:    rgba(255,255,255,0.97);
 }
 
-/* ── Dark Mode OLED ───────────────────────────────── */
+/* ── Dark Mode (Charcoal / Slate) ─────────────────── */
 .dark {
   color-scheme: dark;
 
+  /* Brand — identique clair/sombre */
   --lime:        #1A56DB;
   --lime-hover:  #2563EB;
-  --lime-light:  rgba(26,86,219,0.18);
-  --ink:         #EEF2FF;
-  --ink-60:      rgba(238,242,255,0.60);
-  --ink-30:      rgba(238,242,255,0.30);
-  --ink-10:      rgba(238,242,255,0.08);
-  --surface:     #000000;
-  --surface-2:   #111111;
-  --card-bg:     #111111;
-  --border:      rgba(255,255,255,0.09);
-  --navy:        #EEF2FF;
+  --lime-light:  rgba(26,86,219,0.20);
 
-  --background:           #000000;
-  --foreground:           #EEF2FF;
-  --card:                 #111111;
-  --card-foreground:      #EEF2FF;
-  --popover:              #1A1A1A;
-  --popover-foreground:   #EEF2FF;
+  /* Texte — gris-blanc chaleureux */
+  --ink:         #E2E8F0;
+  --ink-60:      rgba(226,232,240,0.60);
+  --ink-30:      rgba(226,232,240,0.30);
+  --ink-10:      rgba(226,232,240,0.08);
+
+  /* Surfaces — gris-ardoise en couches */
+  --surface:     #0F1117;   /* fond de page  — gris très foncé */
+  --surface-2:   #1A1D27;   /* chips, inputs */
+  --card-bg:     #1E2130;   /* cartes élevées */
+  --border:      rgba(255,255,255,0.08);
+  --navy:        #E2E8F0;
+
+  /* Shadcn tokens */
+  --background:           #0F1117;
+  --foreground:           #E2E8F0;
+  --card:                 #1E2130;
+  --card-foreground:      #E2E8F0;
+  --popover:              #252836;
+  --popover-foreground:   #E2E8F0;
   --primary:              #1A56DB;
   --primary-foreground:   #ffffff;
-  --secondary:            #1A1A1A;
-  --secondary-foreground: #EEF2FF;
-  --muted:                #1A1A1A;
-  --muted-foreground:     rgba(238,242,255,0.50);
-  --accent:               rgba(26,86,219,0.18);
-  --accent-foreground:    #EEF2FF;
+  --secondary:            #1A1D27;
+  --secondary-foreground: #E2E8F0;
+  --muted:                #1A1D27;
+  --muted-foreground:     rgba(226,232,240,0.50);
+  --accent:               rgba(26,86,219,0.20);
+  --accent-foreground:    #E2E8F0;
   --destructive:          #FF453A;
   --destructive-foreground: #ffffff;
-  --input:                rgba(255,255,255,0.12);
+  --input:                rgba(255,255,255,0.10);
   --ring:                 #1A56DB;
 
   /* Layout backdrops */
-  --header-bg: rgba(0,0,0,0.92);
-  --nav-bg:    rgba(17,17,17,0.97);
+  --header-bg: rgba(15,17,23,0.92);
+  --nav-bg:    rgba(15,17,23,0.97);
 }
 
 /* Card-dark stays navy in both modes */
 .dark .card-dark { background: #0D1B4B; }
 
-/* Floating shadows are stronger on dark backgrounds */
-.dark .shadow-float    { box-shadow: 0 4px 20px rgba(0,0,0,0.50); }
-.dark .shadow-float-lg { box-shadow: 0 8px 32px rgba(0,0,0,0.60); }
+/* Floating shadows stronger on dark */
+.dark .shadow-float    { box-shadow: 0 4px 24px rgba(0,0,0,0.45); }
+.dark .shadow-float-lg { box-shadow: 0 8px 40px rgba(0,0,0,0.55); }
 
 /* ── Keyframes ────────────────────────────────────── */
 @keyframes fadeInUp {

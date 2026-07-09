@@ -34,12 +34,12 @@ const CURRENCIES = ['HTG', 'USD', 'EUR', 'CAD', 'BRL'] as const
 function BeneficiarySkeleton() {
   return (
     <div className="flex items-center gap-3 p-4 animate-pulse">
-      <div className="w-11 h-11 rounded-2xl shrink-0" style={{ background: '#F3F4F6' }} />
+      <div className="w-11 h-11 rounded-2xl shrink-0" style={{ background: 'var(--surface-2)' }} />
       <div className="flex-1 space-y-2">
-        <div className="h-4 rounded-lg w-1/2" style={{ background: '#F3F4F6' }} />
-        <div className="h-3 rounded-lg w-2/3" style={{ background: '#F3F4F6' }} />
+        <div className="h-4 rounded-lg w-1/2" style={{ background: 'var(--surface-2)' }} />
+        <div className="h-3 rounded-lg w-2/3" style={{ background: 'var(--surface-2)' }} />
       </div>
-      <div className="h-8 w-20 rounded-xl" style={{ background: '#F3F4F6' }} />
+      <div className="h-8 w-20 rounded-xl" style={{ background: 'var(--surface-2)' }} />
     </div>
   )
 }
@@ -229,11 +229,11 @@ function AddBeneficiaryDrawer({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
       <div
         className="relative w-full rounded-t-3xl overflow-hidden animate-fade-in-up"
-        style={{ background: '#ffffff', borderTop: '2px solid var(--border)', maxHeight: '92vh', overflowY: 'auto' }}
+        style={{ background: 'var(--card-bg)', borderTop: '2px solid var(--border)', maxHeight: '92vh', overflowY: 'auto' }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full" style={{ background: '#DDE1F0' }} />
+          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--surface-2)' }} />
         </div>
 
         {/* Header */}

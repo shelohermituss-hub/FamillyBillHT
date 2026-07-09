@@ -80,7 +80,7 @@ function RowItem({
       style={{ borderBottom: last ? 'none' : '1px solid var(--border)' }}>
       <IconWrap Icon={Icon} />
       <span className="flex-1 text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</span>
-      {right !== undefined ? right : <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />}
+      {right !== undefined ? right : <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />}
     </button>
   )
 }
@@ -210,7 +210,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
                 <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>Languages</span>
                 <p className="text-xs" style={{ color: 'var(--ink-60)' }}>{selectedLang}</p>
               </div>
-              <ChevronRight className={cn("w-4 h-4 tr", showLang && "rotate-90")} style={{ color: '#C7C7CC' }} />
+              <ChevronRight className={cn("w-4 h-4 tr", showLang && "rotate-90")} style={{ color: 'var(--ink-30)' }} />
             </button>
             {showLang && (
               <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
@@ -219,7 +219,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
                     className="w-full flex items-center justify-between px-6 py-2.5 text-sm cursor-pointer tr hover:bg-gray-50"
                     style={{ color: lang === selectedLang ? '#4F46E5' : '#374151' }}>
                     {lang}
-                    {lang === selectedLang && <Check className="w-3.5 h-3.5" style={{ color: '#4F46E5' }} />}
+                    {lang === selectedLang && <Check className="w-3.5 h-3.5" style={{ color: 'var(--lime)' }} />}
                   </button>
                 ))}
               </div>
@@ -232,7 +232,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
             onClick={onNotifs}>
             <IconWrap Icon={Bell} />
             <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Notifications</span>
-            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+            <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
           </button>
 
           {/* Security */}
@@ -240,7 +240,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
             style={{ borderBottom: '1px solid var(--border)' }}>
             <IconWrap Icon={ShieldCheck} />
             <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Security</span>
-            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+            <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
           </button>
 
           {/* Contacts */}
@@ -248,7 +248,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
             style={{ borderBottom: '1px solid var(--border)' }}>
             <IconWrap Icon={User} />
             <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Contacts</span>
-            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+            <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
           </button>
 
           {/* Face ID And Pin */}
@@ -257,7 +257,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
             onClick={() => navigate('/wallet')}>
             <IconWrap Icon={Fingerprint} />
             <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Face ID And Pin</span>
-            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+            <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
           </button>
 
           {/* Change Password */}
@@ -266,7 +266,7 @@ function SettingsScreen({ onBack, onNotifs, onChangePassword }: { onBack: () => 
             onClick={onChangePassword}>
             <IconWrap Icon={Key} />
             <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Changer le mot de passe</span>
-            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+            <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
           </button>
 
           {/* Show Balance In Terminal */}
@@ -577,10 +577,10 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
                 )}
               </div>
               {saving && editingField === key
-                ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#4F46E5' }} />
+                ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--lime)' }} />
                 : saved && editingField === key
                   ? <Check className="w-4 h-4" style={{ color: '#22C55E' }} />
-                  : <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />}
+                  : <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />}
             </button>
           ))}
         </GroupCard>
@@ -864,7 +864,7 @@ export function ProfilePage() {
                       style={{ background: '#9fe870', color: '#0e0f0c' }}>
                       {(profile as any)?.role === 'super_admin' ? 'SUPER' : 'ADMIN'}
                     </span>
-                    <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+                    <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
                   </div>
                 }
               />
@@ -896,7 +896,7 @@ export function ProfilePage() {
             style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
             <IconWrap Icon={Download} />
             <span className="flex-1 text-left text-sm font-medium" style={{ color: 'var(--ink)' }}>Relevés de compte (CSV)</span>
-            <ChevronRight className="w-4 h-4" style={{ color: '#C7C7CC' }} />
+            <ChevronRight className="w-4 h-4" style={{ color: 'var(--ink-30)' }} />
           </button>
 
           {/* Sign out */}

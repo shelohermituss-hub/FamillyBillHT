@@ -57,11 +57,11 @@ const TYPE_CONFIG: Record<NotifType, TypeConfig> = {
 function NotifSkeleton() {
   return (
     <div className="flex gap-3 px-4 py-4 animate-pulse">
-      <div className="w-10 h-10 rounded-xl shrink-0" style={{ background: '#F3F4F6' }} />
+      <div className="w-10 h-10 rounded-xl shrink-0" style={{ background: 'var(--surface-2)' }} />
       <div className="flex-1 space-y-2">
-        <div className="h-4 rounded-lg w-3/4" style={{ background: '#F3F4F6' }} />
-        <div className="h-3 rounded-lg w-full" style={{ background: '#F3F4F6' }} />
-        <div className="h-3 rounded-lg w-1/3" style={{ background: '#F3F4F6' }} />
+        <div className="h-4 rounded-lg w-3/4" style={{ background: 'var(--surface-2)' }} />
+        <div className="h-3 rounded-lg w-full" style={{ background: 'var(--surface-2)' }} />
+        <div className="h-3 rounded-lg w-1/3" style={{ background: 'var(--surface-2)' }} />
       </div>
     </div>
   )

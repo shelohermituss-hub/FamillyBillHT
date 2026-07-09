@@ -209,19 +209,19 @@ function PinPad({ value, onChange, onBiometric }: {
           <button key={n} onClick={() => press(n)}
             className="h-16 rounded-2xl flex flex-col items-center justify-center gap-0.5 cursor-pointer tr active:scale-95"
             style={{ background: 'var(--surface-2)' }}>
-            <span className="font-bold text-xl" style={{ color: '#0D1B4B' }}>{n}</span>
+            <span className="font-bold text-xl" style={{ color: 'var(--ink)' }}>{n}</span>
             {s && <span style={{ fontSize: 7, color: 'rgba(13,27,75,0.4)', letterSpacing: '0.12em', fontWeight: 600 }}>{s}</span>}
           </button>
         )))}
         <button onClick={onBiometric}
           className="h-16 rounded-2xl flex items-center justify-center cursor-pointer tr active:scale-95"
           style={{ background: 'var(--surface-2)' }}>
-          <Fingerprint className="w-6 h-6" style={{ color: 'rgba(13,27,75,0.45)' }} />
+          <Fingerprint className="w-6 h-6" style={{ color: 'var(--ink-60)' }} />
         </button>
         <button onClick={() => press('0')}
           className="h-16 rounded-2xl flex flex-col items-center justify-center gap-0.5 cursor-pointer tr active:scale-95"
           style={{ background: 'var(--surface-2)' }}>
-          <span className="font-bold text-xl" style={{ color: '#0D1B4B' }}>0</span>
+          <span className="font-bold text-xl" style={{ color: 'var(--ink)' }}>0</span>
           <span style={{ fontSize: 7, color: 'rgba(13,27,75,0.4)', letterSpacing: '0.12em', fontWeight: 600 }}>+</span>
         </button>
         <button onClick={del}
@@ -263,9 +263,9 @@ function ScreenOverlay({ children, onBack, title }: {
         <button onClick={onBack}
           className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr shrink-0"
           style={{ background: 'var(--surface-2)' }}>
-          <ChevronLeft className="w-5 h-5" style={{ color: '#0D1B4B' }} />
+          <ChevronLeft className="w-5 h-5" style={{ color: 'var(--ink)' }} />
         </button>
-        <h1 className="font-bold text-base flex-1 truncate" style={{ color: '#0D1B4B', letterSpacing: '-0.02em' }}>{title}</h1>
+        <h1 className="font-bold text-base flex-1 truncate" style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}>{title}</h1>
       </div>
       {/* Scrollable content — pb-28 clears the bottom nav */}
       <div className="flex-1 overflow-y-auto overscroll-contain"
@@ -297,11 +297,11 @@ function WalletPinModal({ acc, user, onSuccess, onCancel }: {
       <div className="relative w-full max-w-lg rounded-t-3xl animate-fade-in-up overflow-hidden" style={{ background: 'var(--card-bg)' }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div>
-            <p className="font-bold text-base" style={{ color: '#0D1B4B' }}>Code PIN requis</p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.5)' }}>Portefeuille {acc.currency}</p>
+            <p className="font-bold text-base" style={{ color: 'var(--ink)' }}>Code PIN requis</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Portefeuille {acc.currency}</p>
           </div>
           <button onClick={onCancel} className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer tr" style={{ background: 'var(--surface-2)' }}>
-            <X className="w-4 h-4" style={{ color: '#0D1B4B' }} />
+            <X className="w-4 h-4" style={{ color: 'var(--ink)' }} />
           </button>
         </div>
         <div className="px-5 pb-4"><CardFront acc={acc} user={user} height={120} /></div>
@@ -323,15 +323,15 @@ function BlockConfirmModal({ acc, onCancel, onConfirm }: {
           <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: '#FEF2F2' }}>
             <AlertTriangle className="w-8 h-8" style={{ color: '#DC2626' }} />
           </div>
-          <h2 className="text-lg font-bold" style={{ color: '#0D1B4B' }}>Bloquer ce portefeuille ?</h2>
-          <p className="text-sm" style={{ color: 'rgba(13,27,75,0.6)', maxWidth: 280 }}>
+          <h2 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>Bloquer ce portefeuille ?</h2>
+          <p className="text-sm" style={{ color: 'var(--ink-60)', maxWidth: 280 }}>
             Le portefeuille {acc.currency} sera suspendu. Toutes les transactions seront bloquées.
           </p>
         </div>
         <div className="flex gap-3">
           <button onClick={onCancel}
             className="flex-1 h-12 rounded-2xl font-semibold text-sm cursor-pointer tr border"
-            style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: 'var(--card-bg)' }}>
+            style={{ borderColor: 'var(--border)', color: 'var(--ink)', background: 'var(--card-bg)' }}>
             Annuler
           </button>
           <button onClick={onConfirm}
@@ -642,7 +642,7 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
       </div>
 
       {/* Sticky CTA */}
-      <div className="shrink-0 px-4 py-4 pb-6" style={{ borderTop: '1px solid #F3F4F6', background: 'var(--card-bg)' }}>
+      <div className="shrink-0 px-4 py-4 pb-6" style={{ borderTop: '1px solid var(--border)', background: 'var(--card-bg)' }}>
         <button
           onClick={() => method === 'card' ? setStep('select-card') : processPayment()}
           disabled={!canNext || loading}
@@ -705,14 +705,14 @@ function DetailsScreen({ acc, user, onBack }: { acc: CurrencyAccount; user: User
             <div key={label} className="flex items-center px-4 py-4"
               style={{ borderBottom: i < arr.length - 1 ? '1px solid #F3F3F6' : 'none' }}>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>{label}</p>
-                <p className="font-semibold text-sm truncate" style={{ color: '#0D1B4B', letterSpacing: mask ? '0.12em' : '0', fontFamily: mask ? 'monospace' : 'inherit' }}>
+                <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--ink-60)' }}>{label}</p>
+                <p className="font-semibold text-sm truncate" style={{ color: 'var(--ink)', letterSpacing: mask ? '0.12em' : '0', fontFamily: mask ? 'monospace' : 'inherit' }}>
                   {mask ? '•••• •••• ••••' : value}
                 </p>
               </div>
               {toggle && (
                 <button onClick={toggle} className="ml-3 w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr shrink-0" style={{ background: 'var(--surface-2)' }}>
-                  {mask ? <EyeOff className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.5)' }} /> : <Eye className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.5)' }} />}
+                  {mask ? <EyeOff className="w-4 h-4" style={{ color: 'var(--ink-60)' }} /> : <Eye className="w-4 h-4" style={{ color: 'var(--ink-60)' }} />}
                 </button>
               )}
             </div>
@@ -759,7 +759,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
           </button>
           <button onClick={onCardBack}
             className="flex-1 h-11 rounded-2xl font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer tr active:scale-[0.97]"
-            style={{ background: 'var(--surface-2)', color: '#0D1B4B' }}>
+            style={{ background: 'var(--surface-2)', color: 'var(--ink)' }}>
             <RefreshCw className="w-4 h-4" />
             Vue arrière
           </button>
@@ -774,22 +774,22 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
           <div className="flex items-center px-4 py-4 gap-3" style={{ borderBottom: '1px solid var(--border)' }}>
             <div className="flex-1">
-              <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Paiements en ligne</p>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Autoriser les achats internet</p>
+              <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>Paiements en ligne</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Autoriser les achats internet</p>
             </div>
             <Toggle on={online} onChange={v => { setOnline(v); persist('online', v) }} />
           </div>
           <div style={{ borderBottom: '1px solid var(--border)' }}>
             <div className="flex items-center px-4 py-4 gap-3">
               <div className="flex-1">
-                <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Activer la limite</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Définir un plafond mensuel</p>
+                <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>Activer la limite</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Définir un plafond mensuel</p>
               </div>
               <Toggle on={limit} onChange={v => { setLimit(v); persist('limit', v) }} />
             </div>
             {limit && (
               <div className="px-4 pb-4">
-                <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: '#EEF3FF' }}>
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'var(--lime-light)' }}>
                   <span className="font-semibold" style={{ color: '#1A56DB' }}>{curr?.symbol}</span>
                   <input type="number" placeholder="Montant du plafond"
                     value={limitAmt}
@@ -802,8 +802,8 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
           </div>
           <div className="flex items-center px-4 py-4 gap-3">
             <div className="flex-1">
-              <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Ajouter à Apple Pay</p>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Payer avec iPhone / Apple Watch</p>
+              <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>Ajouter à Apple Pay</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Payer avec iPhone / Apple Watch</p>
             </div>
             <Toggle on={apple} onChange={v => { setApple(v); persist('apple', v) }} />
           </div>
@@ -818,7 +818,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
             <button key={label} onClick={action}
               className="w-full flex items-center justify-between px-4 py-4 cursor-pointer tr"
               style={{ borderBottom: i < 2 ? '1px solid #F3F3F6' : 'none' }}>
-              <span className="text-sm font-medium" style={{ color: '#0D1B4B' }}>{label}</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</span>
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </button>
           ))}
@@ -912,7 +912,7 @@ function CardBackScreen({ acc, onBack, onBlock }: {
           </button>
           <button onClick={onBack}
             className="flex-1 h-11 rounded-2xl font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer tr active:scale-[0.97]"
-            style={{ background: 'var(--surface-2)', color: '#0D1B4B' }}>
+            style={{ background: 'var(--surface-2)', color: 'var(--ink)' }}>
             <ChevronLeft className="w-4 h-4" />Retour
           </button>
           <button onClick={() => setShowBlock(true)}
@@ -923,16 +923,16 @@ function CardBackScreen({ acc, onBack, onBlock }: {
         </div>
         {/* Month limit card */}
         <div className="rounded-2xl p-4" style={{ background: 'var(--card-bg)' }}>
-          <p className="text-xs font-semibold mb-3" style={{ color: 'rgba(13,27,75,0.45)', letterSpacing: '0.08em' }}>LIMITE MENSUELLE</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'var(--ink-60)', letterSpacing: '0.08em' }}>LIMITE MENSUELLE</p>
           <div className="flex items-end justify-between mb-3">
             <div>
-              <p className="text-xs mb-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Utilisé</p>
-              <p className="font-bold text-xl" style={{ color: '#0D1B4B' }}>
+              <p className="text-xs mb-0.5" style={{ color: 'var(--ink-60)' }}>Utilisé</p>
+              <p className="font-bold text-xl" style={{ color: 'var(--ink)' }}>
                 {curr?.symbol} {(acc.balance * 0.3).toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs mb-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Plafond</p>
+              <p className="text-xs mb-0.5" style={{ color: 'var(--ink-60)' }}>Plafond</p>
               <p className="font-bold text-xl" style={{ color: cs.glow }}>
                 {curr?.symbol} {localStorage.getItem(`fb-limit-amt-${acc.id}`)
                   ? parseFloat(localStorage.getItem(`fb-limit-amt-${acc.id}`)!).toLocaleString('fr-FR')
@@ -954,11 +954,11 @@ function CardBackScreen({ acc, onBack, onBlock }: {
               className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr"
               style={{ borderBottom: i < 1 ? '1px solid #F3F3F6' : 'none' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-                <Icon className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
+                <Icon className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold" style={{ color: '#0D1B4B' }}>{label}</p>
-                <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>{desc}</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{label}</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>{desc}</p>
               </div>
               <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </button>
@@ -991,12 +991,12 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
             {/* Code PIN */}
             <button onClick={onChangePIN}
               className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EEF3FF' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--lime-light)' }}>
                 <Key className="w-5 h-5" style={{ color: '#1A56DB' }} />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold" style={{ color: '#0D1B4B' }}>Code PIN</p>
-                <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>Modifier votre code secret</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Code PIN</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>Modifier votre code secret</p>
               </div>
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </button>
@@ -1008,18 +1008,18 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
               </div>
               <div className="flex-1 text-left">
                 <p className="text-sm font-semibold" style={{ color: '#DC2626' }}>Bloquer le portefeuille</p>
-                <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>Suspendre toutes les transactions</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>Suspendre toutes les transactions</p>
               </div>
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </button>
             {/* Notifications */}
             <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-                <Bell className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
+                <Bell className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: '#0D1B4B' }}>Notifications</p>
-                <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>Alertes de transactions</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Notifications</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>Alertes de transactions</p>
               </div>
               <Toggle on={notif} onChange={v => { setNotif(v); localStorage.setItem(`fb-notif-${acc.id}`, String(v)) }} />
             </div>
@@ -1027,11 +1027,11 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
             <button onClick={() => navigate('/history')}
               className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-                <ArrowDownLeft className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
+                <ArrowDownLeft className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold" style={{ color: '#0D1B4B' }}>Paiements</p>
-                <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>Historique des transactions</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Paiements</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>Historique des transactions</p>
               </div>
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </button>
@@ -1039,11 +1039,11 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
             <button onClick={onSettings}
               className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-                <Shield className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
+                <Shield className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold" style={{ color: '#0D1B4B' }}>Paramètre de carte</p>
-                <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>Limites et restrictions</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Paramètre de carte</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>Limites et restrictions</p>
               </div>
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </button>
@@ -1051,11 +1051,11 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
             <button onClick={() => setToast('Demande de remplacement envoyée !')}
               className="w-full flex items-center gap-3 px-4 py-4 cursor-pointer tr" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface-2)' }}>
-                <RefreshCw className="w-5 h-5" style={{ color: 'rgba(13,27,75,0.6)' }} />
+                <RefreshCw className="w-5 h-5" style={{ color: 'var(--ink-60)' }} />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold" style={{ color: '#0D1B4B' }}>Remplacer le portefeuille</p>
-                <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>Demander un nouveau portefeuille</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Remplacer le portefeuille</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>Demander un nouveau portefeuille</p>
               </div>
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
             </button>
@@ -1067,7 +1067,7 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
               </div>
               <div className="flex-1 text-left">
                 <p className="text-sm font-semibold" style={{ color: '#DC2626' }}>Supprimer le portefeuille</p>
-                <p className="text-xs" style={{ color: 'rgba(13,27,75,0.45)' }}>Action irréversible</p>
+                <p className="text-xs" style={{ color: 'var(--ink-60)' }}>Action irréversible</p>
               </div>
               <ChevronRight className="w-4 h-4" style={{ color: 'rgba(220,38,38,0.3)' }} />
             </button>
@@ -1115,10 +1115,10 @@ function ChangePinScreen({ acc, onBack, onDone }: {
     <ScreenOverlay title="Modifier le code PIN" onBack={onBack}>
       <div className="flex flex-col items-center px-4 pt-8 space-y-8">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#EEF3FF' }}>
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--lime-light)' }}>
             <Key className="w-8 h-8" style={{ color: '#1A56DB' }} />
           </div>
-          <h2 className="font-bold text-lg mb-2" style={{ color: '#0D1B4B' }}>{titles[step]}</h2>
+          <h2 className="font-bold text-lg mb-2" style={{ color: 'var(--ink)' }}>{titles[step]}</h2>
           <p className="text-sm" style={{ color: 'rgba(13,27,75,0.55)', maxWidth: 240, margin: '0 auto' }}>{subtitles[step]}</p>
           {error && <p className="text-sm mt-2 font-medium" style={{ color: '#DC2626' }}>{error}</p>}
         </div>
@@ -1150,7 +1150,7 @@ function PinSetupScreen({ onBack, onConfirm }: { onBack: () => void; onConfirm: 
     <ScreenOverlay title={step === 'set' ? 'Créer votre code PIN' : 'Confirmer le PIN'} onBack={onBack}>
       <div className="flex flex-col items-center px-4 pt-8 space-y-8">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#EEF3FF' }}>
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--lime-light)' }}>
             <Key className="w-8 h-8" style={{ color: '#1A56DB' }} />
           </div>
           <p className="text-sm" style={{ color: 'rgba(13,27,75,0.55)', maxWidth: 240, margin: '0 auto' }}>
@@ -1240,8 +1240,8 @@ function WalletHistoryScreen({ acc, user, onBack }: {
                     <span className="font-bold text-base" style={{ color }}>{sign}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: '#0D1B4B' }}>{label}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>{date}</p>
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--ink)' }}>{label}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>{date}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-bold text-sm tabular-nums" style={{ color }}>
@@ -1279,8 +1279,8 @@ function DeleteWalletModal({ acc, onCancel, onConfirm }: {
           <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: '#FEF2F2' }}>
             <Trash2 className="w-8 h-8" style={{ color: '#DC2626' }} />
           </div>
-          <h2 className="text-lg font-bold" style={{ color: '#0D1B4B' }}>Supprimer ce portefeuille ?</h2>
-          <p className="text-sm" style={{ color: 'rgba(13,27,75,0.6)', maxWidth: 280 }}>
+          <h2 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>Supprimer ce portefeuille ?</h2>
+          <p className="text-sm" style={{ color: 'var(--ink-60)', maxWidth: 280 }}>
             Le portefeuille {acc.currency} sera définitivement supprimé. Cette action est irréversible.
             {acc.balance > 0 && <span className="block mt-1.5 font-semibold" style={{ color: '#DC2626' }}>
               Attention : solde de {getCurrency(acc.currency)?.symbol} {acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} sera perdu.
@@ -1290,7 +1290,7 @@ function DeleteWalletModal({ acc, onCancel, onConfirm }: {
         <div className="flex gap-3">
           <button onClick={onCancel} disabled={loading}
             className="flex-1 h-12 rounded-2xl font-semibold text-sm cursor-pointer tr border"
-            style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: 'var(--card-bg)' }}>
+            style={{ borderColor: 'var(--border)', color: 'var(--ink)', background: 'var(--card-bg)' }}>
             Annuler
           </button>
           <button onClick={confirm} disabled={loading}
@@ -1370,18 +1370,18 @@ function AddWalletScreen({ user, onBack, onNext }: {
             <>
               <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
                 <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-                  <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.45)' }}>Numéro (auto)</p>
-                  <p className="font-mono font-semibold text-sm" style={{ color: '#0D1B4B' }}>{autoNum}</p>
+                  <p className="text-xs font-medium mb-1" style={{ color: 'var(--ink-60)' }}>Numéro (auto)</p>
+                  <p className="font-mono font-semibold text-sm" style={{ color: 'var(--ink)' }}>{autoNum}</p>
                 </div>
                 <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-                  <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.45)' }}>Titulaire</p>
+                  <p className="text-xs font-medium mb-1" style={{ color: 'var(--ink-60)' }}>Titulaire</p>
                   <input value={holderName} onChange={e => setHolderName(e.target.value)} placeholder="Votre nom complet"
-                    className="w-full font-semibold text-sm bg-transparent outline-none" style={{ color: '#0D1B4B' }} />
+                    className="w-full font-semibold text-sm bg-transparent outline-none" style={{ color: 'var(--ink)' }} />
                 </div>
                 <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-                  <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.45)' }}>Devise</p>
+                  <p className="text-xs font-medium mb-1" style={{ color: 'var(--ink-60)' }}>Devise</p>
                   <select value={currency} onChange={e => { setCurrency(e.target.value); setStyleId(CURRENCY_DEFAULT_STYLE[e.target.value] ?? 'purple') }}
-                    className="w-full font-semibold text-sm bg-transparent outline-none cursor-pointer" style={{ color: '#0D1B4B' }}>
+                    className="w-full font-semibold text-sm bg-transparent outline-none cursor-pointer" style={{ color: 'var(--ink)' }}>
                     {CURRENCIES.slice(0, 10).map(c => (
                       <option key={c.code} value={c.code}>{c.flag} {c.code} — {c.name}</option>
                     ))}
@@ -1389,18 +1389,18 @@ function AddWalletScreen({ user, onBack, onNext }: {
                 </div>
                 <div className="flex">
                   <div className="flex-1 px-4 py-3.5" style={{ borderRight: '1px solid #F3F3F6' }}>
-                    <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.45)' }}>Expiration</p>
-                    <p className="font-mono font-semibold text-sm" style={{ color: '#0D1B4B' }}>{autoExp}</p>
+                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--ink-60)' }}>Expiration</p>
+                    <p className="font-mono font-semibold text-sm" style={{ color: 'var(--ink)' }}>{autoExp}</p>
                   </div>
                   <div className="flex-1 px-4 py-3.5">
-                    <p className="text-xs font-medium mb-1" style={{ color: 'rgba(13,27,75,0.45)' }}>CVV</p>
-                    <p className="font-mono font-semibold text-sm" style={{ color: '#0D1B4B' }}>{autoCVV}</p>
+                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--ink-60)' }}>CVV</p>
+                    <p className="font-mono font-semibold text-sm" style={{ color: 'var(--ink)' }}>{autoCVV}</p>
                   </div>
                 </div>
               </div>
               {/* Style picker */}
               <div>
-                <p className="text-xs font-semibold mb-3" style={{ color: 'rgba(13,27,75,0.5)', letterSpacing: '0.08em' }}>DESIGN DE CARTE</p>
+                <p className="text-xs font-semibold mb-3" style={{ color: 'var(--ink-60)', letterSpacing: '0.08em' }}>DESIGN DE CARTE</p>
                 <div className="flex gap-2.5">
                   {CARD_STYLES.map(s => (
                     <button key={s.id} onClick={() => setStyleId(s.id)}
@@ -1415,7 +1415,7 @@ function AddWalletScreen({ user, onBack, onNext }: {
               <div className="flex gap-3">
                 <button onClick={() => setToast('Fonctionnalité disponible bientôt !')}
                   className="flex-1 h-12 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer tr border"
-                  style={{ borderColor: '#DDE1F0', color: '#0D1B4B', background: 'var(--card-bg)' }}>
+                  style={{ borderColor: 'var(--border)', color: 'var(--ink)', background: 'var(--card-bg)' }}>
                   <ScanLine className="w-4 h-4" />Scanner
                 </button>
                 <button onClick={() => holderName.trim() && setStep('verify')} disabled={!holderName.trim()}
@@ -1430,20 +1430,20 @@ function AddWalletScreen({ user, onBack, onNext }: {
               <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)' }}>
                 <div className="px-4 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
                   <div>
-                    <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Titulaire</p>
-                    <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>{holderName}</p>
+                    <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--ink-60)' }}>Titulaire</p>
+                    <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>{holderName}</p>
                   </div>
                 </div>
                 <div className="px-4 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
                   <div>
-                    <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Devise</p>
-                    <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>{curr?.flag} {currency} — {curr?.name}</p>
+                    <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--ink-60)' }}>Devise</p>
+                    <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>{curr?.flag} {currency} — {curr?.name}</p>
                   </div>
                 </div>
                 <div className="px-4 py-4 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium mb-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Portefeuille principal</p>
-                    <p className="text-sm" style={{ color: 'rgba(13,27,75,0.6)' }}>Définir comme défaut</p>
+                    <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--ink-60)' }}>Portefeuille principal</p>
+                    <p className="text-sm" style={{ color: 'var(--ink-60)' }}>Définir comme défaut</p>
                   </div>
                   <Toggle on={setDefault} onChange={setSetDefault} />
                 </div>
@@ -1492,8 +1492,8 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
           <CardFront acc={mainAcc} user={user} visible={visible} />
         ) : (
           <div className="w-full rounded-[1.75rem] flex flex-col items-center justify-center gap-3"
-            style={{ height: 210, background: '#DDE1F0', border: '2px dashed rgba(13,27,75,0.12)' }}>
-            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#EEF3FF' }}>
+            style={{ height: 210, background: 'var(--surface-2)', border: '2px dashed rgba(13,27,75,0.12)' }}>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'var(--lime-light)' }}>
               <Plus className="w-7 h-7" style={{ color: '#1A56DB' }} />
             </div>
             <p className="font-semibold text-sm" style={{ color: '#1A56DB' }}>Aucun portefeuille</p>
@@ -1503,19 +1503,19 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
 
       {/* Total balance + visibility toggle */}
       <div className="flex flex-col items-center pb-5 px-5">
-        <p className="text-xs font-medium mb-1.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Total Cards Balance</p>
+        <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--ink-60)' }}>Total Cards Balance</p>
         <div className="flex items-center gap-2.5">
-          <p className="font-black tabular-nums" style={{ fontSize: 30, color: '#0D1B4B', letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <p className="font-black tabular-nums" style={{ fontSize: 30, color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1 }}>
             {visible
               ? `$${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : '$•••,•••.••'}
           </p>
           <button onClick={() => setVisible(v => !v)}
             className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer tr"
-            style={{ background: 'rgba(13,27,75,0.07)' }}>
+            style={{ background: 'var(--surface-2)' }}>
             {visible
-              ? <Eye className="w-3.5 h-3.5" style={{ color: 'rgba(13,27,75,0.5)' }} />
-              : <EyeOff className="w-3.5 h-3.5" style={{ color: 'rgba(13,27,75,0.5)' }} />}
+              ? <Eye className="w-3.5 h-3.5" style={{ color: 'var(--ink-60)' }} />
+              : <EyeOff className="w-3.5 h-3.5" style={{ color: 'var(--ink-60)' }} />}
           </button>
         </div>
       </div>
@@ -1530,12 +1530,12 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
           </button>
           <button onClick={() => onRecharge(mainAcc)}
             className="flex-1 h-11 rounded-full font-semibold text-sm cursor-pointer tr active:scale-[0.97]"
-            style={{ background: 'var(--card-bg)', color: '#0D1B4B', border: '1.5px solid #DDE1F0' }}>
+            style={{ background: 'var(--card-bg)', color: 'var(--ink)', border: '1.5px solid var(--border)' }}>
             Recharger
           </button>
           <button
             className="flex-1 h-11 rounded-full font-semibold text-sm cursor-pointer tr active:scale-[0.97]"
-            style={{ background: 'var(--card-bg)', color: '#0D1B4B', border: '1.5px solid #DDE1F0' }}>
+            style={{ background: 'var(--card-bg)', color: 'var(--ink)', border: '1.5px solid var(--border)' }}>
             Payer
           </button>
         </div>
@@ -1546,7 +1546,7 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
         <div className="px-5">
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
             <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-              <p className="font-bold text-base" style={{ color: '#0D1B4B' }}>Portefeuille Settings</p>
+              <p className="font-bold text-base" style={{ color: 'var(--ink)' }}>Portefeuille Settings</p>
             </div>
             {([
               { label: 'Portefeuille Info', screen: 'details'        as WalletScreen },
@@ -1556,7 +1556,7 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
               <button key={label} onClick={() => onNavigate(s, mainAcc)}
                 className="w-full flex items-center justify-between px-4 py-4 cursor-pointer tr"
                 style={{ borderBottom: i < arr.length - 1 ? '1px solid #F3F3F6' : 'none' }}>
-                <span className="text-sm font-medium" style={{ color: '#0D1B4B' }}>{label}</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</span>
                 <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.3)' }} />
               </button>
             ))}
@@ -1678,7 +1678,7 @@ export function WalletPage() {
         <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'rgba(13,27,75,0.4)', zIndex: 80 }}>
           <div className="rounded-2xl p-6 flex flex-col items-center gap-4" style={{ background: 'var(--card-bg)' }}>
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#1A56DB' }} />
-            <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Création en cours…</p>
+            <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>Création en cours…</p>
           </div>
         </div>
       )}
