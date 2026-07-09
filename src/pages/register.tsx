@@ -499,7 +499,7 @@ export function RegisterPage() {
               <Search className="w-4 h-4 shrink-0" style={{ color: MUTED }}/>
               <input type="text" value={cSearch} onChange={e => setCSearch(e.target.value)}
                 placeholder="Rechercher un pays..." autoFocus
-                className="flex-1 bg-transparent text-sm outline-none" style={{ color: INK }}/>
+                className="flex-1 bg-transparent text-base outline-none" style={{ color: INK }}/>
             </div>
             <div className="overflow-y-auto rounded-2xl" style={{ maxHeight: 300, border: '1px solid #F3F4F6' }}>
               {filtered.map(c => (

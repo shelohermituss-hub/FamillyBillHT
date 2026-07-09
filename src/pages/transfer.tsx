@@ -909,7 +909,7 @@ export function TransferPage() {
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
               </button>
               <input type="number" value={amountStr==='0'?'':amountStr} onChange={e=>setAmountStr(e.target.value||'0')}
-                placeholder="0.00" className="flex-1 bg-transparent text-sm font-semibold outline-none"
+                placeholder="0.00" className="flex-1 bg-transparent text-base font-semibold outline-none"
                 style={{color:'#1C1C1E'}} min="0"/>
             </div>
           </div>
@@ -1378,7 +1378,7 @@ export function TransferPage() {
         <div className="px-5 pb-10">
           <p className="text-xs font-medium mb-1.5 mt-2" style={{color:'#8E8E93'}}>Phone number</p>
           <input type="tel" value={phoneNumber} onChange={e=>setPhoneNumber(e.target.value)} placeholder="+1 212 456 7890"
-            className="w-full h-12 px-4 rounded-xl text-sm outline-none mb-1" style={{background:'#F2F2F7',border:'1px solid #E5E7EB',color:'#1C1C1E'}}/>
+            className="w-full h-12 px-4 rounded-xl text-base outline-none mb-1" style={{background:'#F2F2F7',border:'1px solid #E5E7EB',color:'#1C1C1E'}}/>
           {found&&<div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-3" style={{background:`${ACCENT}10`,border:`1px solid ${ACCENT}30`}}>
             <Check className="w-4 h-4 shrink-0" style={{color:ACCENT}}/><p className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{found.name}</p>
           </div>}

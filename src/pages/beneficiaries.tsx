@@ -265,7 +265,7 @@ function AddBeneficiaryDrawer({
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               placeholder="Jean Dupont"
-              className="w-full h-11 px-4 rounded-xl text-sm outline-none"
+              className="w-full h-11 px-4 rounded-xl text-base outline-none"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--border)',
@@ -284,7 +284,7 @@ function AddBeneficiaryDrawer({
               value={form.phone}
               onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
               placeholder="+509 1234 5678"
-              className="w-full h-11 px-4 rounded-xl text-sm outline-none"
+              className="w-full h-11 px-4 rounded-xl text-base outline-none"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--border)',
@@ -303,7 +303,7 @@ function AddBeneficiaryDrawer({
               value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               placeholder="jean@email.com"
-              className="w-full h-11 px-4 rounded-xl text-sm outline-none"
+              className="w-full h-11 px-4 rounded-xl text-base outline-none"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--border)',
@@ -323,7 +323,7 @@ function AddBeneficiaryDrawer({
                 value={form.bank_name}
                 onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))}
                 placeholder="BNC, SOGEBANK..."
-                className="w-full h-11 px-4 rounded-xl text-sm outline-none"
+                className="w-full h-11 px-4 rounded-xl text-base outline-none"
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
@@ -340,7 +340,7 @@ function AddBeneficiaryDrawer({
                 value={form.account_number}
                 onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))}
                 placeholder="1234567890"
-                className="w-full h-11 px-4 rounded-xl text-sm outline-none"
+                className="w-full h-11 px-4 rounded-xl text-base outline-none"
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
@@ -359,7 +359,7 @@ function AddBeneficiaryDrawer({
               <select
                 value={form.currency}
                 onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
-                className="w-full h-11 px-4 rounded-xl text-sm outline-none"
+                className="w-full h-11 px-4 rounded-xl text-base outline-none"
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
@@ -380,7 +380,7 @@ function AddBeneficiaryDrawer({
                 value={form.country}
                 onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
                 placeholder="Haïti"
-                className="w-full h-11 px-4 rounded-xl text-sm outline-none"
+                className="w-full h-11 px-4 rounded-xl text-base outline-none"
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
@@ -525,7 +525,7 @@ export function BeneficiariesPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Rechercher un bénéficiaire..."
-            className="flex-1 text-sm bg-transparent outline-none"
+            className="flex-1 text-base bg-transparent outline-none"
             style={{ color: 'var(--ink)' }}
           />
           {search && (

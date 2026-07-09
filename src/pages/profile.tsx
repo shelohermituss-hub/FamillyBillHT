@@ -411,7 +411,7 @@ function ChangePasswordScreen({ onBack }: { onBack: () => void }) {
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-12 rounded-2xl px-4 text-sm border outline-none"
+                  className="w-full h-12 rounded-2xl px-4 text-base border outline-none"
                   style={{ borderColor: '#E5E7EB', background: '#fff', color: '#111' }}
                   required
                 />
@@ -425,7 +425,7 @@ function ChangePasswordScreen({ onBack }: { onBack: () => void }) {
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-12 rounded-2xl px-4 text-sm border outline-none"
+                  className="w-full h-12 rounded-2xl px-4 text-base border outline-none"
                   style={{ borderColor: '#E5E7EB', background: '#fff', color: '#111' }}
                   required
                 />

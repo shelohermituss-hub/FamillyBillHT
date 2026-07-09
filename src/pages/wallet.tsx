@@ -794,7 +794,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
                   <input type="number" placeholder="Montant du plafond"
                     value={limitAmt}
                     onChange={e => { setLimitAmt(e.target.value); localStorage.setItem(`fb-limit-amt-${acc.id}`, e.target.value) }}
-                    className="flex-1 bg-transparent font-semibold text-sm outline-none"
+                    className="flex-1 bg-transparent font-semibold text-base outline-none"
                     style={{ color: '#1A56DB' }} />
                 </div>
               </div>
