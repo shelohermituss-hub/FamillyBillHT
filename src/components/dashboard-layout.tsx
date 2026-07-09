@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, Bell, User, ChevronRight, Settings, X, ShieldCheck } from 'lucide-react'
+import { LogOut, Bell, User, ChevronRight, Settings, X, ShieldCheck, BarChart2 } from 'lucide-react'
 
 type IconProps = { className?: string; style?: React.CSSProperties }
 
@@ -64,15 +64,13 @@ import { useAuth } from '@/lib/auth-context'
 import { useNotifications } from '@/lib/notifications-context'
 import { cn } from '@/lib/utils'
 
-type NavItemDef =
-  | { icon: React.FC<IconProps>; label: string; href: string; special?: never }
-  | { icon: React.FC<IconProps>; label: string; href?: never; special: 'profile' }
+type NavItemDef = { icon: React.FC<IconProps>; label: string; href: string }
 
 const NAV_ITEMS: NavItemDef[] = [
   { icon: NavIconHome,    label: 'Accueil', href: '/dashboard' },
   { icon: NavIconWallet,  label: 'Wallet',  href: '/wallet'    },
   { icon: NavIconStats,   label: 'Stats',   href: '/history'   },
-  { icon: NavIconProfile, label: 'Profil',  special: 'profile' },
+  { icon: NavIconProfile, label: 'Profil',  href: '/profile'   },
 ]
 
 const SIDEBAR_ITEMS = [
@@ -108,79 +106,139 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 
   if (!open) return null
 
+  const MENU_ITEMS = [
+    {
+      icon: (
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: '#F3F4F6' }}>
+          <User className="w-5 h-5" style={{ color: '#6B7280' }} />
+        </div>
+      ),
+      label: 'Mon profil',
+      href: '/profile',
+    },
+    {
+      icon: (
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: '#F3F4F6' }}>
+          <BarChart2 className="w-5 h-5" style={{ color: '#6B7280' }} />
+        </div>
+      ),
+      label: 'Historique',
+      href: '/history',
+    },
+    {
+      icon: (
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: '#F3F4F6' }}>
+          <Settings className="w-5 h-5" style={{ color: '#6B7280' }} />
+        </div>
+      ),
+      label: 'Paramètres',
+      href: '/profile',
+    },
+  ]
+
   return (
     <div className="fixed inset-0 z-50 flex items-end">
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full rounded-t-3xl overflow-hidden animate-fade-in-up"
-        style={{ background: '#ffffff', boxShadow: '0 -8px 40px rgba(0,0,0,0.18)' }}>
+
+      {/* Sheet */}
+      <div
+        className="relative w-full rounded-t-3xl animate-fade-in-up"
+        style={{ background: '#ffffff', boxShadow: '0 -8px 40px rgba(0,0,0,0.15)' }}
+      >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full" style={{ background: '#DDE1F0' }} />
+          <div className="w-10 h-1 rounded-full" style={{ background: '#E5E7EB' }} />
         </div>
 
         {/* User info */}
-        <div className="px-5 py-4 flex items-center gap-4" style={{ borderBottom: '1px solid #F3F3F6' }}>
-          <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center text-sm font-bold shrink-0"
-            style={avatarUrl ? {} : { background: 'var(--lime)', color: '#fff' }}>
+        <div className="px-5 pt-4 pb-5 flex items-center gap-4"
+          style={{ borderBottom: '1px solid #F3F4F6' }}>
+          {/* Circular avatar */}
+          <div
+            className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-base font-bold shrink-0"
+            style={avatarUrl ? { border: '2px solid #E5E7EB' } : { background: 'var(--lime)', color: '#fff' }}
+          >
             {avatarUrl
               ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               : (initials || <User className="w-5 h-5" />)}
           </div>
+
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-base truncate" style={{ color: '#0D1B4B' }}>{profile?.full_name ?? 'Utilisateur'}</p>
-            <p className="text-sm truncate" style={{ color: 'rgba(13,27,75,0.45)' }}>{(profile as any)?.email ?? ''}</p>
+            <p className="font-bold text-base leading-tight truncate" style={{ color: '#111827' }}>
+              {profile?.full_name ?? 'Utilisateur'}
+            </p>
+            <p className="text-sm truncate mt-0.5" style={{ color: '#9CA3AF' }}>
+              {(profile as any)?.email ?? ''}
+            </p>
           </div>
-          <button onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer"
-            style={{ background: '#F3F3F6' }}>
-            <X className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.5)' }} />
+
+          <button
+            onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-full cursor-pointer shrink-0"
+            style={{ background: '#F3F4F6' }}
+          >
+            <X className="w-4 h-4" style={{ color: '#6B7280' }} />
           </button>
         </div>
 
         {/* Menu items */}
         <div className="px-4 py-2">
-          {[
-            { icon: User,         label: 'Mon profil',  href: '/profile'  },
-            { icon: NavIconStats, label: 'Historique',  href: '/history'  },
-            { icon: Settings,     label: 'Paramètres',  href: '/profile'  },
-          ].map(({ icon: Icon, label, href }) => (
-            <button key={label} onClick={() => go(href)}
-              className="w-full flex items-center gap-4 px-2 py-3.5 rounded-xl cursor-pointer tr"
-              style={{ color: '#0D1B4B' }}>
-              <div className="w-9 h-9 flex items-center justify-center rounded-xl shrink-0"
-                style={{ background: '#F3F3F6' }}>
-                <Icon className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.6)' }} />
-              </div>
-              <span className="flex-1 text-sm font-semibold text-left">{label}</span>
-              <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.25)' }} />
+          {MENU_ITEMS.map(({ icon, label, href }) => (
+            <button
+              key={label}
+              onClick={() => go(href)}
+              className="w-full flex items-center gap-4 px-2 py-3.5 rounded-2xl cursor-pointer tr hover:bg-gray-50"
+            >
+              {icon}
+              <span className="flex-1 text-base font-semibold text-left" style={{ color: '#111827' }}>
+                {label}
+              </span>
+              <ChevronRight className="w-5 h-5" style={{ color: '#D1D5DB' }} />
             </button>
           ))}
 
-          {/* Admin access */}
-          <button onClick={() => go('/admin')}
-            className="w-full flex items-center gap-4 px-2 py-3.5 rounded-xl cursor-pointer tr mt-1"
-            style={{ color: '#0D1B4B' }}>
-            <div className="w-9 h-9 flex items-center justify-center rounded-xl shrink-0"
+          {/* Administration */}
+          <button
+            onClick={() => go('/admin')}
+            className="w-full flex items-center gap-4 px-2 py-3.5 rounded-2xl cursor-pointer tr hover:bg-gray-50"
+          >
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
               style={{ background: 'rgba(159,232,112,0.15)' }}>
-              <ShieldCheck className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+              <ShieldCheck className="w-5 h-5" style={{ color: 'var(--lime)' }} />
             </div>
-            <span className="flex-1 text-sm font-semibold text-left">Administration</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full mr-1"
-              style={{ background: 'var(--lime)', color: '#fff' }}>ADMIN</span>
-            <ChevronRight className="w-4 h-4" style={{ color: 'rgba(13,27,75,0.25)' }} />
+            <span className="flex-1 text-base font-semibold text-left" style={{ color: '#111827' }}>
+              Administration
+            </span>
+            <span
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full mr-1"
+              style={{ background: 'var(--lime)', color: '#fff' }}
+            >
+              ADMIN
+            </span>
+            <ChevronRight className="w-5 h-5" style={{ color: '#D1D5DB' }} />
           </button>
         </div>
 
+        {/* Separator */}
+        <div className="mx-5 my-1" style={{ borderTop: '1px solid #F3F4F6' }} />
+
         {/* Logout */}
-        <div className="px-4 pb-4 pt-1" style={{ borderTop: '1px solid #F3F3F6' }}>
-          <button onClick={handleSignOut}
-            className="w-full flex items-center gap-4 px-2 py-3.5 rounded-xl cursor-pointer tr"
-            style={{ color: '#DC2626' }}>
-            <div className="w-9 h-9 flex items-center justify-center rounded-xl shrink-0"
+        <div className="px-4 pb-4 pt-1">
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-4 px-2 py-3.5 rounded-2xl cursor-pointer tr hover:bg-red-50"
+          >
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
               style={{ background: '#FEF2F2' }}>
-              <LogOut className="w-4 h-4 text-red-600" />
+              <LogOut className="w-5 h-5" style={{ color: '#EF4444' }} />
             </div>
-            <span className="flex-1 text-sm font-semibold text-left">Déconnexion</span>
+            <span className="text-base font-semibold" style={{ color: '#EF4444' }}>
+              Déconnexion
+            </span>
           </button>
         </div>
 
@@ -192,7 +250,7 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 }
 
 // ── Header Actions ─────────────────────────────────────────────────────────────
-function HeaderActions() {
+function HeaderActions({ onProfileOpen }: { onProfileOpen: () => void }) {
   const { unreadCount } = useNotifications()
   const { profile } = useAuth()
   const navigate = useNavigate()
@@ -220,15 +278,17 @@ function HeaderActions() {
         )}
       </button>
 
-      {/* Profile avatar — display only, not clickable */}
-      <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden"
-        style={avatarUrl ? {} : { background: 'var(--lime)', color: 'white' }}
+      {/* Profile avatar — opens drawer */}
+      <button
+        onClick={onProfileOpen}
+        aria-label="Menu profil"
+        className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden cursor-pointer tr"
+        style={avatarUrl ? { border: '2px solid var(--border)' } : { background: 'var(--lime)', color: 'white' }}
       >
         {avatarUrl
           ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
           : (initials || <User className="w-4 h-4" />)}
-      </div>
+      </button>
     </div>
   )
 }
@@ -323,7 +383,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         style={{ left: 256, background: 'var(--card-bg)', borderBottom: '1px solid var(--border)' }}
       >
         <div className="flex-1" />
-        <HeaderActions />
+        <HeaderActions onProfileOpen={() => setProfileOpen(true)} />
       </div>
 
       {/* ── Mobile header ── */}
@@ -346,7 +406,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               style={{ background: 'var(--lime)', color: '#ffffff' }}>HT</span>
           </div>
         </Link>
-        <HeaderActions />
+        <HeaderActions onProfileOpen={() => setProfileOpen(true)} />
       </header>
 
       {/* ── Main ── */}
@@ -370,29 +430,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       >
         <div className="flex items-center justify-around px-1 pt-2 pb-3">
           {NAV_ITEMS.map(item => {
-            if (item.special === 'profile') {
-              return (
-                <button
-                  key="profile"
-                  onClick={() => setProfileOpen(true)}
-                  className="flex-1 flex flex-col items-center gap-1 cursor-pointer"
-                >
-                  <div
-                    className="w-11 h-9 flex items-center justify-center rounded-xl tr"
-                    style={{ background: 'transparent', transition: 'background 200ms ease' }}
-                  >
-                    <item.icon
-                      className="tr"
-                      style={{ width: 19, height: 19, color: 'var(--ink-30)', transition: 'color 200ms ease' }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-semibold tracking-tight" style={{ color: 'var(--ink-30)' }}>
-                    {item.label}
-                  </span>
-                </button>
-              )
-            }
-
             const active = isActive(item.href, location.pathname)
             return (
               <Link
