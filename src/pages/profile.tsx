@@ -7,12 +7,16 @@ import {
   Camera, Loader2, Copy, Share2, QrCode, Building2, ArrowDownLeft,
   X, Download,
 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/lib/auth-context'
 import { useNotifications, type AppNotification } from '@/lib/notifications-context'
 import { supabase, type Transaction } from '@/lib/supabase'
 import { getCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
+import { profileSchema, type ProfileInput } from '@/services/schemas'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -516,10 +520,19 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [activeTab, setActiveTab] = useState<'personal' | 'business'>('personal')
   const [editingField, setEditingField] = useState<string | null>(null)
-  const [phone, setPhone] = useState<string>(profile?.phone ?? '212-456-7890')
-  const [address, setAddress] = useState<string>(profile?.address ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<ProfileInput>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      full_name: profile?.full_name ?? '',
+      phone: profile?.phone ?? '',
+      country: profile?.country ?? '',
+      address: profile?.address ?? '',
+    },
+  })
+  const phone = watch('phone') ?? ''
+  const address = watch('address') ?? ''
 
   const initials = (profile?.full_name ?? 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 
@@ -544,11 +557,22 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
     img.src = url
   }
 
-  async function saveField() {
+  async function saveField(data: ProfileInput) {
     if (!user) return
     setSaving(true)
-    await supabase.from('wise_users').update({ phone, address }).eq('id', user.id)
-    setSaving(false); setSaved(true)
+    const { error } = await supabase.from('wise_users').update({
+      full_name: data.full_name,
+      phone: data.phone || null,
+      country: data.country || null,
+      address: data.address || null,
+    }).eq('id', user.id)
+    setSaving(false)
+    if (error) {
+      toast.error('Impossible de mettre à jour le profil.')
+      return
+    }
+    setSaved(true)
+    toast.success('Profil mis à jour.')
     setTimeout(() => { setSaved(false); setEditingField(null) }, 800)
   }
 
@@ -610,13 +634,15 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
               <div className="flex-1 min-w-0">
                 <p className="text-xs" style={{ color: '#9CA3AF' }}>{label}</p>
                 {editingField === key && key === 'phone' ? (
-                  <input value={phone} onChange={e => setPhone(e.target.value)}
-                    className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
-                    autoFocus onBlur={saveField} />
+                  <form onSubmit={handleSubmit(saveField)}>
+                    <input {...register('phone')} className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }} autoFocus />
+                    {errors.phone && <p className="text-[10px] text-red-500">{errors.phone.message}</p>}
+                  </form>
                 ) : editingField === key && key === 'address' ? (
-                  <input value={address} onChange={e => setAddress(e.target.value)}
-                    className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }}
-                    autoFocus onBlur={saveField} />
+                  <form onSubmit={handleSubmit(saveField)}>
+                    <input {...register('address')} className="text-sm font-semibold outline-none w-full" style={{ color: '#111' }} autoFocus />
+                    {errors.address && <p className="text-[10px] text-red-500">{errors.address.message}</p>}
+                  </form>
                 ) : (
                   <p className="text-sm font-semibold truncate" style={{ color: '#111' }}>{value}</p>
                 )}

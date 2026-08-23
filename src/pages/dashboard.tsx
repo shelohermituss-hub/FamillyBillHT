@@ -1,12 +1,15 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowUpRight, ArrowDownLeft, Repeat, Eye, EyeOff,
   X, Share2, Copy, Check, QrCode,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
+import type { CurrencyAccount } from '@/lib/supabase'
 import { getCurrency } from '@/lib/currencies'
+import { useWallet } from '@/hooks/use-wallet'
+import { useTransactions } from '@/hooks/use-transactions'
+import { useAIInsights } from '@/hooks/use-ai-insights'
 import { BILL_CATEGORIES } from '@/lib/haiti-providers'
 
 // ── Receive Modal ─────────────────────────────────────────────────────────────
@@ -208,24 +211,13 @@ function BillGrid() {
 export function DashboardPage() {
   const { user, profile } = useAuth()
   const navigate = useNavigate()
-  const [usdAccount, setUsdAccount] = useState<CurrencyAccount | null>(null)
-  const [transactions, setTx] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
+  const { accounts, loading: walletLoading } = useWallet(user?.id)
+  const { transactions, loading: transactionsLoading } = useTransactions(user?.id, 10)
+  const usdAccount: CurrencyAccount | null = accounts.find(account => account.currency === 'USD') ?? null
+  const loading = walletLoading || transactionsLoading
+  const { insight, loading: insightLoading } = useAIInsights(transactions)
   const [visible, setVisible] = useState(true)
   const [showReceive, setShowReceive] = useState(false)
-
-  const load = useCallback(async () => {
-    if (!user) return
-    const [a, t] = await Promise.all([
-      supabase.from('currency_accounts').select('*').eq('user_id', user.id).eq('currency', 'USD').maybeSingle(),
-      supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
-    ])
-    if (a.data) setUsdAccount(a.data)
-    if (t.data) setTx(t.data)
-    setLoading(false)
-  }, [user])
-
-  useEffect(() => { load() }, [load])
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'là'
   const avatarUrl = profile?.avatar_url
@@ -334,6 +326,22 @@ export function DashboardPage() {
           </div>
           <BillGrid />
         </div>
+
+        {insightLoading ? (
+          <div className="rounded-2xl bg-white p-4 animate-pulse">
+            <div className="h-4 w-40 rounded bg-gray-100 mb-3" />
+            <div className="h-3 w-full rounded bg-gray-100" />
+          </div>
+        ) : insight ? (
+          <div className="rounded-2xl p-4" style={{ background: '#ECFDF5', border: '1px solid #D1FAE5' }}>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-bold text-base" style={{ color: '#065F46' }}>Analyse de vos dépenses</h2>
+              <span className="text-xs font-semibold" style={{ color: '#059669' }}>{insight.topCategory}</span>
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: '#047857' }}>{insight.summary}</p>
+            {insight.recommendations[0] && <p className="text-xs mt-2" style={{ color: '#065F46' }}>{insight.recommendations[0]}</p>}
+          </div>
+        ) : null}
 
         {/* ── Recent transactions ── */}
         <div className="rounded-2xl overflow-hidden mb-4" style={{ background: '#fff', border: '1px solid #F3F4F6', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
