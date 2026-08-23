@@ -21,7 +21,11 @@ export type WiseUser = {
   phone?: string
   country?: string
   address?: string
+  date_of_birth?: string
+  kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+  is_admin?: boolean
   created_at: string
+  updated_at?: string
 }
 
 export type CurrencyAccount = {
@@ -34,6 +38,9 @@ export type CurrencyAccount = {
   sort_code?: string
   routing_number?: string
   is_main: boolean
+  is_frozen: boolean
+  card_style?: string
+  wallet_settings?: Record<string, unknown>
   created_at: string
 }
 
@@ -51,6 +58,7 @@ export type Jar = {
 export type Transaction = {
   id: string
   user_id: string
+  account_id?: string
   type: 'send' | 'receive' | 'convert' | 'deposit' | 'withdraw' | 'bill_payment'
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
   amount: number
@@ -59,11 +67,15 @@ export type Transaction = {
   target_currency?: string
   exchange_rate?: number
   fee: number
+  recipient_id?: string
   recipient_name?: string
   recipient_email?: string
   recipient_account?: string
+  sender_id?: string
+  sender_name?: string
   note?: string
   reference?: string
   created_at: string
   completed_at?: string
+  updated_at?: string
 }

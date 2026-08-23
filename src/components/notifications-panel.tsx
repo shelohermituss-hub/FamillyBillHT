@@ -22,6 +22,7 @@ const TYPE_CONFIG: Record<AppNotification['type'], {
   alert:           { icon: AlertTriangle,  bg: 'bg-amber-50',            color: 'text-amber-500'     },
   rate:            { icon: TrendingUp,     bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
   payment_request: { icon: ArrowUpRight,   bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
+  payment_received: { icon: ArrowDownLeft,  bg: 'bg-[var(--lime-light)]', color: 'text-[var(--ink)]'  },
 }
 
 export function NotificationsPanel({

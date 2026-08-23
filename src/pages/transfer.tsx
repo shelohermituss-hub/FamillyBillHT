@@ -8,10 +8,12 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useNotifications } from '@/lib/notifications-context'
-import { supabase, type CurrencyAccount, type WiseUser } from '@/lib/supabase'
+import { supabase, type CurrencyAccount } from '@/lib/supabase'
 import { getCurrency, formatCurrency, getRate } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 import { bankTransferSchema } from '@/services/schemas'
+import { searchUsers, verifyTransactionPin, hasTransactionPin } from '@/services/api'
+import type { SearchResult } from '@/types'
 import { toast } from 'sonner'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -34,7 +36,6 @@ const CARD_STYLES = [
   { id:'rose',   g:'linear-gradient(135deg,#831843,#e11d48,#fb7185)'  },
 ]
 const CUR_STYLE: Record<string,string> = { HTG:'purple', USD:'green', EUR:'blue', CAD:'orange', BRL:'rose' }
-const walletPin = (id: string) => `fb-w-pin-${id}`
 function maskId(id: string) { const h=id.replace(/-/g,'').slice(-8).toUpperCase(); return h.slice(0,4)+' '+h.slice(4) }
 function genRef() {
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -256,7 +257,7 @@ export function TransferPage() {
   const [betweenPickerFor, setBetweenPickerFor] = useState<'from'|'to'>('from')
 
   // Real users / contacts
-  const [appUsers, setAppUsers] = useState<WiseUser[]>([])
+  const [appUsers, setAppUsers] = useState<SearchResult[]>([])
   const [favUserIds, setFavUserIds] = useState<string[]>(()=>{
     try { return JSON.parse(localStorage.getItem('fb-fav-contacts')?? '[]') } catch { return [] }
   })
@@ -267,8 +268,7 @@ export function TransferPage() {
     if (!user) return
     supabase.from('currency_accounts').select('*').eq('user_id', user.id)
       .then(({data})=>{ if (data?.length) { setAccounts(data); setFromWallet(data.find(a=>a.is_main)??data[0]) }})
-    supabase.from('wise_users').select('*').neq('id', user.id)
-      .then(({data})=>{ if (data) setAppUsers(data) })
+    searchUsers('').then(results => { if (results) setAppUsers(results) })
   },[user])
 
   // Re-check recipient wallet availability whenever the sender's wallet changes.
@@ -286,6 +286,7 @@ export function TransferPage() {
           currency: info.currency,
           is_main: info.is_main,
           balance: 0,
+          is_frozen: false,
           created_at: new Date().toISOString(),
         }
         if (info.exact_match) setRecipientWalletAcct(acct)
@@ -294,11 +295,11 @@ export function TransferPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[walletIdFound?.id, fromWallet?.id])
 
-  const toContact = (u: WiseUser): Contact => ({
+  const toContact = (u: SearchResult): Contact => ({
     id: u.id,
     name: u.full_name,
     initials: u.full_name.split(' ').map((w:string)=>w[0]).join('').slice(0,2).toUpperCase(),
-    phone: u.user_code ?? u.email,
+    phone: u.user_code ?? '',
     isFav: favUserIds.includes(u.id),
   })
   const allContacts = appUsers.map(toContact)
@@ -333,11 +334,12 @@ export function TransferPage() {
   }
   function pinBack(){ setPin(p=>p.slice(0,-1)) }
 
-  function checkPin(p:string){
+  async function checkPin(p:string){
     if (!fromWallet) return
-    const stored = localStorage.getItem(walletPin(fromWallet.id))
-    if (!stored){ localStorage.setItem(walletPin(fromWallet.id), p); proceed() }
-    else if (p===stored){ proceed() }
+    const pinSet = await hasTransactionPin()
+    if (!pinSet) { setPinError('Aucun PIN défini. Définissez votre PIN dans le profil.'); setPin(''); return }
+    const { valid } = await verifyTransactionPin(p)
+    if (valid) proceed()
     else { setPinError('PIN incorrect. Réessayez.'); setPin('') }
   }
 
@@ -359,38 +361,28 @@ export function TransferPage() {
     // Determine destination and credit amount
     let toAccountId: string|null = null
     let recipientUserId: string|null = null
-    let creditAmount = sendAmount - fee
+    // creditAmount is computed server-side by do_transfer — we don't send it
 
     if (betweenTo && betweenTo.user_id === user.id) {
       toAccountId = betweenTo.id
-      creditAmount = betweenTo.currency !== fromWallet.currency
-        ? (sendAmount - fee) * getRate(fromWallet.currency, betweenTo.currency)
-        : sendAmount - fee
     } else if (recipientWalletAcct) {
       toAccountId = recipientWalletAcct.id
       recipientUserId = recipientWalletAcct.user_id
-      creditAmount = sendAmount - fee
     } else if (recipientMainWallet) {
       toAccountId = recipientMainWallet.id
       recipientUserId = recipientMainWallet.user_id
-      creditAmount = recipientMainWallet.currency !== fromWallet.currency
-        ? (sendAmount - fee) * getRate(fromWallet.currency, recipientMainWallet.currency)
-        : sendAmount - fee
     } else if (walletIdFound) {
-      // get_recipient_wallet RPC may not be available — let SQL auto-find via p_recipient_user_id
       recipientUserId = walletIdFound.id
-      creditAmount = sendAmount - fee
     }
 
     // Single atomic RPC call — balance check + debit + credit + transaction records
+    // Server recomputes fee and credit_amount, ignoring client-supplied values
     const { data: result, error } = await supabase.rpc('do_transfer', {
+      p_sender_user_id:    user.id,
       p_from_account_id:   fromWallet.id,
       p_to_account_id:     toAccountId,
       p_recipient_user_id: recipientUserId,
       p_send_amount:       sendAmount,
-      p_fee:               fee,
-      p_credit_amount:     creditAmount,
-      p_recipient_name:    recipName,
       p_note:              note || null,
       p_reference:         txRef,
     })
@@ -436,8 +428,9 @@ export function TransferPage() {
     if (val.length >= 6) {
       setWalletIdSearching(true)
       walletIdTimer.current = setTimeout(async () => {
-        const { data: wu } = await supabase.from('wise_users').select('id,full_name,user_code').eq('user_code', val).maybeSingle()
+        const results = await searchUsers(val)
         setWalletIdSearching(false)
+        const wu = results.find(r => r.user_code.toUpperCase() === val.toUpperCase())
         if (!wu) { setWalletIdError('Aucun utilisateur trouvé.'); return }
         setWalletIdFound({ id: wu.id, name: wu.full_name, code: wu.user_code })
         // wallet availability is checked by useEffect watching [walletIdFound?.id, fromWallet?.id]
@@ -1248,9 +1241,10 @@ export function TransferPage() {
               if (!fromWallet||!selectedContact) return
               // Find recipient's wallet for this currency
               if (!recipientWalletAcct) {
-                const {data}=await supabase.from('currency_accounts').select('*')
-                  .eq('user_id', selectedContact.id).eq('currency', fromWallet.currency)
-                if (data?.length) setRecipientWalletAcct(data[0])
+                const { data: info } = await supabase.rpc('get_recipient_wallet', { p_user_id: selectedContact.id, p_currency: fromWallet.currency })
+                if (info) {
+                  setRecipientWalletAcct({ id: info.id, user_id: info.user_id, currency: info.currency, is_main: info.is_main, balance: 0, is_frozen: false, created_at: new Date().toISOString() })
+                }
               }
               doTransfer('contact-success')
             }} disabled={processing}

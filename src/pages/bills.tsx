@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
-import { supabase } from '@/lib/supabase'
+import { supabase, type CurrencyAccount } from '@/lib/supabase'
 import { getRate, getFeeRate } from '@/lib/currencies'
+import { payBillRPC } from '@/services/api'
 import {
   BILL_CATEGORIES,
   PROVIDERS,
@@ -688,6 +689,8 @@ export function BillsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [txId, setTxId] = useState('')
+  const [wallets] = useState<CurrencyAccount[]>([])
+  const [selectedWalletId] = useState<string>('')
 
   function goBack() {
     if (step === 'category')        { navigate(-1);           return }
@@ -712,41 +715,46 @@ export function BillsPage() {
     setStep('details')
   }
 
-  async function handleConfirm(method: PayMethod = 'wallet') {
-    if (!user || !selectedProvider) return
+  async function handleConfirm(_method: PayMethod = 'wallet') {
+    if (!user || !selectedProvider || !selectedCategory) return
     setSubmitting(true)
     setSubmitError('')
 
-    const ref = `BILL-${selectedProvider.id.toUpperCase()}-${Date.now()}`
-    const recipientName = fieldValues['account_name']
-      || fieldValues['landlord_name']
+    const accountRef = fieldValues['account_number']
+      || fieldValues['meter_number']
+      || fieldValues['phone_number']
       || fieldValues['moncash_number']
-      || selectedProvider.name
+      || fieldValues['account_name']
+      || fieldValues['landlord_name']
+      || ''
 
-    const { data, error } = await supabase.from('transactions').insert({
-      user_id: user.id,
-      type: 'send',
-      status: selectedProvider.instant ? 'completed' : 'processing',
-      amount: parseFloat(amount),
-      currency: 'HTG',
-      target_amount: parseFloat(amount),
-      target_currency: 'HTG',
-      exchange_rate: 1,
-      fee: parseFloat(amount) * getFeeRate('HTG', 'USD'),
-      recipient_name: recipientName,
-      note: `Paiement ${selectedProvider.name} via ${method === 'wallet' ? 'portefeuille' : 'carte'} — ${Object.entries(fieldValues)
-        .filter(([, v]) => v)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join(', ')}`,
-      reference: ref,
-    }).select().single()
-
-    if (error) {
-      setSubmitError('Paiement échoué. Vérifiez votre solde et réessayez.')
+    const wallet = wallets.find(w => w.id === selectedWalletId) ?? wallets.find(w => w.currency === 'HTG') ?? wallets[0]
+    if (!wallet) {
+      setSubmitError('Aucun portefeuille disponible pour le paiement.')
       setSubmitting(false)
       return
     }
-    if (data) setTxId(data.id)
+    if (wallet.balance < parseFloat(amount)) {
+      setSubmitError('Solde insuffisant dans le portefeuille sélectionné.')
+      setSubmitting(false)
+      return
+    }
+
+    const result = await payBillRPC({
+      accountId: wallet.id,
+      amount: parseFloat(amount),
+      currency: 'HTG',
+      provider: selectedProvider.name,
+      category: selectedCategory.label,
+      accountRef,
+    })
+
+    if (!result.success) {
+      setSubmitError(result.error ?? 'Paiement échoué. Vérifiez votre solde et réessayez.')
+      setSubmitting(false)
+      return
+    }
+    setTxId(result.newBalance !== undefined ? `wallet-balance:${result.newBalance}` : 'paid')
     setSubmitting(false)
     setStep('success')
   }

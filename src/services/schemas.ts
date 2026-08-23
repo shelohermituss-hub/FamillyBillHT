@@ -10,8 +10,8 @@ export const forgotPasswordSchema = z.object({
 })
 
 export const resetPasswordSchema = z.object({
-  password: z.string().min(6, 'Au moins 6 caractères'),
-  confirmPassword: z.string().min(6, 'Au moins 6 caractères'),
+  password: z.string().min(8, 'Au moins 8 caractères').regex(/[a-zA-Z]/, 'Au moins une lettre').regex(/[0-9]/, 'Au moins un chiffre'),
+  confirmPassword: z.string().min(8, 'Au moins 8 caractères'),
 }).refine(d => d.password === d.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
   path: ['confirmPassword'],

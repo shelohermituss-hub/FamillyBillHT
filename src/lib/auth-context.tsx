@@ -7,7 +7,7 @@ type AuthContextType = {
   profile: WiseUser | null
   session: Session | null
   loading: boolean
-  signUp: (email: string, password: string, fullName: string, phone?: string, country?: string) => Promise<{ error: Error | null; userId?: string }>
+  signUp: (email: string, password: string, fullName: string, phone?: string, country?: string, dateOfBirth?: string) => Promise<{ error: Error | null; userId?: string }>
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -22,7 +22,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   async function fetchProfile(userId: string) {
-    // Use maybeSingle() to avoid 406 when row doesn't exist
     const { data } = await supabase
       .from('wise_users')
       .select('*')
@@ -47,20 +46,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setProfile(null)
-      }
-      setLoading(false)
+      (async () => {
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        } else {
+          setProfile(null)
+        }
+        setLoading(false)
+      })()
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  async function signUp(email: string, password: string, fullName: string, phone?: string, country?: string) {
+  async function signUp(email: string, password: string, fullName: string, phone?: string, country?: string, dateOfBirth?: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -68,19 +69,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
     if (error) return { error }
     if (data.user) {
-      const userCode = 'FB' + Math.random().toString(36).slice(2, 8).toUpperCase()
-      await supabase.from('wise_users').upsert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        verified: false,
-        user_code: userCode,
-        phone: phone ?? null,
-        country: country ?? null,
+      const { error: rpcError } = await supabase.rpc('create_user_account', {
+        p_user_id: data.user.id,
+        p_email: email,
+        p_full_name: fullName,
+        p_phone: phone ?? null,
+        p_country: country ?? null,
+        p_date_of_birth: dateOfBirth ?? null,
       })
-      await supabase.from('currency_accounts').insert(
-        { user_id: data.user.id, currency: 'USD', balance: 0, is_main: true }
-      )
+      if (rpcError) {
+        return { error: new Error('Compte créé mais erreur lors de l\'initialisation du profil. Contactez le support.') }
+      }
       await fetchProfile(data.user.id)
       return { error: null, userId: data.user.id }
     }

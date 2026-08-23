@@ -5,8 +5,9 @@ import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { resetPasswordSchema } from '@/services/schemas'
+import { setTransactionPin } from '@/services/api'
 
-type Step = 'welcome' | 'phone' | 'otp' | 'name' | 'country' | 'email' | 'pin' | 'pinConfirm' | 'password'
+type Step = 'welcome' | 'phone' | 'otp' | 'name' | 'country' | 'dob' | 'email' | 'pin' | 'pinConfirm' | 'password'
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const INDIGO = '#4F46E5'
@@ -222,13 +223,14 @@ export function RegisterPage() {
   const navigate = useNavigate()
 
   const [step, setStep] = useState<Step>('welcome')
-  const [viaEmail, setViaEmail] = useState(false)
+  const viaEmail = false
 
   // Form fields
   const [phone, setPhone]           = useState('')
   const [otpInput, setOtpInput]     = useState('')
   const [fullName, setFullName]     = useState('')
   const [country, setCountry]       = useState('')
+  const [dob, setDob]               = useState('')
   const [cSearch, setCSearch]       = useState('')
   const [email, setEmail]           = useState('')
   const [pinVal, setPinVal]         = useState('')
@@ -237,6 +239,7 @@ export function RegisterPage() {
   const [showPw, setShowPw]         = useState(false)
   const [showConfPw, setShowConfPw] = useState(false)
   const [confPw, setConfPw]         = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
@@ -251,7 +254,8 @@ export function RegisterPage() {
       case 'otp':        return 'phone'
       case 'name':       return viaEmail ? 'welcome' : 'otp'
       case 'country':    return 'name'
-      case 'email':      return 'country'
+      case 'dob':        return 'country'
+      case 'email':      return 'dob'
       case 'pin':        return 'email'
       case 'pinConfirm': return 'pin'
       case 'password':   return 'pinConfirm'
@@ -287,7 +291,7 @@ export function RegisterPage() {
     restartOtp(); go('otp')
   }
 
-  function skipPhone() { setViaEmail(true); setPhone(''); go('name') }
+  // skipPhone removed — phone verification is now required
 
   function otpDigit(d: string) {
     if (otpInput.length >= PIN_LEN) return
@@ -309,6 +313,15 @@ export function RegisterPage() {
 
   function submitCountry() {
     if (!country) { setError('Sélectionnez un pays.'); return }
+    go('dob')
+  }
+
+  function submitDob() {
+    if (!dob) { setError('Date de naissance requise.'); return }
+    const d = new Date(dob)
+    if (isNaN(d.getTime())) { setError('Date invalide.'); return }
+    const age = (Date.now() - d.getTime()) / (365.25 * 24 * 3600 * 1000)
+    if (age < 18) { setError('Vous devez avoir au moins 18 ans.'); return }
     go('email')
   }
 
@@ -343,8 +356,9 @@ export function RegisterPage() {
       setError(parsed.error.issues[0]?.message ?? 'Mot de passe invalide.')
       return
     }
+    if (!termsAccepted) { setError('Vous devez accepter les conditions générales.'); return }
     setLoading(true); setError('')
-    const { error: err, userId } = await signUp(email, password, fullName.trim(), phone||undefined, country||undefined)
+    const { error: err, userId } = await signUp(email, password, fullName.trim(), phone||undefined, country||undefined, dob||undefined)
     if (err) {
       const m = err.message
       if (m.includes('already registered')) setError('Cet email est déjà utilisé. Connectez-vous.')
@@ -352,7 +366,9 @@ export function RegisterPage() {
       else setError(m)
       setLoading(false); return
     }
-    if (userId) localStorage.setItem(`fb-app-pin-${userId}`, pinVal)
+    if (userId) {
+      await setTransactionPin(pinVal)
+    }
     toast.success('Compte créé avec succès.')
     navigate('/dashboard', { replace: true })
   }
@@ -472,10 +488,6 @@ export function RegisterPage() {
             {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
             <p className="text-xs mb-8" style={{ color: MUTED }}>Un code de vérification sera envoyé à ce numéro</p>
             <Btn label="Continuer" onClick={submitPhone} disabled={phone.replace(/\D/g,'').length < 7}/>
-            <button onClick={skipPhone}
-              className="w-full text-center text-sm font-semibold mt-5 cursor-pointer py-2" style={{ color: INDIGO }}>
-              S'inscrire sans vérification téléphonique
-            </button>
           </div>
         )}
 
@@ -526,6 +538,23 @@ export function RegisterPage() {
           </div>
         )}
 
+        {/* ── Date of Birth ── */}
+        {step === 'dob' && (
+          <div>
+            <h1 className="text-[26px] font-bold mb-1.5" style={{ color: INK }}>Date de naissance</h1>
+            <p className="text-sm mb-7" style={{ color: MUTED }}>Vous devez avoir au moins 18 ans pour utiliser FamillyBill HT</p>
+            <p className="text-xs font-medium mb-1.5" style={{ color: MUTED }}>Date de naissance</p>
+            <input type="date" value={dob} onChange={e => setDob(e.target.value)}
+              autoFocus
+              className="w-full h-14 px-4 rounded-2xl text-base outline-none mb-2"
+              style={{ background: BG_IN, color: INK }}/>
+            {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
+            <div className="mt-6">
+              <Btn label="Continuer" onClick={submitDob} disabled={!dob}/>
+            </div>
+          </div>
+        )}
+
         {/* ── Email ── */}
         {step === 'email' && (
           <div>
@@ -567,7 +596,7 @@ export function RegisterPage() {
 
             <p className="text-xs font-medium mb-1.5" style={{ color: MUTED }}>Nouveau mot de passe</p>
             <div className="flex items-center h-14 px-4 rounded-2xl gap-2 mb-1"
-              style={{ background: BG_IN, border: `1.5px solid ${password.length >= 6 ? '#22C55E' : 'transparent'}` }}>
+              style={{ background: BG_IN, border: `1.5px solid ${password.length >= 8 ? '#22C55E' : 'transparent'}` }}>
               <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="Mot de passe" autoFocus
                 className="flex-1 bg-transparent text-base outline-none" style={{ color: INK }}/>
@@ -575,16 +604,16 @@ export function RegisterPage() {
                 {showPw ? <Eye className="w-5 h-5" style={{ color: MUTED }}/> : <EyeOff className="w-5 h-5" style={{ color: MUTED }}/>}
               </button>
             </div>
-            {password.length >= 6 && (
+            {password.length >= 8 && password.length > 0 && (
               <div className="flex items-center gap-1.5 mb-4">
                 <Check className="w-3.5 h-3.5" style={{ color: '#22C55E' }}/>
-                <p className="text-xs" style={{ color: '#22C55E' }}>Il doit contenir plus de 6 lettres et chiffres</p>
+                <p className="text-xs" style={{ color: '#22C55E' }}>Au moins 8 caractères avec une lettre et un chiffre</p>
               </div>
             )}
-            {password.length > 0 && password.length < 6 && (
-              <p className="text-xs mb-4" style={{ color: MUTED }}>Il doit contenir plus de 6 lettres et chiffres</p>
+            {password.length > 0 && password.length < 8 && (
+              <p className="text-xs mb-4" style={{ color: MUTED }}>Au moins 8 caractères avec une lettre et un chiffre</p>
             )}
-            {!password && <p className="text-xs mb-4" style={{ color: MUTED }}>Il doit contenir plus de 6 lettres et chiffres</p>}
+            {!password && <p className="text-xs mb-4" style={{ color: MUTED }}>Au moins 8 caractères avec une lettre et un chiffre</p>}
 
             <p className="text-xs font-medium mb-1.5" style={{ color: MUTED }}>Confirmer le mot de passe</p>
             <div className="flex items-center h-14 px-4 rounded-2xl gap-2 mb-6"
@@ -598,10 +627,20 @@ export function RegisterPage() {
             </div>
 
             {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+
+            {/* Terms acceptance */}
+            <label className="flex items-start gap-3 mb-4 cursor-pointer">
+              <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)}
+                className="mt-1 w-5 h-5 rounded cursor-pointer" style={{ accentColor: INDIGO }}/>
+              <span className="text-xs leading-relaxed" style={{ color: MUTED }}>
+                J'accepte les <a href="/terms" className="font-semibold" style={{ color: INDIGO }}>conditions générales</a> et la <a href="/privacy" className="font-semibold" style={{ color: INDIGO }}>politique de confidentialité</a> de FamillyBill HT.
+              </span>
+            </label>
+
             <Btn
               label={loading ? 'Création du compte...' : 'Continuer'}
               onClick={submitPassword}
-              disabled={password.length < 6 || password !== confPw}
+              disabled={password.length < 8 || password !== confPw || !termsAccepted}
               loading={loading}
             />
           </div>

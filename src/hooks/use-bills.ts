@@ -1,15 +1,16 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { payBillRPC } from '@/services/api'
 
 export type Bill = {
   id: string
   user_id: string
-  provider_id: string
-  category_id: string
+  provider: string
+  category: string
   amount: number
   currency: string
-  status: 'pending' | 'paid' | 'failed'
-  fields: Record<string, string>
+  status: 'pending' | 'paid' | 'failed' | 'completed'
+  account_ref: string
   reference: string
   created_at: string
   paid_at?: string | null
@@ -55,34 +56,24 @@ export function useBills(userId: string | undefined) {
     return () => { supabase.removeChannel(channel) }
   }, [userId, refresh])
 
-  const payBill = useCallback(async (bill: Omit<Bill, 'id' | 'created_at' | 'user_id'> & { fromAccountId: string }) => {
+  const payBill = useCallback(async (params: {
+    fromAccountId: string
+    amount: number
+    currency: string
+    provider: string
+    category: string
+    accountRef: string
+  }) => {
     if (!userId) return { error: 'Non authentifié' }
-    const ref = 'BL' + Date.now().toString(36).toUpperCase()
-    const { error: txError } = await supabase.rpc('do_transfer', {
-      p_from_account_id: bill.fromAccountId,
-      p_to_account_id: null,
-      p_recipient_user_id: null,
-      p_send_amount: bill.amount,
-      p_fee: 0,
-      p_credit_amount: bill.amount,
-      p_recipient_name: bill.reference || null,
-      p_note: `Paiement facture: ${bill.provider_id}`,
-      p_reference: ref,
+    const result = await payBillRPC({
+      accountId: params.fromAccountId,
+      amount: params.amount,
+      currency: params.currency,
+      provider: params.provider,
+      category: params.category,
+      accountRef: params.accountRef,
     })
-    if (txError) return { error: txError.message }
-
-    const { error: billError } = await supabase.from('bill_payments').insert({
-      user_id: userId,
-      provider_id: bill.provider_id,
-      category_id: bill.category_id,
-      amount: bill.amount,
-      currency: bill.currency,
-      status: 'paid',
-      fields: bill.fields,
-      reference: ref,
-      paid_at: new Date().toISOString(),
-    })
-    if (billError) return { error: billError.message }
+    if (result.error) return { error: result.error }
     await refresh()
     return { error: null }
   }, [userId, refresh])

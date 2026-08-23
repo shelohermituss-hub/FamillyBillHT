@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/lib/auth-context'
 import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
 import { getCurrency, getRate, CURRENCIES } from '@/lib/currencies'
+import { processDeposit, freezeAccount, unfreezeAccount, setTransactionPin, verifyTransactionPin, hasTransactionPin } from '@/services/api'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const CURRENCY_FLAGS: Record<string, string> = {
@@ -82,8 +83,7 @@ function CardFront({ acc, user, visible = true, height = 210 }: {
   const num     = getCardNumber(acc)
   const exp     = getCardExpiry(acc)
   const flag    = CURRENCY_FLAGS[acc.currency]
-  const frozen  = acc.id !== 'preview' && localStorage.getItem(`fb-frozen-${acc.id}`)  === 'true'
-  const blocked = acc.id !== 'preview' && localStorage.getItem(`fb-blocked-${acc.id}`) === 'true'
+  const frozen  = acc.id !== 'preview' && acc.is_frozen === true
 
   return (
     <div className="relative rounded-[1.75rem] overflow-hidden w-full select-none"
@@ -134,15 +134,15 @@ function CardFront({ acc, user, visible = true, height = 210 }: {
         </div>
       </div>
       {/* Frozen overlay */}
-      {frozen && !blocked && (
+      {frozen && (
         <div className="absolute inset-0 rounded-[1.75rem] flex flex-col items-center justify-center gap-2"
           style={{ background: 'rgba(30,58,138,0.55)', backdropFilter: 'blur(2px)' }}>
           <Snowflake className="w-10 h-10 text-white" />
           <span className="font-bold text-white tracking-widest" style={{ fontSize: 13 }}>GELÉ</span>
         </div>
       )}
-      {/* Blocked overlay */}
-      {blocked && (
+      {/* Blocked overlay removed — use freeze instead */}
+      {false && (
         <div className="absolute inset-0 rounded-[1.75rem] flex flex-col items-center justify-center gap-2"
           style={{ background: 'rgba(185,28,28,0.6)', backdropFilter: 'blur(2px)' }}>
           <AlertTriangle className="w-10 h-10 text-white" />
@@ -284,10 +284,11 @@ function WalletPinModal({ acc, user, onSuccess, onCancel }: {
   const [pin, setPin]     = useState('')
   const [error, setError] = useState('')
 
-  function handleChange(v: string) {
+  async function handleChange(v: string) {
     setPin(v); setError('')
     if (v.length === 4) {
-      if (v === localStorage.getItem(walletPinKey(acc.id))) { onSuccess() }
+      const { valid } = await verifyTransactionPin(v)
+      if (valid) { onSuccess() }
       else { setError('Code PIN incorrect.'); setTimeout(() => setPin(''), 500) }
     }
   }
@@ -371,14 +372,12 @@ function DepositFlow({ accounts, initialAcc, user, onClose, onSuccess }: {
   async function processPayment() {
     if (!user?.id || !num) return
     setLoading(true)
-    await supabase.from('currency_accounts')
-      .update({ balance: targetAcc.balance + num }).eq('id', targetAcc.id)
-    await supabase.from('transactions').insert({
-      user_id: user.id, type: 'deposit', status: 'completed',
-      amount: num, currency: targetAcc.currency, fee: 0,
-      reference: `DEP-${Date.now()}`,
-    })
+    const result = await processDeposit(targetAcc.id, num)
     setLoading(false)
+    if (!result.success) {
+      alert(result.error ?? 'Erreur lors du dépôt')
+      return
+    }
     setShowCvvSheet(false)
     setStep('done')
     onSuccess()
@@ -734,7 +733,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
   acc: CurrencyAccount; user: UserLike
   onBack: () => void; onBlock: () => void; onCardBack: () => void; onFullSettings: () => void; onChangePIN: () => void; onThemePicker: () => void
 }) {
-  const [frozen, setFrozen] = useState(localStorage.getItem(`fb-frozen-${acc.id}`)  === 'true')
+  const [frozen, setFrozen] = useState(acc.is_frozen === true)
   const [online, setOnline] = useState(localStorage.getItem(`fb-online-${acc.id}`)  !== 'false')
   const [limit,  setLimit]  = useState(localStorage.getItem(`fb-limit-${acc.id}`)   === 'true')
   const [apple,  setApple]  = useState(localStorage.getItem(`fb-apple-${acc.id}`)   === 'true')
@@ -742,7 +741,11 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
   const [showBlock, setShowBlock] = useState(false)
   const curr = getCurrency(acc.currency)
 
-  const persist = (key: string, val: boolean) => localStorage.setItem(`fb-${key}-${acc.id}`, String(val))
+  const toggleFreeze = async () => {
+    const n = !frozen
+    if (n) { await freezeAccount(acc.id) } else { await unfreezeAccount(acc.id) }
+    setFrozen(n)
+  }
 
   return (
     <ScreenOverlay title="Paramètres du portefeuille" onBack={onBack}>
@@ -751,7 +754,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
         <CardFront acc={acc} user={user} />
         {/* Action pills */}
         <div className="flex gap-3">
-          <button onClick={() => { const n = !frozen; setFrozen(n); persist('frozen', n) }}
+          <button onClick={toggleFreeze}
             className="flex-1 h-11 rounded-2xl font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer tr active:scale-[0.97]"
             style={{ background: frozen ? '#1A56DB' : '#EEF3FF', color: frozen ? '#fff' : '#1A56DB' }}>
             <Snowflake className="w-4 h-4" />
@@ -777,7 +780,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
               <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Paiements en ligne</p>
               <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Autoriser les achats internet</p>
             </div>
-            <Toggle on={online} onChange={v => { setOnline(v); persist('online', v) }} />
+            <Toggle on={online} onChange={v => { setOnline(v); localStorage.setItem(`fb-online-${acc.id}`, String(v)) }} />
           </div>
           <div style={{ borderBottom: '1px solid #F3F3F6' }}>
             <div className="flex items-center px-4 py-4 gap-3">
@@ -785,7 +788,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
                 <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Activer la limite</p>
                 <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Définir un plafond mensuel</p>
               </div>
-              <Toggle on={limit} onChange={v => { setLimit(v); persist('limit', v) }} />
+              <Toggle on={limit} onChange={v => { setLimit(v); localStorage.setItem(`fb-limit-${acc.id}`, String(v)) }} />
             </div>
             {limit && (
               <div className="px-4 pb-4">
@@ -805,7 +808,7 @@ function SettingsScreen({ acc, user, onBack, onBlock, onCardBack, onFullSettings
               <p className="font-semibold text-sm" style={{ color: '#0D1B4B' }}>Ajouter à Apple Pay</p>
               <p className="text-xs mt-0.5" style={{ color: 'rgba(13,27,75,0.45)' }}>Payer avec iPhone / Apple Watch</p>
             </div>
-            <Toggle on={apple} onChange={v => { setApple(v); persist('apple', v) }} />
+            <Toggle on={apple} onChange={v => { setApple(v); localStorage.setItem(`fb-apple-${acc.id}`, String(v)) }} />
           </div>
         </div>
         {/* Quick links */}
@@ -895,10 +898,16 @@ function ThemePickerScreen({ acc, user, onBack, onApply }: {
 function CardBackScreen({ acc, onBack, onBlock }: {
   acc: CurrencyAccount; onBack: () => void; onBlock: () => void
 }) {
-  const [frozen,    setFrozen]    = useState(localStorage.getItem(`fb-frozen-${acc.id}`) === 'true')
+  const [frozen,    setFrozen]    = useState(acc.is_frozen === true)
   const [showBlock, setShowBlock] = useState(false)
   const curr = getCurrency(acc.currency)
   const cs   = getCardStyle(acc)
+
+  const toggleFreeze = async () => {
+    const n = !frozen
+    if (n) { await freezeAccount(acc.id) } else { await unfreezeAccount(acc.id) }
+    setFrozen(n)
+  }
 
   return (
     <ScreenOverlay title="Vue arrière de la carte" onBack={onBack}>
@@ -906,7 +915,7 @@ function CardBackScreen({ acc, onBack, onBlock }: {
       <div className="px-4 pt-4 space-y-4">
         <CardBack acc={acc} />
         <div className="flex gap-3">
-          <button onClick={() => { const n = !frozen; setFrozen(n); localStorage.setItem(`fb-frozen-${acc.id}`, String(n)) }}
+          <button onClick={toggleFreeze}
             className="flex-1 h-11 rounded-2xl font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer tr active:scale-[0.97]"
             style={{ background: frozen ? '#1A56DB' : '#EEF3FF', color: frozen ? '#fff' : '#1A56DB' }}>
             <Snowflake className="w-4 h-4" />{frozen ? 'Dégeler' : 'Geler'}
@@ -1080,26 +1089,31 @@ function FullSettingsScreen({ acc, onBack, onBlock, onChangePIN, onSettings, onD
 }
 
 // ── Change PIN Screen ──────────────────────────────────────────────────────────
-function ChangePinScreen({ acc, onBack, onDone }: {
-  acc: CurrencyAccount; onBack: () => void; onDone: () => void
+function ChangePinScreen({ onBack, onDone }: {
+  acc?: CurrencyAccount; onBack: () => void; onDone: () => void
 }) {
   const [step,   setStep]   = useState<'current' | 'new' | 'confirm'>('current')
   const [pin,    setPin]    = useState('')
   const [newPin, setNewPin] = useState('')
   const [error,  setError]  = useState('')
 
-  const hasPin = !!localStorage.getItem(walletPinKey(acc.id))
+  const [hasPin, setHasPin] = useState(false)
+  useEffect(() => { hasTransactionPin().then(setHasPin) }, [])
 
-  function handleChange(v: string) {
+  async function handleChange(v: string) {
     setPin(v); setError('')
     if (v.length === 4) {
       if (step === 'current') {
-        if (!hasPin || v === localStorage.getItem(walletPinKey(acc.id))) { setPin(''); setStep('new') }
-        else { setError('PIN incorrect.'); setTimeout(() => setPin(''), 500) }
+        if (!hasPin) { setPin(''); setStep('new') }
+        else {
+          const { valid } = await verifyTransactionPin(v)
+          if (valid) { setPin(''); setStep('new') }
+          else { setError('PIN incorrect.'); setTimeout(() => setPin(''), 500) }
+        }
       } else if (step === 'new') {
         setNewPin(v); setPin(''); setStep('confirm')
       } else {
-        if (v === newPin) { localStorage.setItem(walletPinKey(acc.id), v); onDone() }
+        if (v === newPin) { await setTransactionPin(v); onDone() }
         else { setError('Les codes ne correspondent pas.'); setPin(''); setNewPin(''); setStep('new') }
       }
     }
@@ -1642,7 +1656,7 @@ export function WalletPage() {
       .select().single()
     if (!error && newAcc) {
       localStorage.setItem(`fb-card-style-${newAcc.id}`, pendingData.styleId)
-      localStorage.setItem(walletPinKey(newAcc.id), pin)
+      await setTransactionPin(pin)
       await loadAccounts()
     }
     setSaving(false)

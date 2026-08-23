@@ -17,6 +17,7 @@ import { supabase, type Transaction } from '@/lib/supabase'
 import { getCurrency } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
 import { profileSchema, type ProfileInput } from '@/services/schemas'
+import { updateProfile, deleteUserAccount } from '@/services/api'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -315,6 +316,11 @@ function SettingsScreen({ onBack, onNotifs }: { onBack: () => void; onNotifs: ()
   }
 
   async function handleDeleteAccount() {
+    const { error } = await deleteUserAccount()
+    if (error) {
+      toast.error('Erreur lors de la suppression: ' + error)
+      return
+    }
     await signOut()
     navigate('/')
   }
@@ -458,47 +464,37 @@ function SettingsScreen({ onBack, onNotifs }: { onBack: () => void; onNotifs: ()
 // ── Privacy & Security screen ─────────────────────────────────────────────────
 
 function PrivacyScreen({ onBack }: { onBack: () => void }) {
-  const [twoFA,     setTwoFA]     = useState(() => localStorage.getItem('fb-2fa') !== 'false')
-  const [biometric, setBiometric] = useState(() => localStorage.getItem('fb-biometric') === 'true')
-  const [location,  setLocation]  = useState(() => localStorage.getItem('fb-location') === 'true')
-
-  function toggle(key: string, val: boolean, set: (v: boolean) => void) {
-    set(val); localStorage.setItem(key, String(val))
-  }
+  // 2FA, biometric, and location are not yet implemented server-side
+  // Show informational labels instead of fake toggles
 
   return (
     <SubScreen>
       <SubHeader title="Confidentialité & Sécurité" onBack={onBack} />
       <div className="px-4 pt-6 space-y-4">
         <GroupCard>
-          <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
-            onClick={() => toggle('fb-2fa', !twoFA, setTwoFA)}>
+          <div className="flex items-center gap-4 px-4 py-3.5">
             <IconWrap Icon={ShieldCheck} />
             <div className="flex-1">
               <p className="text-sm font-medium" style={{ color: '#111' }}>Double authentification (2FA)</p>
-              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Protection renforcée du compte</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Bientôt disponible</p>
             </div>
-            <Switch checked={twoFA} onCheckedChange={v => toggle('fb-2fa', v, setTwoFA)} onClick={e => e.stopPropagation()} />
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F3F4F6', color: '#9CA3AF' }}>Bientôt</span>
           </div>
-          <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
-            style={{ borderBottom: '1px solid #F9FAFB' }}
-            onClick={() => toggle('fb-biometric', !biometric, setBiometric)}>
+          <div className="flex items-center gap-4 px-4 py-3.5">
             <IconWrap Icon={Fingerprint} />
             <div className="flex-1">
               <p className="text-sm font-medium" style={{ color: '#111' }}>Biométrie</p>
-              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Face ID / Empreinte digitale</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Bientôt disponible</p>
             </div>
-            <Switch checked={biometric} onCheckedChange={v => toggle('fb-biometric', v, setBiometric)} onClick={e => e.stopPropagation()} />
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F3F4F6', color: '#9CA3AF' }}>Bientôt</span>
           </div>
-          <div className="flex items-center gap-4 px-4 py-3.5 cursor-pointer"
-            onClick={() => toggle('fb-location', !location, setLocation)}>
+          <div className="flex items-center gap-4 px-4 py-3.5">
             <IconWrap Icon={MapPin} />
             <div className="flex-1">
               <p className="text-sm font-medium" style={{ color: '#111' }}>Localisation</p>
-              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Autorisations de géolocalisation</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>Bientôt disponible</p>
             </div>
-            <Switch checked={location} onCheckedChange={v => toggle('fb-location', v, setLocation)} onClick={e => e.stopPropagation()} />
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F3F4F6', color: '#9CA3AF' }}>Bientôt</span>
           </div>
         </GroupCard>
       </div>
@@ -550,7 +546,7 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
       ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, 200, 200)
       URL.revokeObjectURL(url)
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-      await supabase.from('wise_users').update({ avatar_url: dataUrl }).eq('id', user.id)
+      await updateProfile(user.id, { avatar_url: dataUrl })
       setAvatarUrl(dataUrl)
       setUploadingAvatar(false)
     }
@@ -560,20 +556,21 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
   async function saveField(data: ProfileInput) {
     if (!user) return
     setSaving(true)
-    const { error } = await supabase.from('wise_users').update({
-      full_name: data.full_name,
-      phone: data.phone || null,
-      country: data.country || null,
-      address: data.address || null,
-    }).eq('id', user.id)
-    setSaving(false)
-    if (error) {
+    try {
+      await updateProfile(user.id, {
+        full_name: data.full_name,
+        phone: data.phone || undefined,
+        country: data.country || undefined,
+        address: data.address || undefined,
+      })
+      setSaved(true)
+      toast.success('Profil mis à jour.')
+      setTimeout(() => { setSaved(false); setEditingField(null) }, 800)
+    } catch {
       toast.error('Impossible de mettre à jour le profil.')
-      return
+    } finally {
+      setSaving(false)
     }
-    setSaved(true)
-    toast.success('Profil mis à jour.')
-    setTimeout(() => { setSaved(false); setEditingField(null) }, 800)
   }
 
   const infoRows = [
@@ -696,7 +693,7 @@ function StatementsModal({ onClose }: { onClose: () => void }) {
       tx.amount.toFixed(2), tx.currency,
       tx.recipient_name ?? '', tx.reference ?? '',
     ])
-    const csv = [header, ...rows].map(r => r.join(',')).join('\n')
+    const csv = [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -826,21 +823,14 @@ export function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showStatements, setShowStatements] = useState(false)
-  const [biometric, setBiometric] = useState(() => localStorage.getItem('fb-biometric') === 'true')
-
-  const ensureUserCode = useCallback(async () => {
-    if (!user || profile?.user_code) return
-    const code = 'FB' + Math.random().toString(36).slice(2, 8).toUpperCase()
-    await supabase.from('wise_users').update({ user_code: code }).eq('id', user.id)
-    setDisplayCode(code)
-  }, [user, profile])
+  // user_code is generated server-side by the handle_new_user trigger
 
   useEffect(() => {
     const code = profile?.user_code
-    if (code) setDisplayCode(code); else ensureUserCode()
+    if (code) setDisplayCode(code)
     const av = profile?.avatar_url
     if (av) setAvatarUrl(av)
-  }, [profile, ensureUserCode])
+  }, [profile])
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -856,7 +846,7 @@ export function ProfilePage() {
       ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, 200, 200)
       URL.revokeObjectURL(url)
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-      await supabase.from('wise_users').update({ avatar_url: dataUrl }).eq('id', user.id)
+      await updateProfile(user.id, { avatar_url: dataUrl })
       setAvatarUrl(dataUrl)
       setUploadingAvatar(false)
     }
@@ -893,12 +883,19 @@ export function ProfilePage() {
 
           <p className="text-base font-bold" style={{ color: '#111' }}>{profile?.full_name ?? 'Utilisateur'}</p>
 
-          {/* Verified badge */}
-          <div className="flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full"
-            style={{ background: '#4F46E5' }}>
-            <Check className="w-3 h-3 text-white" strokeWidth={3} />
-            <span className="text-xs font-semibold text-white">Verified</span>
-          </div>
+          {/* Verified badge — conditional on actual verification status */}
+          {profile?.verified ? (
+            <div className="flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full"
+              style={{ background: '#22C55E' }}>
+              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+              <span className="text-xs font-semibold text-white">Vérifié</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full"
+              style={{ background: '#F3F4F6' }}>
+              <span className="text-xs font-semibold" style={{ color: '#9CA3AF' }}>Non vérifié</span>
+            </div>
+          )}
         </div>
 
         <div className="px-4 space-y-3">
@@ -908,9 +905,7 @@ export function ProfilePage() {
             <RowItem Icon={Bell} label={`Notifications${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
               onPress={() => push('notifications-list')} />
             <RowItem Icon={Fingerprint} label="Set Up Face ID" right={
-              <Switch checked={biometric}
-                onCheckedChange={v => { setBiometric(v); localStorage.setItem('fb-biometric', String(v)) }}
-                onClick={e => e.stopPropagation()} />
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F3F4F6', color: '#9CA3AF' }}>Bientôt</span>
             } />
             <RowItem Icon={ShieldCheck} label="Privacy & Security" onPress={() => push('privacy')} last />
           </GroupCard>

@@ -1,8 +1,10 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 
 export type AppNotification = {
   id: string
-  type: 'receive' | 'send' | 'info' | 'alert' | 'rate' | 'payment_request'
+  type: 'receive' | 'send' | 'info' | 'alert' | 'rate' | 'payment_request' | 'payment_received'
   title: string
   body: string
   amount?: number
@@ -28,38 +30,79 @@ const NotificationsContext = createContext<NotificationsCtx>({
   addNotification: () => {},
 })
 
-const INITIAL: AppNotification[] = [
-  {
-    id: 'welcome',
-    type: 'info',
-    title: 'Bienvenue sur FamillyBill HT',
-    body: 'Votre compte est prêt. Envoyez et recevez de l\'argent en quelques secondes.',
-    time: new Date(),
-    read: false,
-  },
-]
-
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL)
+  const { user } = useAuth()
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+
+  const loadNotifications = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (data) {
+      setNotifications(data.map(n => ({
+        id: n.id,
+        type: n.type as AppNotification['type'],
+        title: n.title ?? '',
+        body: n.body ?? '',
+        time: new Date(n.created_at),
+        read: n.read ?? false,
+      })))
+    }
+  }, [user])
+
+  useEffect(() => {
+    loadNotifications()
+  }, [loadNotifications])
+
+  useEffect(() => {
+    if (!user) return
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => loadNotifications()
+      )
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => loadNotifications()
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [user, loadNotifications])
 
   const unreadCount = notifications.filter(n => !n.read).length
 
-  function markAllRead() {
+  const markAllRead = useCallback(async () => {
+    if (!user) return
     setNotifications(ns => ns.map(n => ({ ...n, read: true })))
-  }
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', user.id)
+      .eq('read', false)
+  }, [user])
 
-  function markRead(id: string) {
+  const markRead = useCallback(async (id: string) => {
     setNotifications(ns => ns.map(n => n.id === id ? { ...n, read: true } : n))
-  }
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id)
+  }, [])
 
-  function addNotification(n: Omit<AppNotification, 'id' | 'read' | 'time'>) {
+  const addNotification = useCallback((n: Omit<AppNotification, 'id' | 'read' | 'time'>) => {
     setNotifications(ns => [{
       ...n,
       id: Date.now().toString(),
       read: false,
       time: new Date(),
     }, ...ns])
-  }
+  }, [])
 
   return (
     <NotificationsContext.Provider value={{ notifications, unreadCount, markAllRead, markRead, addNotification }}>
