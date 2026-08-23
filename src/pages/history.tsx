@@ -555,7 +555,7 @@ export function HistoryPage() {
   }, [user])
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 overflow-x-hidden" style={{ background: '#F9FAFB', maxWidth: '100vw' }}>
+    <div className="min-h-screen pb-28 md:pb-8 overflow-x-hidden w-full min-w-0" style={{ background: '#F9FAFB', maxWidth: '100vw' }}>
 
       {/* Sticky header */}
       <div className="sticky top-0 z-30 px-4 pt-5 pb-3" style={{ background: '#F9FAFB' }}>

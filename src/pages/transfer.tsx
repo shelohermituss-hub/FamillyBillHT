@@ -526,7 +526,7 @@ export function TransferPage() {
   // Processing modal
   const ProcModal = () => (
     <div className="fixed inset-0 z-[90] flex items-center justify-center" style={{background:'rgba(0,0,0,0.45)',backdropFilter:'blur(4px)'}}>
-      <div className="bg-white rounded-3xl mx-6 px-6 pt-4 pb-8 text-center" style={{maxWidth:320}}>
+      <div className="w-[calc(100%-3rem)] max-w-[320px] bg-white rounded-3xl mx-6 px-6 pt-4 pb-8 text-center">
         <ProcessingIllustration/>
         <p className="text-xl font-bold mt-2" style={{color:'#1C1C1E'}}>Processing..</p>
         <p className="text-sm mt-1" style={{color:'#8E8E93'}}>Just hold a second, we are processing your transfer.</p>
@@ -563,7 +563,7 @@ export function TransferPage() {
   // HUB
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='hub') return (
-    <div className="min-h-screen bg-white pb-28 overflow-x-hidden" style={{maxWidth:'100vw'}}>
+    <div className="min-h-screen w-full min-w-0 bg-white pb-28 overflow-x-hidden" style={{maxWidth:'100vw'}}>
       <div className="px-4 pt-2">
         {/* Header */}
         <div className="flex items-center justify-between pt-2 pb-4">

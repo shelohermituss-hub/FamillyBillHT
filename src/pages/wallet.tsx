@@ -1486,7 +1486,7 @@ function MainWalletScreen({ accounts, loading, user, onNavigate, onRecharge }: {
   }
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: '#F3F3F6' }}>
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden pb-28" style={{ background: '#F3F3F6' }}>
       {/* Card */}
       <div className="px-5 pt-6 pb-4">
         {mainAcc ? (

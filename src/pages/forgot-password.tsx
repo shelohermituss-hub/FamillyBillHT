@@ -165,7 +165,7 @@ export function ForgotPasswordPage() {
 
   if (step === 'email') {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: '#ffffff', maxWidth: 480, margin: '0 auto' }}>
+      <div className="min-h-screen w-full min-w-0 overflow-x-hidden flex flex-col max-w-[480px] mx-auto" style={{ background: '#ffffff' }}>
         <GradientHeader title="Mot de passe oublié" subtitle="Entrez votre email pour recevoir un code" backTo="/login" />
         <form onSubmit={emailForm.handleSubmit(sendCode)} className="flex-1 px-6 pt-8 pb-10 flex flex-col gap-5">
           <div>
@@ -189,7 +189,7 @@ export function ForgotPasswordPage() {
 
   if (step === 'otp') {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: '#ffffff', maxWidth: 480, margin: '0 auto' }}>
+      <div className="min-h-screen w-full min-w-0 overflow-x-hidden flex flex-col max-w-[480px] mx-auto" style={{ background: '#ffffff' }}>
         <GradientHeader title="Vérification" subtitle={`Code envoyé à ${email}`} onBack={() => { go('email'); setOtp('') }} />
         <div className="flex-1 flex flex-col">
           <div className="px-6 pt-6">
@@ -212,7 +212,7 @@ export function ForgotPasswordPage() {
 
   if (step === 'password') {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: '#ffffff', maxWidth: 480, margin: '0 auto' }}>
+      <div className="min-h-screen w-full min-w-0 overflow-x-hidden flex flex-col max-w-[480px] mx-auto" style={{ background: '#ffffff' }}>
         <GradientHeader title="Nouveau mot de passe" subtitle="Choisissez un mot de passe sécurisé" onBack={() => go('otp')} />
         <form onSubmit={pwForm.handleSubmit(updatePassword)} className="flex-1 px-6 pt-8 pb-10 flex flex-col gap-5">
           <div>
@@ -252,7 +252,7 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12" style={{ background: '#ffffff', maxWidth: 480, margin: '0 auto' }}>
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden flex flex-col items-center justify-center px-6 py-12 max-w-[480px] mx-auto" style={{ background: '#ffffff' }}>
       <div className="text-center space-y-6">
         <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-2xl" style={{ background: 'linear-gradient(135deg, #6B63F5, #4F46E5)' }}>
           <Check className="w-12 h-12 text-white" strokeWidth={2.5} />

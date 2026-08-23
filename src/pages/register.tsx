@@ -372,7 +372,7 @@ export function RegisterPage() {
       : 'Le code doit comporter 6 chiffres'
 
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white flex flex-col">
         <div className="px-6 pt-12 pb-2 shrink-0">
           <Back onClick={goBack}/>
         </div>
@@ -405,7 +405,7 @@ export function RegisterPage() {
 
   // ── Regular form screens ──────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white flex flex-col">
       {step !== 'welcome' && (
         <div className="px-6 pt-12 pb-4 shrink-0">
           <Back onClick={goBack}/>

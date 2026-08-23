@@ -70,18 +70,19 @@ type NavItemDef =
   | { icon: React.FC<IconProps>; label: string; href?: never; special: 'profile' }
 
 const NAV_ITEMS: NavItemDef[] = [
-  { icon: NavIconHome,    label: 'Accueil', href: '/dashboard' },
-  { icon: NavIconWallet,  label: 'Wallet',  href: '/wallet'    },
-  { icon: NavIconStats,   label: 'Stats',   href: '/history'   },
-  { icon: NavIconProfile, label: 'Profil',  special: 'profile' },
+  { icon: NavIconHome,    label: 'Accueil',  href: '/dashboard' },
+  { icon: NavIconWallet,  label: 'Wallet',   href: '/wallet'    },
+  { icon: NavIconBills,   label: 'Factures', href: '/bills'     },
+  { icon: NavIconFamily,  label: 'Famille',  href: '/family'    },
+  { icon: NavIconProfile, label: 'Profil',   special: 'profile' },
 ]
 
 const SIDEBAR_ITEMS = [
-  { icon: NavIconHome,   label: 'Accueil',   href: '/dashboard' },
-  { icon: NavIconWallet, label: 'Wallet',    href: '/wallet'    },
-  { icon: NavIconBills,  label: 'Factures',  href: '/bills'     },
-  { icon: NavIconFamily, label: 'Famille',   href: '/family'    },
-  { icon: NavIconStats,  label: 'Historique',href: '/history'   },
+  { icon: NavIconHome,   label: 'Accueil',    href: '/dashboard' },
+  { icon: NavIconWallet, label: 'Wallet',     href: '/wallet'    },
+  { icon: NavIconBills,  label: 'Factures',   href: '/bills'     },
+  { icon: NavIconFamily, label: 'Famille',    href: '/family'    },
+  { icon: NavIconStats,  label: 'Historique', href: '/history'   },
 ]
 
 function isActive(href: string, path: string) {
@@ -332,7 +333,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* ── Mobile header ── */}
       <header
-        className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 px-4 flex items-center justify-between"
+        className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 px-4 flex items-center justify-between w-full min-w-0"
         style={{
           background: 'rgba(243,243,246,0.92)',
           backdropFilter: 'blur(16px)',
@@ -354,7 +355,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       </header>
 
       {/* ── Main ── */}
-      <main className="flex-1 md:ml-64 pt-14 md:pt-16 min-h-screen pb-28 md:pb-0">
+      <main className="flex-1 md:ml-64 pt-14 md:pt-16 min-h-screen pb-24 md:pb-0 w-full min-w-0 overflow-x-hidden">
         {children}
       </main>
 
@@ -363,7 +364,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* ── Mobile bottom nav ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 w-full min-w-0"
         style={{
           background: 'rgba(255,255,255,0.97)',
           backdropFilter: 'blur(20px)',
@@ -372,25 +373,26 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
-        <div className="flex items-center justify-around px-1 pt-2 pb-3">
+        <div className="flex items-stretch justify-around px-1 pt-2 pb-2 w-full min-w-0">
           {NAV_ITEMS.map(item => {
             if (item.special === 'profile') {
               return (
                 <button
                   key="profile"
                   onClick={() => setProfileOpen(true)}
-                  className="flex-1 flex flex-col items-center gap-1 cursor-pointer"
+                  className="flex-1 flex flex-col items-center gap-1 cursor-pointer min-w-0 py-1"
+                  aria-label={item.label}
                 >
                   <div
-                    className="w-11 h-9 flex items-center justify-center rounded-xl tr"
+                    className="w-11 h-11 flex items-center justify-center rounded-xl tr"
                     style={{ background: 'transparent', transition: 'background 200ms ease' }}
                   >
                     <item.icon
                       className="tr"
-                      style={{ width: 19, height: 19, color: 'var(--ink-30)', transition: 'color 200ms ease' }}
+                      style={{ width: 22, height: 22, color: 'var(--ink-30)', transition: 'color 200ms ease' }}
                     />
                   </div>
-                  <span className="text-[10px] font-semibold tracking-tight" style={{ color: 'var(--ink-30)' }}>
+                  <span className="text-[10px] font-semibold tracking-tight truncate" style={{ color: 'var(--ink-30)' }}>
                     {item.label}
                   </span>
                 </button>
@@ -402,10 +404,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 to={item.href}
-                className="flex-1 flex flex-col items-center gap-1 cursor-pointer"
+                className="flex-1 flex flex-col items-center gap-1 cursor-pointer min-w-0 py-1"
               >
                 <div
-                  className="w-11 h-9 flex items-center justify-center rounded-xl tr"
+                  className="w-11 h-11 flex items-center justify-center rounded-xl tr"
                   style={{
                     background: active ? 'var(--lime)' : 'transparent',
                     transition: 'background 200ms ease',
@@ -414,15 +416,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                   <item.icon
                     className="tr"
                     style={{
-                      width: 19,
-                      height: 19,
+                      width: 22,
+                      height: 22,
                       color: active ? '#ffffff' : 'var(--ink-30)',
                       transition: 'color 200ms ease',
                     }}
                   />
                 </div>
                 <span
-                  className="text-[10px] font-semibold tracking-tight"
+                  className="text-[10px] font-semibold tracking-tight truncate"
                   style={{
                     color: active ? 'var(--lime)' : 'var(--ink-30)',
                     transition: 'color 200ms ease',

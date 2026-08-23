@@ -268,7 +268,7 @@ export function LandingPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col bg-white overflow-hidden"
+      className="min-h-screen w-full min-w-0 flex flex-col bg-white overflow-x-hidden"
       onPointerDown={e => { ptrStart.current = e.clientX }}
       onPointerUp={e => {
         const d = e.clientX - ptrStart.current

@@ -184,7 +184,7 @@ export function SupportPage() {
 
   // ── Hub screen ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white pb-28">
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white pb-28">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3">
         <button onClick={()=>navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer" style={{background:'#F2F2F7'}}>

@@ -103,23 +103,23 @@ function StepBar({ current }: { current: Step }) {
 // ── Category grid ─────────────────────────────────────────────────────────────
 function CategoryStep({ onSelect }: { onSelect: (cat: BillCategory) => void }) {
   return (
-    <div className="space-y-4 animate-fade-in-up">
+    <div className="space-y-4 animate-fade-in-up w-full min-w-0">
       <div>
         <h2 className="text-lg font-semibold text-[var(--ink)]">Quelle facture payez-vous ?</h2>
         <p className="text-sm text-[var(--ink-60)] mt-1">Choisissez une catégorie</p>
       </div>
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 w-full min-w-0">
         {BILL_CATEGORIES.map(cat => (
           <button
             key={cat.id}
             onClick={() => onSelect(cat)}
-            className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border border-[var(--border)] hover:border-[var(--ink-30)] tr cursor-pointer group"
+            className="flex flex-col items-center gap-2.5 p-3 sm:p-4 rounded-2xl border border-[var(--border)] hover:border-[var(--ink-30)] tr cursor-pointer group w-full min-w-0"
             style={{ background: 'var(--card-bg)' }}
           >
             <div className="tr group-hover:scale-110">
               <CategoryIcon cat={cat} size="md" />
             </div>
-            <span className="text-xs font-semibold text-[var(--ink)] text-center leading-tight">
+            <span className="text-xs font-semibold text-[var(--ink)] text-center leading-tight break-words">
               {cat.label}
             </span>
           </button>
@@ -149,7 +149,7 @@ function ProviderStep({
   }, [])
 
   return (
-    <div className="space-y-4 animate-fade-in-up">
+    <div className="space-y-4 animate-fade-in-up w-full min-w-0">
       <div className="flex items-center gap-2 mb-1">
         <CategoryIcon cat={category} size="sm" />
         <h2 className="text-lg font-semibold text-[var(--ink)]">{category.label}</h2>
@@ -157,11 +157,11 @@ function ProviderStep({
       <p className="text-sm text-[var(--ink-60)] -mt-2">Choisissez le fournisseur</p>
 
       {loading ? (
-        <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
+        <div className="card-flat overflow-hidden divide-y divide-[var(--border)] w-full min-w-0">
           {[1, 2, 3].map(i => (
             <div key={i} className="flex items-center gap-3 px-4 py-3.5">
               <Skeleton className="w-11 h-11 rounded-xl shrink-0" />
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 min-w-0">
                 <Skeleton className="h-3.5 w-32" />
                 <Skeleton className="h-3 w-48" />
               </div>
@@ -169,16 +169,16 @@ function ProviderStep({
           ))}
         </div>
       ) : (
-        <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
+        <div className="card-flat overflow-hidden divide-y divide-[var(--border)] w-full min-w-0">
           {providers.map(provider => (
             <button
               key={provider.id}
               onClick={() => onSelect(provider)}
-              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left"
+              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left min-w-0"
             >
               <ProviderLogo provider={provider} size="sm" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[var(--ink)]">{provider.name}</p>
+                <p className="text-sm font-semibold text-[var(--ink)] truncate">{provider.name}</p>
                 <p className="text-xs text-[var(--ink-60)] truncate">{provider.description}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -197,16 +197,16 @@ function ProviderStep({
       {!loading && others.length > 0 && (
         <>
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)] px-1">Autres services populaires</p>
-          <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
+          <div className="card-flat overflow-hidden divide-y divide-[var(--border)] w-full min-w-0">
             {others.map(provider => (
               <button
                 key={provider.id}
                 onClick={() => onSelect(provider)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left"
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left min-w-0"
               >
                 <ProviderLogo provider={provider} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[var(--ink)]">{provider.name}</p>
+                  <p className="text-sm font-semibold text-[var(--ink)] truncate">{provider.name}</p>
                   <p className="text-xs text-[var(--ink-60)] truncate">{provider.description}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-[var(--ink-30)]" />
@@ -281,17 +281,17 @@ function DetailsStep({
     htgAmount > 0
 
   return (
-    <div className="space-y-5 animate-fade-in-up">
+    <div className="space-y-5 animate-fade-in-up w-full min-w-0">
       {/* Provider header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <ProviderLogo provider={provider} size="md" />
-        <div>
-          <h2 className="text-lg font-semibold text-[var(--ink)]">{provider.name}</h2>
-          <p className="text-xs text-[var(--ink-60)]">{provider.description}</p>
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-[var(--ink)] truncate">{provider.name}</h2>
+          <p className="text-xs text-[var(--ink-60)] truncate">{provider.description}</p>
         </div>
       </div>
 
-      <div className="card-flat p-5 space-y-4">
+      <div className="card-flat p-4 sm:p-5 space-y-4 w-full min-w-0">
         {provider.fields.map(field => (
           <div key={field.id} className="space-y-1.5">
             <Label className="text-sm font-medium text-[var(--ink)]">
@@ -331,14 +331,14 @@ function DetailsStep({
         {/* Amount block — mirrors transfer page step 1 */}
         <div className="space-y-3 pt-2 border-t border-[var(--border)]">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)]">Vous payez</p>
-          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr">
+          <div className="flex items-center gap-3 px-3 sm:px-4 py-3 rounded-2xl border border-[var(--border)] focus-within:border-[var(--ink-30)] tr w-full min-w-0">
             <Input
               type="number"
               value={amount}
               onChange={e => onAmountChange(e.target.value)}
               placeholder="0"
               min="1"
-              className="border-0 shadow-none text-3xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 tabular-nums bg-transparent text-[var(--ink)]"
+              className="border-0 shadow-none text-2xl sm:text-3xl font-bold p-0 h-auto focus-visible:ring-0 flex-1 min-w-0 tabular-nums bg-transparent text-[var(--ink)]"
             />
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm shrink-0" style={{ background: 'var(--lime)', color: '#ffffff' }}>
               <span>🇭🇹</span> HTG
@@ -391,27 +391,27 @@ function ReviewStep({
     .map(f => ({ label: f.label, value: fieldValues[f.id] }))
 
   return (
-    <div className="space-y-5 animate-fade-in-up">
+    <div className="space-y-5 animate-fade-in-up w-full min-w-0">
       <div>
         <h2 className="text-lg font-semibold text-[var(--ink)]">Récapitulatif</h2>
         <p className="text-sm text-[var(--ink-60)] mt-1">Vérifiez avant de confirmer le paiement</p>
       </div>
 
       {/* Provider card */}
-      <div className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)]" style={{ background: 'var(--card-bg)' }}>
+      <div className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)] min-w-0" style={{ background: 'var(--card-bg)' }}>
         <ProviderLogo provider={provider} size="sm" />
-        <div>
-          <p className="font-semibold text-[var(--ink)]">{provider.name}</p>
-          <p className="text-xs text-[var(--ink-60)]">{category.label}</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-[var(--ink)] truncate">{provider.name}</p>
+          <p className="text-xs text-[var(--ink-60)] truncate">{category.label}</p>
         </div>
         {provider.instant && (
-          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0" style={{ background: 'var(--lime)', color: '#ffffff' }}>
             Instantané
           </span>
         )}
       </div>
 
-      <div className="rounded-xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
+      <div className="rounded-xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)] w-full min-w-0">
         {rows.map((row, i) => (
           <div key={i} className="flex justify-between items-start gap-3 px-4 py-3">
             <span className="text-sm text-[var(--ink-60)] shrink-0">{row.label}</span>
@@ -495,37 +495,37 @@ function PaymentMethodStep({
   const walletInsufficient = walletBalance !== null && walletBalance < htgAmount
 
   return (
-    <div className="space-y-5 animate-fade-in-up">
+    <div className="space-y-5 animate-fade-in-up w-full min-w-0">
       <div>
         <h2 className="text-lg font-semibold text-[var(--ink)]">Moyen de paiement</h2>
         <p className="text-sm text-[var(--ink-60)] mt-1">Choisissez comment payer votre facture</p>
       </div>
 
       {/* Amount summary */}
-      <div className="flex items-center justify-between px-4 py-3.5 rounded-2xl"
+      <div className="flex items-center justify-between px-4 py-3.5 rounded-2xl w-full min-w-0"
         style={{ background: 'var(--lime-light)', border: '1px solid var(--lime)20' }}>
-        <span className="text-sm font-semibold text-[var(--ink)]">Total à payer</span>
-        <span className="text-lg font-bold text-[var(--ink)]">
+        <span className="text-sm font-semibold text-[var(--ink)] shrink-0">Total à payer</span>
+        <span className="text-lg font-bold text-[var(--ink)] text-right">
           G {htgAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
         </span>
       </div>
 
       {/* Options */}
-      <div className="space-y-3">
+      <div className="space-y-3 w-full min-w-0">
         {/* Wallet option */}
         <button
           onClick={() => !walletInsufficient && setSelected('wallet')}
-          className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 tr cursor-pointer"
+          className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border-2 tr cursor-pointer min-w-0"
           style={{
             borderColor: selected === 'wallet' ? 'var(--lime)' : 'var(--border)',
             background: selected === 'wallet' ? 'var(--lime-light)' : 'var(--card-bg)',
             opacity: walletInsufficient ? 0.5 : 1,
           }}>
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0"
             style={{ background: selected === 'wallet' ? 'var(--lime)' : 'var(--surface-2)' }}>
             <Wallet className="w-5 h-5" style={{ color: selected === 'wallet' ? '#fff' : 'var(--ink-60)' }} />
           </div>
-          <div className="flex-1 text-left">
+          <div className="flex-1 text-left min-w-0">
             <p className="font-semibold text-sm text-[var(--ink)]">Solde du portefeuille</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>
               {walletBalance !== null
@@ -545,16 +545,16 @@ function PaymentMethodStep({
         {/* Card option */}
         <button
           onClick={() => setSelected('card')}
-          className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 tr cursor-pointer"
+          className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border-2 tr cursor-pointer min-w-0"
           style={{
             borderColor: selected === 'card' ? 'var(--lime)' : 'var(--border)',
             background: selected === 'card' ? 'var(--lime-light)' : 'var(--card-bg)',
           }}>
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0"
             style={{ background: selected === 'card' ? 'var(--lime)' : 'var(--surface-2)' }}>
             <CreditCard className="w-5 h-5" style={{ color: selected === 'card' ? '#fff' : 'var(--ink-60)' }} />
           </div>
-          <div className="flex-1 text-left">
+          <div className="flex-1 text-left min-w-0">
             <p className="font-semibold text-sm text-[var(--ink)]">Carte bancaire</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--ink-60)' }}>Visa / Mastercard</p>
           </div>
@@ -601,7 +601,7 @@ function SuccessStep({
   const usdEquiv = htgAmount * getRate('HTG', 'USD')
 
   return (
-    <div className="card-flat p-8 text-center space-y-6 animate-scale-in">
+    <div className="card-flat p-6 sm:p-8 text-center space-y-6 animate-scale-in w-full min-w-0">
       <div className="relative w-24 h-24 mx-auto">
         <div className="w-24 h-24 rounded-3xl overflow-hidden border border-[var(--border)] bg-white flex items-center justify-center">
           {provider.logo
@@ -776,8 +776,8 @@ export function BillsPage() {
   const stepNumber = STEPS.indexOf(step)
 
   return (
-    <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'var(--surface)' }}>
-      <div className="max-w-lg mx-auto px-4 pt-6">
+    <div className="min-h-screen pb-20 md:pb-8 w-full min-w-0 overflow-x-hidden" style={{ background: 'var(--surface)' }}>
+      <div className="max-w-lg mx-auto w-full min-w-0 px-4 sm:px-5 pt-6">
 
         {step !== 'success' && (
           <div className="flex items-center gap-3 mb-6 animate-fade-in-up">

@@ -46,7 +46,7 @@ export function NotFoundPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white flex flex-col">
       {/* Back button */}
       <div className="px-4 pt-4 pb-2">
         <button onClick={()=>navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"

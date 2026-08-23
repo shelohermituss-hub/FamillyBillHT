@@ -527,7 +527,7 @@ export function FamilyPage() {
 
   if (selectedWallet) {
     return (
-      <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
+      <div className="min-h-screen w-full min-w-0 overflow-x-hidden pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
         <div className="max-w-lg mx-auto px-4 pt-6">
           <button
             onClick={() => setSelectedWallet(null)}
@@ -543,7 +543,7 @@ export function FamilyPage() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden pb-24 md:pb-8" style={{ background: 'var(--surface)' }}>
       {showCreate && (
         <CreateWalletModal
           onClose={() => setShowCreate(false)}

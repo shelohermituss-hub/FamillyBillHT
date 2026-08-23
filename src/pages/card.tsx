@@ -99,7 +99,7 @@ export function CardPage() {
       <div className="fixed top-0 left-1/4 w-96 h-96 rounded-full -z-10 blur-[120px]" style={{ background: 'rgba(109,40,217,0.12)' }} />
       <div className="fixed bottom-20 right-0 w-72 h-72 rounded-full -z-10 blur-[100px]" style={{ background: 'rgba(5,150,105,0.1)' }} />
 
-      <div className="min-h-screen pb-36" style={{ background: 'transparent' }}>
+      <div className="min-h-screen w-full min-w-0 overflow-x-hidden pb-36" style={{ background: 'transparent' }}>
 
         {/* ── Header ── */}
         <div className="px-5 pt-7 pb-4 flex items-center justify-between">

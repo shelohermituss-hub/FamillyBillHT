@@ -83,7 +83,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#ffffff', maxWidth: 480, margin: '0 auto' }}>
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden flex flex-col max-w-[480px] mx-auto" style={{ background: '#ffffff' }}>
       <div
         className="relative flex flex-col items-center pt-14 pb-10 px-6"
         style={{

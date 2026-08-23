@@ -88,7 +88,7 @@ export function AccountPage() {
   const availableCurrencies = CURRENCIES.filter(c => !accounts.find(a => a.currency === c.code))
 
   return (
-    <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'var(--surface)' }}>
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden pb-20 md:pb-8" style={{ background: 'var(--surface)' }}>
       <div className="max-w-4xl mx-auto px-4 pt-6 space-y-5">
 
         <div>

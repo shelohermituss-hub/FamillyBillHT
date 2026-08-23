@@ -227,7 +227,7 @@ export function DashboardPage() {
   const greetWord = greetHour < 12 ? 'Bonjour' : greetHour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 overflow-x-hidden" style={{ background: '#F3F4F6', maxWidth: '100vw' }}>
+    <div className="min-h-screen pb-28 md:pb-8 overflow-x-hidden w-full min-w-0" style={{ background: '#F3F4F6', maxWidth: '100vw' }}>
       {showReceive && <ReceiveModal profile={profile} onClose={() => setShowReceive(false)} />}
 
       {/* ── Header card (white) ── */}

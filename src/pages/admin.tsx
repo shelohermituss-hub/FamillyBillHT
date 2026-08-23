@@ -15,7 +15,7 @@ const MODULES = [
 
 export function AdminPage() {
   return (
-    <div className="min-h-screen px-4 py-6 max-w-2xl mx-auto">
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden px-4 py-6 max-w-2xl mx-auto">
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
