@@ -84,12 +84,13 @@ function AppRoutes() {
 export function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="fb-theme">
-      <NotificationsProvider>
-        <AuthProvider>
+      {/* 1. AuthProvider englobe désormais le reste des composants */}
+      <AuthProvider>
+        <NotificationsProvider>
           <AppRoutes />
           <PwaPrompt />
-        </AuthProvider>
-      </NotificationsProvider>
+        </NotificationsProvider>
+      </AuthProvider>
     </ThemeProvider>
   )
 }
