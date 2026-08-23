@@ -93,7 +93,7 @@ function isActive(href: string, path: string) {
 function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
-  const avatarUrl = (profile as any)?.avatar_url as string | undefined
+  const avatarUrl = profile?.avatar_url
   const initials = (profile?.full_name ?? 'U').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
 
   async function handleSignOut() {
@@ -129,7 +129,7 @@ function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-base truncate" style={{ color: '#0D1B4B' }}>{profile?.full_name ?? 'Utilisateur'}</p>
-            <p className="text-sm truncate" style={{ color: 'rgba(13,27,75,0.45)' }}>{(profile as any)?.email ?? ''}</p>
+            <p className="text-sm truncate" style={{ color: 'rgba(13,27,75,0.45)' }}>{profile?.email ?? ''}</p>
           </div>
           <button onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full cursor-pointer"
@@ -200,7 +200,7 @@ function HeaderActions() {
 
   const initials = (profile?.full_name ?? 'U')
     .split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
-  const avatarUrl = (profile as any)?.avatar_url as string | undefined
+  const avatarUrl = profile?.avatar_url
 
   return (
     <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ function HeaderActions() {
 // ── Layout ─────────────────────────────────────────────────────────────────────
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
-  const avatarUrl = (profile as any)?.avatar_url as string | undefined
+  const avatarUrl = profile?.avatar_url
   const location = useLocation()
   const navigate = useNavigate()
   const [profileOpen, setProfileOpen] = useState(false)
@@ -304,7 +304,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate text-[var(--ink)]">{profile?.full_name ?? 'Utilisateur'}</p>
-                <p className="text-xs truncate" style={{ color: 'var(--ink-60)' }}>{(profile as any)?.email ?? ''}</p>
+                <p className="text-xs truncate" style={{ color: 'var(--ink-60)' }}>{profile?.email ?? ''}</p>
               </div>
             </div>
           </Link>

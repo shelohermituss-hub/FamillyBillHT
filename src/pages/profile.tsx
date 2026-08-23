@@ -512,12 +512,12 @@ function PersonalDetailsScreen({ onBack, onSettings, onHelp, onSignOut }: {
 }) {
   const { user, profile } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [avatarUrl, setAvatarUrl] = useState<string>((profile as any)?.avatar_url ?? '')
+  const [avatarUrl, setAvatarUrl] = useState<string>(profile?.avatar_url ?? '')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [activeTab, setActiveTab] = useState<'personal' | 'business'>('personal')
   const [editingField, setEditingField] = useState<string | null>(null)
-  const [phone, setPhone] = useState<string>((profile as any)?.phone ?? '212-456-7890')
-  const [address, setAddress] = useState<string>((profile as any)?.address ?? '')
+  const [phone, setPhone] = useState<string>(profile?.phone ?? '212-456-7890')
+  const [address, setAddress] = useState<string>(profile?.address ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -795,24 +795,24 @@ export function ProfilePage() {
   const push = useCallback((s: Screen) => setScreenStack(p => [...p, s]), [])
   const back = useCallback(() => setScreenStack(p => p.length > 1 ? p.slice(0, -1) : p), [])
 
-  const [displayCode,  setDisplayCode]  = useState<string>((profile as any)?.user_code ?? '')
-  const [avatarUrl,    setAvatarUrl]    = useState<string>((profile as any)?.avatar_url ?? '')
+  const [displayCode,  setDisplayCode]  = useState<string>(profile?.user_code ?? '')
+  const [avatarUrl,    setAvatarUrl]    = useState<string>(profile?.avatar_url ?? '')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showStatements, setShowStatements] = useState(false)
   const [biometric, setBiometric] = useState(() => localStorage.getItem('fb-biometric') === 'true')
 
   const ensureUserCode = useCallback(async () => {
-    if (!user || (profile as any)?.user_code) return
+    if (!user || profile?.user_code) return
     const code = 'FB' + Math.random().toString(36).slice(2, 8).toUpperCase()
     await supabase.from('wise_users').update({ user_code: code }).eq('id', user.id)
     setDisplayCode(code)
   }, [user, profile])
 
   useEffect(() => {
-    const code = (profile as any)?.user_code
+    const code = profile?.user_code
     if (code) setDisplayCode(code); else ensureUserCode()
-    const av = (profile as any)?.avatar_url
+    const av = profile?.avatar_url
     if (av) setAvatarUrl(av)
   }, [profile, ensureUserCode])
 

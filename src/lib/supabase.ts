@@ -20,6 +20,7 @@ export type WiseUser = {
   user_code?: string
   phone?: string
   country?: string
+  address?: string
   created_at: string
 }
 

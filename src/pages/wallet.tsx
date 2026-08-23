@@ -7,7 +7,7 @@ import {
   CreditCard, Building2, Calendar, Clock,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { supabase, type CurrencyAccount } from '@/lib/supabase'
+import { supabase, type CurrencyAccount, type Transaction } from '@/lib/supabase'
 import { getCurrency, getRate, CURRENCIES } from '@/lib/currencies'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -1169,7 +1169,7 @@ function PinSetupScreen({ onBack, onConfirm }: { onBack: () => void; onConfirm: 
 function WalletHistoryScreen({ acc, user, onBack }: {
   acc: CurrencyAccount; user: UserLike; onBack: () => void
 }) {
-  const [txs,     setTxs]     = useState<any[]>([])
+  const [txs,     setTxs]     = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const curr = getCurrency(acc.currency)
 
