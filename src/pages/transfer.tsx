@@ -11,6 +11,8 @@ import { useNotifications } from '@/lib/notifications-context'
 import { supabase, type CurrencyAccount, type WiseUser } from '@/lib/supabase'
 import { getCurrency, formatCurrency, getRate } from '@/lib/currencies'
 import { cn } from '@/lib/utils'
+import { bankTransferSchema } from '@/services/schemas'
+import { toast } from 'sonner'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Screen =
@@ -394,7 +396,9 @@ export function TransferPage() {
     })
 
     if (error || !result?.success) {
-      setTransferError(result?.error ?? error?.message ?? 'Erreur lors du transfert. Réessayez.')
+      const msg = result?.error ?? error?.message ?? 'Erreur lors du transfert. Réessayez.'
+      setTransferError(msg)
+      toast.error(msg)
       setProcessing(false)
       return
     }
@@ -411,6 +415,7 @@ export function TransferPage() {
       amount: sendAmount,
       from: recipName ?? undefined,
     })
+    toast.success('Transfert effectué avec succès.')
     setProcessing(false)
     push(nextScreen)
   }
@@ -856,7 +861,15 @@ export function TransferPage() {
   // BANK FORM
   // ─────────────────────────────────────────────────────────────────────────
   if (screen==='bank-form') {
-    const canContinue = bankName&&recipientName.trim()&&recipientAccount.trim()&&sendAmount>0&&fromWallet
+    const parsed = bankTransferSchema.safeParse({
+      bankName, recipientName, recipientAccount, purpose, amount: sendAmount,
+    })
+    const canContinue = parsed.success && !!fromWallet
+    const fieldError = (field: string) => {
+      if (parsed.success) return null
+      const issue = parsed.error.issues.find(i => i.path[0] === field)
+      return issue?.message ?? null
+    }
     return (
       <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
         <Hdr title="Bank transfer" onBack={back} right={<QRIcon/>}/>
@@ -877,11 +890,11 @@ export function TransferPage() {
 
           {/* Form */}
           {[
-            { label:'Bank name', value:bankName, onChange:setBankName, placeholder:'ex. BNC, Unibank...', isSelect:true },
-            { label:"Recipient's Name", value:recipientName, onChange:setRecipientName, placeholder:'Full name' },
-            { label:'Account number', value:recipientAccount, onChange:setRecipientAccount, placeholder:'9000 0112 3456 78', mono:true },
-            { label:'Purpose of Transfer', value:purpose, onChange:setPurpose, placeholder:'Reason for transfer' },
-          ].map(({label,value,onChange,placeholder,mono,isSelect})=>(
+            { label:'Bank name', value:bankName, onChange:setBankName, placeholder:'ex. BNC, Unibank...', isSelect:true, error: null as string|null },
+            { label:"Recipient's Name", value:recipientName, onChange:setRecipientName, placeholder:'Full name', error: fieldError('recipientName') },
+            { label:'Account number', value:recipientAccount, onChange:setRecipientAccount, placeholder:'9000 0112 3456 78', mono:true, error: fieldError('recipientAccount') },
+            { label:'Purpose of Transfer', value:purpose, onChange:setPurpose, placeholder:'Reason for transfer', error: null },
+          ].map(({label,value,onChange,placeholder,mono,isSelect,error})=>(
             <div key={label} className="mb-3">
               <p className="text-sm font-medium mb-1.5" style={{color:'#1C1C1E'}}>{label}</p>
               {isSelect?(
@@ -893,15 +906,16 @@ export function TransferPage() {
               ):(
                 <input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
                   className={cn('w-full h-12 px-4 rounded-xl text-sm outline-none',mono&&'font-mono')}
-                  style={{background:'#F2F2F7',border:'1px solid #F0F0F5',color:'#1C1C1E'}}/>
+                  style={{background:'#F2F2F7',border:`1px solid ${error?'#EF4444':'#F0F0F5'}`,color:'#1C1C1E'}}/>
               )}
+              {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
             </div>
           ))}
 
           {/* Amount row */}
           <div className="mb-5">
             <p className="text-sm font-medium mb-1.5" style={{color:'#1C1C1E'}}>Amount</p>
-            <div className="flex items-center gap-2 px-4 h-12 rounded-xl" style={{background:'#F2F2F7',border:'1px solid #F0F0F5'}}>
+            <div className="flex items-center gap-2 px-4 h-12 rounded-xl" style={{background:'#F2F2F7',border:`1px solid ${fieldError('amount')?'#EF4444':'#F0F0F5'}`}}>
               <button onClick={()=>setWalletPickerOpen(true)} className="flex items-center gap-1 cursor-pointer shrink-0">
                 <span className="text-sm font-semibold" style={{color:'#1C1C1E'}}>{fromWallet?.currency??'USD'}</span>
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5"><path strokeLinecap="round" d="M6 9l6 6 6-6"/></svg>
@@ -910,6 +924,7 @@ export function TransferPage() {
                 placeholder="0.00" className="flex-1 bg-transparent text-sm font-semibold outline-none"
                 style={{color:'#1C1C1E'}} min="0"/>
             </div>
+            {fieldError('amount') && <p className="text-xs text-red-500 mt-1">{fieldError('amount')}</p>}
           </div>
 
           <button onClick={()=>{ const ref=genRef();setTxRef(ref);setWalletPickerOpen(true) }} disabled={!canContinue}

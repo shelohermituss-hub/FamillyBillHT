@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Eye, EyeOff, Search, Check, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
+import { resetPasswordSchema } from '@/services/schemas'
 
 type Step = 'welcome' | 'phone' | 'otp' | 'name' | 'country' | 'email' | 'pin' | 'pinConfirm' | 'password'
 
@@ -336,8 +338,11 @@ export function RegisterPage() {
   function pinConfDel() { setPinConf(p => p.slice(0,-1)) }
 
   async function submitPassword() {
-    if (password.length < 6) { setError('Au moins 6 caractères.'); return }
-    if (password !== confPw)  { setError('Les mots de passe ne correspondent pas.'); return }
+    const parsed = resetPasswordSchema.safeParse({ password, confirmPassword: confPw })
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Mot de passe invalide.')
+      return
+    }
     setLoading(true); setError('')
     const { error: err, userId } = await signUp(email, password, fullName.trim(), phone||undefined, country||undefined)
     if (err) {
@@ -348,6 +353,7 @@ export function RegisterPage() {
       setLoading(false); return
     }
     if (userId) localStorage.setItem(`fb-app-pin-${userId}`, pinVal)
+    toast.success('Compte créé avec succès.')
     navigate('/dashboard', { replace: true })
   }
 

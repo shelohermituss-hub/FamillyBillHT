@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ArrowRight, CheckCircle2, Loader2, ChevronRight, Info, Wallet, CreditCard, Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { getRate, getFeeRate } from '@/lib/currencies'
@@ -140,6 +141,12 @@ function ProviderStep({
   const others = PROVIDERS.filter(
     p => !category.providerIds.includes(p.id) && p.priority === 1
   )
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 400)
+    return () => clearTimeout(t)
+  }, [])
 
   return (
     <div className="space-y-4 animate-fade-in-up">
@@ -149,31 +156,45 @@ function ProviderStep({
       </div>
       <p className="text-sm text-[var(--ink-60)] -mt-2">Choisissez le fournisseur</p>
 
-      <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
-        {providers.map(provider => (
-          <button
-            key={provider.id}
-            onClick={() => onSelect(provider)}
-            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left"
-          >
-            <ProviderLogo provider={provider} size="sm" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[var(--ink)]">{provider.name}</p>
-              <p className="text-xs text-[var(--ink-60)] truncate">{provider.description}</p>
+      {loading ? (
+        <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+              <Skeleton className="w-11 h-11 rounded-xl shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {provider.instant && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>
-                  Instantané
-                </span>
-              )}
-              <ChevronRight className="w-4 h-4 text-[var(--ink-30)]" />
-            </div>
-          </button>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
+          {providers.map(provider => (
+            <button
+              key={provider.id}
+              onClick={() => onSelect(provider)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--surface)] tr cursor-pointer text-left"
+            >
+              <ProviderLogo provider={provider} size="sm" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[var(--ink)]">{provider.name}</p>
+                <p className="text-xs text-[var(--ink-60)] truncate">{provider.description}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {provider.instant && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--lime)', color: '#ffffff' }}>
+                    Instantané
+                  </span>
+                )}
+                <ChevronRight className="w-4 h-4 text-[var(--ink-30)]" />
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
-      {others.length > 0 && (
+      {!loading && others.length > 0 && (
         <>
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ink-60)] px-1">Autres services populaires</p>
           <div className="card-flat overflow-hidden divide-y divide-[var(--border)]">
